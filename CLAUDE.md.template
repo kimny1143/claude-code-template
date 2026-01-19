@@ -1,0 +1,104 @@
+# CLAUDE.md
+
+Claude Code がこのリポジトリで作業する際のガイドライン。
+
+---
+
+## クイックスタート
+
+```bash
+# 環境構築
+npm install
+cp .env.example .env.local  # 環境変数設定
+
+# 開発
+npm run dev                  # 開発サーバー
+
+# テスト・品質
+npm run test                 # テスト
+npm run lint                 # Lint
+npm run build                # ビルド
+```
+
+---
+
+## プロジェクト概要
+
+**[プロジェクト名]** - [一言説明]
+
+### 技術スタック
+
+| カテゴリ | 技術 |
+|---------|------|
+| **Frontend** | [例: Next.js, React, TypeScript] |
+| **Backend** | [例: Node.js, Express] |
+| **Database** | [例: PostgreSQL, Prisma] |
+| **Testing** | [例: Vitest, Playwright] |
+
+### アーキテクチャ
+
+- [主要なアーキテクチャパターンを記載]
+- [例: Repository パターン、Service 層など]
+
+---
+
+## ディレクトリ構造
+
+```
+project/
+├── src/               # ソースコード
+│   ├── components/    # UIコンポーネント
+│   ├── lib/           # ユーティリティ
+│   └── ...
+├── tests/             # テスト
+└── docs/              # ドキュメント
+```
+
+---
+
+## 重要な注意事項
+
+### セキュリティ
+
+- 環境変数は `.env.local` で管理（Git にコミットしない）
+- API キーをコードに直接書かない
+
+### コーディング規約
+
+- [プロジェクト固有のルールを記載]
+
+---
+
+## Commands（スラッシュコマンド）
+
+| コマンド | 用途 |
+|---------|------|
+| `/commit` | Git コミットワークフロー |
+| `/pr` | Pull Request 作成 |
+| `/build-fix` | ビルドエラー自動修正 |
+| `/security` | セキュリティ監査 |
+
+---
+
+## Skills（詳細ガイド）
+
+特定の作業時は `.claude/skills/` の該当スキルを参照：
+
+| スキル | 用途 |
+|-------|------|
+| `tdd` | テスト駆動開発 |
+| `backend-patterns` | API/Repository パターン |
+| `coding-rules` | コーディング規約 |
+| `git-worktree` | Git worktree 操作 |
+
+---
+
+## 関連ドキュメント
+
+| ドキュメント | 内容 |
+|-------------|------|
+| [docs/xxx.md](docs/xxx.md) | [説明] |
+
+---
+
+*最終更新: [日付]*
