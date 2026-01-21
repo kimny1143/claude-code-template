@@ -44,25 +44,107 @@ Affaan Mustafa の「[Everything Claude Code](https://github.com/affaan-m/everyt
 
 ## 使い方
 
-### 1. このリポジトリをクローン
+### 方法 A: シンボリックリンクで共有（推奨）
+
+複数プロジェクトで設定を共有し、一括更新できる方法。
+
+#### 1. テンプレートを配置
+
+```bash
+# Dropbox や共有フォルダに配置
+git clone https://github.com/kimny1143/claude-code-template.git ~/Dropbox/_DevProjects/claude-code-template
+```
+
+#### 2. セットアップスクリプトを実行
+
+```bash
+cd /path/to/your/project
+
+# スクリプトをダウンロード（初回のみ）
+curl -o setup-claude.sh https://raw.githubusercontent.com/kimny1143/claude-code-template/main/setup.sh
+chmod +x setup-claude.sh
+
+# 実行
+./setup-claude.sh
+```
+
+または手動で:
+```bash
+TEMPLATE=~/Dropbox/_DevProjects/claude-code-template/.claude
+mkdir -p .claude/{commands,skills,agents,hooks}
+
+# コマンドをリンク
+ln -s $TEMPLATE/commands/commit.md .claude/commands/
+ln -s $TEMPLATE/commands/pr.md .claude/commands/
+
+# スキルをリンク
+ln -s $TEMPLATE/skills/tdd .claude/skills/
+ln -s $TEMPLATE/skills/coding-rules .claude/skills/
+```
+
+#### 3. プロジェクト固有設定を追加
+
+```bash
+# プロジェクト固有スキル（シンボリックリンクではなくディレクトリで作成）
+mkdir -p .claude/skills/my-database
+echo "# Database Skill" > .claude/skills/my-database/index.md
+```
+
+#### シンボリックリンク構成のイメージ
+
+```
+claude-code-template/          ← 共有設定の原本
+├── .claude/
+│   ├── commands/
+│   │   ├── commit.md          ← 全プロジェクト共通
+│   │   └── pr.md
+│   └── skills/
+│       ├── tdd/               ← 全プロジェクト共通
+│       └── coding-rules/
+
+your-project/.claude/
+├── commands/
+│   ├── commit.md → ~/...template/.claude/commands/commit.md  (symlink)
+│   └── my-workflow.md         ← プロジェクト固有
+└── skills/
+    ├── tdd → ~/...template/.claude/skills/tdd  (symlink)
+    └── database/              ← プロジェクト固有
+```
+
+#### 共有設定の更新
+
+テンプレートを更新すると、全プロジェクトに自動反映:
+```bash
+cd ~/Dropbox/_DevProjects/claude-code-template
+vim .claude/skills/tdd/index.md  # 編集
+# → 全プロジェクトに即反映（シンボリックリンクのため）
+```
+
+---
+
+### 方法 B: コピーで使用
+
+独立した設定が必要な場合。
+
+#### 1. このリポジトリをクローン
 
 ```bash
 git clone https://github.com/kimny1143/claude-code-template.git
 cd claude-code-template
 ```
 
-### 2. 既存プロジェクトにコピー
+#### 2. 既存プロジェクトにコピー
 
 ```bash
 cp -r .claude/ /path/to/your/project/
 cp CLAUDE.md.template /path/to/your/project/CLAUDE.md
 ```
 
-### 3. CLAUDE.md をカスタマイズ
+#### 3. CLAUDE.md をカスタマイズ
 
 `CLAUDE.md.template` を `CLAUDE.md` にリネームし、プロジェクト固有の情報を記入。
 
-### 4. Hooks を設定
+#### 4. Hooks を設定
 
 `.claude/settings.local.json` のパスをプロジェクトに合わせて更新:
 
