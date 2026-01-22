@@ -2,68 +2,73 @@
 
 このファイルはHooキャラクターのアニメーション実装の詳細を記載。
 
-## SVG構造
+## デザイン仕様
+
+**スタイル**: 白いラインアート（モノトーン）
+**カラー**: 白 (`#FFFFFF`) のストローク、塗りつぶしなし
+**背景**: 透明（ダークBG上で使用）
+
+> **注意**: 実際のロゴは `/public/logo.png` を参照。
+> SVGを作成する際はこのPNGをトレースすること。
+
+## SVG構造（概念）
+
+実際のSVGは `/public/logo.png` からトレースして作成する必要がある。
+以下はアニメーション用のレイヤー分け構造の参考:
 
 ```svg
 <svg viewBox="0 0 200 200" width="200" height="200">
-  <!-- 背景レイヤー（影） -->
-  <ellipse class="shadow" cx="100" cy="185" rx="40" ry="10" fill="rgba(0,0,0,0.2)" />
-  
+  <!--
+    スタイル: stroke="#FFFFFF" stroke-width="2" fill="none"
+    全てラインアートで構成
+  -->
+
   <!-- ボディ -->
   <g class="body">
-    <ellipse cx="100" cy="130" rx="55" ry="65" fill="#F6AD55" />
-    <!-- 胸の模様 -->
-    <ellipse cx="100" cy="145" rx="35" ry="45" fill="#FAD9A8" />
+    <!-- 本体の輪郭 -->
   </g>
-  
+
   <!-- 左羽 -->
-  <g class="left-wing" transform-origin="70 120">
-    <ellipse cx="50" cy="120" rx="22" ry="40" fill="#E08D3C" />
+  <g class="left-wing" transform-origin="center">
+    <!-- 羽の輪郭 -->
   </g>
-  
+
   <!-- 右羽 -->
-  <g class="right-wing" transform-origin="130 120">
-    <ellipse cx="150" cy="120" rx="22" ry="40" fill="#E08D3C" />
+  <g class="right-wing" transform-origin="center">
+    <!-- 羽の輪郭 -->
   </g>
-  
+
   <!-- 頭部 -->
-  <g class="head" transform-origin="100 80">
-    <circle cx="100" cy="65" r="48" fill="#F6AD55" />
-    
+  <g class="head" transform-origin="center">
+    <!-- 頭の輪郭 -->
+
     <!-- 耳（羽角） -->
-    <polygon class="left-ear" points="60,30 70,55 55,50" fill="#E08D3C" />
-    <polygon class="right-ear" points="140,30 130,55 145,50" fill="#E08D3C" />
-    
-    <!-- 顔の模様 -->
-    <ellipse cx="100" cy="70" rx="38" ry="35" fill="#FAD9A8" />
-    
+    <g class="left-ear"></g>
+    <g class="right-ear"></g>
+
     <!-- 左目 -->
     <g class="left-eye">
-      <ellipse cx="80" cy="60" rx="14" ry="18" fill="#2D3748" />
-      <ellipse cx="80" cy="60" rx="10" ry="14" fill="#1A202C" />
-      <circle cx="84" cy="55" r="5" fill="white" />
-      <circle cx="78" cy="63" r="2" fill="white" opacity="0.5" />
+      <!-- 目の輪郭とハイライト -->
     </g>
-    
+
     <!-- 右目 -->
     <g class="right-eye">
-      <ellipse cx="120" cy="60" rx="14" ry="18" fill="#2D3748" />
-      <ellipse cx="120" cy="60" rx="10" ry="14" fill="#1A202C" />
-      <circle cx="124" cy="55" r="5" fill="white" />
-      <circle cx="118" cy="63" r="2" fill="white" opacity="0.5" />
+      <!-- 目の輪郭とハイライト -->
     </g>
-    
+
     <!-- くちばし -->
-    <polygon class="beak" points="100,72 88,90 112,90" fill="#2D3748" />
-  </g>
-  
-  <!-- 足 -->
-  <g class="feet">
-    <ellipse cx="85" cy="190" rx="12" ry="6" fill="#E08D3C" />
-    <ellipse cx="115" cy="190" rx="12" ry="6" fill="#E08D3C" />
+    <g class="beak"></g>
   </g>
 </svg>
 ```
+
+## SVG作成手順
+
+1. `/public/logo.png` をFigmaにインポート
+2. Image Trace または手動でパスをトレース
+3. 上記のレイヤー構造に分割
+4. 各パーツを個別グループ化（アニメーション用）
+5. SVGとしてエクスポート
 
 ## 状態別アニメーション詳細
 

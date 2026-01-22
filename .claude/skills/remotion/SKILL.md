@@ -36,12 +36,12 @@ npm install remotion @remotion/cli @remotion/player
 // src/styles/theme.ts
 export const colors = {
   primary: '#2D3748',      // ダークグレー（メインUI）
-  accent: '#F6AD55',       // オレンジ（Hooの色、アクセント）
-  accentDark: '#E08D3C',   // ダークオレンジ（Hooの影）
+  accent: '#6366F1',       // インディゴ（CTAボタン等）
   background: '#1A202C',   // ダークBG
   backgroundLight: '#2D3748',
   text: '#E2E8F0',         // ライトグレー（本文）
   textMuted: '#A0AEC0',    // ミュートテキスト
+  hoo: '#FFFFFF',          // Hooは白ラインアート
   success: '#48BB78',      // 成功
   error: '#F56565',        // エラー
 };
@@ -65,7 +65,9 @@ export const colors = {
 - 名前: Hoo（フー）
 - キャッチフレーズ: "ほほう (Ho Hoo)"
 - 役割: MUEDnoteのAIアシスタント、マーケティングマスコット
-- ベースカラー: `#F6AD55`（オレンジ）
+- **スタイル**: 白いラインアート（モノトーン）
+- **ベースカラー**: `#FFFFFF`（白ストローク、塗りなし）
+- **参照**: `/public/logo.png`
 
 ### 表情・状態
 | 状態 | 用途 | アニメーション |
