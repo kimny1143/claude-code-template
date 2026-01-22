@@ -2,19 +2,23 @@
 
 このファイルはHooキャラクターのアニメーション実装の詳細を記載。
 
+## デザインコンセプト
+
+**Hoo = フクロウ + オープンリールテープレコーダー**
+
+- **メインモチーフ**: フクロウ
+- **目**: オープンリールのテープリール（2つの円）
+- **テープ**: リール間を繋ぐテープ（8の字/波線）
+- **音楽記録アプリ**としての象徴的デザイン
+
 ## デザイン仕様
 
-**スタイル**: 白いラインアート（モノトーン）
-**カラー**: 白 (`#FFFFFF`) のストローク、塗りつぶしなし
-**背景**: 透明（ダークBG上で使用）
+- **スタイル**: 白いラインアート（モノトーン）
+- **カラー**: 白 (`#FFFFFF`) のストローク、塗りつぶしなし
+- **背景**: 透明（ダークBG上で使用）
+- **参照**: `/public/logo.png`
 
-> **注意**: 実際のロゴは `/public/logo.png` を参照。
-> SVGを作成する際はこのPNGをトレースすること。
-
-## SVG構造（概念）
-
-実際のSVGは `/public/logo.png` からトレースして作成する必要がある。
-以下はアニメーション用のレイヤー分け構造の参考:
+## SVG構造（アニメーション用レイヤー分け）
 
 ```svg
 <svg viewBox="0 0 200 200" width="200" height="200">
@@ -23,51 +27,117 @@
     全てラインアートで構成
   -->
 
-  <!-- ボディ -->
-  <g class="body">
-    <!-- 本体の輪郭 -->
+  <!-- フクロウ本体の輪郭 -->
+  <g class="body-outline">
+    <!-- 頭 + ボディのシルエット -->
   </g>
 
-  <!-- 左羽 -->
-  <g class="left-wing" transform-origin="center">
-    <!-- 羽の輪郭 -->
+  <!-- 耳（羽角） -->
+  <g class="ears">
+    <path class="left-ear" />
+    <path class="right-ear" />
   </g>
 
-  <!-- 右羽 -->
-  <g class="right-wing" transform-origin="center">
-    <!-- 羽の輪郭 -->
+  <!-- 左リール（左目） -->
+  <g class="left-reel" transform-origin="center">
+    <circle class="reel-outer" />  <!-- 外円 -->
+    <circle class="reel-inner" />  <!-- 内円/ハブ -->
+    <!-- リールのスポーク等あれば -->
   </g>
 
-  <!-- 頭部 -->
-  <g class="head" transform-origin="center">
-    <!-- 頭の輪郭 -->
+  <!-- 右リール（右目） -->
+  <g class="right-reel" transform-origin="center">
+    <circle class="reel-outer" />
+    <circle class="reel-inner" />
+  </g>
 
-    <!-- 耳（羽角） -->
-    <g class="left-ear"></g>
-    <g class="right-ear"></g>
+  <!-- テープ（リール間を繋ぐ） -->
+  <g class="tape">
+    <path class="tape-path" />  <!-- 8の字 or 波線 -->
+  </g>
 
-    <!-- 左目 -->
-    <g class="left-eye">
-      <!-- 目の輪郭とハイライト -->
-    </g>
-
-    <!-- 右目 -->
-    <g class="right-eye">
-      <!-- 目の輪郭とハイライト -->
-    </g>
-
-    <!-- くちばし -->
-    <g class="beak"></g>
+  <!-- くちばし（あれば） -->
+  <g class="beak">
+    <path />
   </g>
 </svg>
+```
+
+## アニメーションパターン
+
+### idle（待機）- リール回転
+```typescript
+export const idleAnimation = (frame: number, fps: number) => {
+  // リールがゆっくり回転（録音中のイメージ）
+  const rotation = (frame / fps) * 30; // 1秒で30度回転
+
+  return {
+    leftReel: { rotate: rotation },
+    rightReel: { rotate: -rotation }, // 逆回転
+    body: { translateY: Math.sin((frame / fps) * Math.PI) * 2 }, // 軽い呼吸
+  };
+};
+```
+
+### recording（録音中）- リール高速回転
+```typescript
+export const recordingAnimation = (frame: number, fps: number) => {
+  // リールが速く回転
+  const rotation = (frame / fps) * 180; // 1秒で180度
+
+  // テープが流れるアニメーション（dashoffset）
+  const tapeOffset = (frame / fps) * 50;
+
+  return {
+    leftReel: { rotate: rotation },
+    rightReel: { rotate: -rotation },
+    tape: { strokeDashoffset: -tapeOffset },
+  };
+};
+```
+
+### curious（興味）- 首傾げ
+```typescript
+export const curiousAnimation = (frame: number, fps: number, startFrame: number = 0) => {
+  const progress = spring({
+    frame: frame - startFrame,
+    fps,
+    config: { damping: 15, stiffness: 80 },
+  });
+
+  return {
+    body: { rotate: progress * 15 }, // 首を傾ける
+    leftReel: { rotate: (frame / fps) * 30 },
+    rightReel: { rotate: -(frame / fps) * 30 },
+  };
+};
+```
+
+### happy（喜び）- リール高速 + 揺れ
+```typescript
+export const happyAnimation = (frame: number, fps: number) => {
+  const bounce = Math.sin((frame / fps) * Math.PI * 4) * 5;
+  const fastRotation = (frame / fps) * 360;
+
+  return {
+    body: { translateY: -Math.abs(bounce) },
+    leftReel: { rotate: fastRotation },
+    rightReel: { rotate: -fastRotation },
+  };
+};
 ```
 
 ## SVG作成手順
 
 1. `/public/logo.png` をFigmaにインポート
 2. Image Trace または手動でパスをトレース
-3. 上記のレイヤー構造に分割
-4. 各パーツを個別グループ化（アニメーション用）
+3. **重要**: 以下のパーツを個別レイヤーに分離:
+   - 本体輪郭 (`body-outline`)
+   - 左リール (`left-reel`) - 回転の中心点を設定
+   - 右リール (`right-reel`) - 回転の中心点を設定
+   - テープ (`tape`)
+   - 耳 (`ears`)
+4. 各パーツの `transform-origin` を適切に設定
 5. SVGとしてエクスポート
 
 ## 状態別アニメーション詳細

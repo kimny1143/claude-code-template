@@ -61,6 +61,12 @@ export const colors = {
 
 ## Hooキャラクター仕様
 
+### デザインコンセプト
+**フクロウ + オープンリールテープレコーダー** のハイブリッド
+- 目 = テープリール（2つの円）
+- リール間にテープが張っている
+- 音楽記録アプリの象徴的デザイン
+
 ### 基本情報
 - 名前: Hoo（フー）
 - キャッチフレーズ: "ほほう (Ho Hoo)"
@@ -69,20 +75,28 @@ export const colors = {
 - **ベースカラー**: `#FFFFFF`（白ストローク、塗りなし）
 - **参照**: `/public/logo.png`
 
+### アニメーション可能パーツ
+| パーツ | 説明 | アニメーション |
+|-------|------|--------------|
+| left-reel | 左目（テープリール） | 回転 |
+| right-reel | 右目（テープリール） | 回転（逆方向） |
+| tape | リール間のテープ | 流れる動き |
+| body | 本体輪郭 | 揺れ、傾き |
+| ears | 耳（羽角） | 軽い揺れ |
+
 ### 表情・状態
 | 状態 | 用途 | アニメーション |
 |------|------|--------------|
-| idle | 待機 | 呼吸（上下2px、2秒周期） |
-| curious | 興味・説明 | 首を右に15度傾ける、目を見開く |
-| happy | 喜び・完了 | 羽パタパタ、目を細める |
-| thinking | 考え中 | 目を上に向ける、首を左に傾ける |
-| pointing | 指し示す | 右羽を前に出す |
+| idle | 待機 | リールゆっくり回転 + 軽い呼吸 |
+| recording | 録音中 | リール高速回転 + テープ流れ |
+| curious | 興味・説明 | 首を傾ける + リール回転 |
+| happy | 喜び・完了 | リール高速 + 上下バウンス |
 
 ### アニメーションコード
 
 ```typescript
-// 呼吸（常時）
-const breathe = Math.sin((frame / fps) * Math.PI) * 2;
+// リール回転（常時）
+const reelRotation = (frame / fps) * 30; // 1秒で30度
 
 // 首傾げ（curious時）
 const tilt = spring({
@@ -91,8 +105,11 @@ const tilt = spring({
   config: { damping: 15, stiffness: 80 },
 }) * 15;
 
-// 羽パタパタ（happy時）
-const flapAngle = Math.sin((frame / fps) * Math.PI * 8) * 20;
+// リール高速回転（recording/happy時）
+const fastRotation = (frame / fps) * 180;
+
+// テープ流れ（strokeDashoffsetで表現）
+const tapeOffset = (frame / fps) * 50;
 ```
 
 **詳細**: `hoo-animation.md` 参照
