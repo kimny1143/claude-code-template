@@ -86,6 +86,8 @@ project/
 
 | スキル | 用途 |
 |-------|------|
+| `ui-ux-pro-max` | UI/UX設計、glassmorphism、アクセシビリティ |
+| `web-performance` | Core Web Vitals、Lighthouse最適化 |
 | `tdd` | テスト駆動開発 |
 | `backend-patterns` | API/Repository パターン |
 | `coding-rules` | コーディング規約 |
@@ -98,6 +100,22 @@ project/
 | ドキュメント | 内容 |
 |-------------|------|
 | [docs/xxx.md](docs/xxx.md) | [説明] |
+
+---
+
+## 学習メモ
+
+### Patterns（推奨パターン）
+
+<!-- プロジェクト固有の学びを記録 -->
+- [例] **gitignoreの効率的な書き方**: 個別ファイル列挙より `*` で全て無視して `!` でホワイトリスト指定する方が管理しやすい
+
+### Gotchas（落とし穴）
+
+<!-- 再発防止のための注意点を記録 -->
+- [例] **半透明背景とコントラスト**: glassmorphism (bg-white/5, bg-black/45等) では実効背景色が変わるため、`text-slate-*` は使わず `text-white` または `text-white/80` 以上を使用する
+
+- [例] **CLAUDE.mdの情報を鵜呑みにしない**: ディレクトリ構造等の情報は古くなっている可能性あり。実際のファイルシステムを確認してから言及すること
 
 ---
 
