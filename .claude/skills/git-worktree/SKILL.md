@@ -1,3 +1,13 @@
+---
+name: git-worktree
+description: >
+  Git worktree を使った複数ブランチの同時作業管理。
+  使用タイミング: (1) 複数機能を並行開発したい時 (2) PRレビュー中に別作業したい時
+  (3) 本番ホットフィックスと開発を同時進行したい時 (4) worktreeの使い方を知りたい時。
+  トリガー例: 「worktreeで」「別ブランチを同時に」「並行開発したい」
+  「PRレビューしながら開発」「ホットフィックス用のworktree」
+---
+
 # git-worktree - Git Worktree 操作
 
 複数ブランチを同時に作業するための Git worktree 管理。

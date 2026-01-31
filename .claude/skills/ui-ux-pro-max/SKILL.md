@@ -163,6 +163,103 @@ UI/UXデザインおよび実装の専門スキル。
 
 ---
 
+## 多言語タイポグラフィ
+
+**なぜ必要か:** 日本語は同じフォントサイズでも英語より視覚的に重く見える（画数が多いため）。同じサイズだと日本語が窮屈・重く見えるため、1段階小さくして視覚的バランスを取る。
+
+### タイポグラフィトークン（globals.css で定義済み）
+
+| トークン | 用途 | 英語 (デスクトップ) | 日本語 (デスクトップ) |
+|---------|------|-------------------|---------------------|
+| `.text-hero` | ランディングページのメインタイトル | 96px | 80px |
+| `.text-section` | セクション見出し（h2） | 48px | 40px |
+| `.text-headline` | 機能タイトル、製品見出し | 30px | 24px |
+| `.text-subhead` | タグライン、リード文 | 24px | 20px |
+
+### 使用方法
+
+```tsx
+// NG: Tailwind直接指定（言語による調整なし）
+<h1 className="text-5xl md:text-8xl font-bold">...</h1>
+
+// OK: トークン使用（自動で言語対応）
+<h1 className="text-hero text-white">...</h1>
+```
+
+### レスポンシブ対応
+
+トークンにはモバイル・タブレット・デスクトップのレスポンシブサイズが含まれる。追加のブレークポイント指定は不要。
+
+```tsx
+// NG: 冗長なブレークポイント指定
+<h1 className="text-hero sm:text-hero md:text-hero">...</h1>
+
+// OK: トークンのみ
+<h1 className="text-hero">...</h1>
+```
+
+### 適用対象
+
+- ランディングページの見出し（h1, h2）
+- セクションタイトル
+- 製品名、機能名
+- タグライン、リード文
+
+**注意:** 本文テキスト（p要素の長文）には適用しない。本文は `text-white/80` 等の通常スタイルを使用。
+
+---
+
+## デザイントークン遵守ルール
+
+**原則:** Tailwindのデフォルト値を直接使用せず、`globals.css` で定義されたデザイントークンを使用する。
+
+### 角丸（Border Radius）
+
+| トークン | 値 | 用途 |
+|---------|-----|------|
+| `--radius-sm` | 8px | 小さいバッジ、タグ |
+| `--radius-md` | 12px | ボタン、入力フィールド |
+| `--radius-lg` | 16px | カード、モーダル |
+| `--radius-full` | 999px | ピル型ボタン、アバター |
+
+```tsx
+// NG: Tailwind直接指定
+<button className="rounded-lg">...</button>
+<div className="rounded-xl">...</div>
+
+// OK: トークン使用
+<button className="rounded-[var(--radius-md)]">...</button>
+<div className="rounded-[var(--radius-lg)]">...</div>
+```
+
+### 色
+
+```tsx
+// NG: Tailwind色を直接使用
+<p className="text-slate-400">...</p>
+<div className="bg-gray-900">...</div>
+
+// OK: プロジェクトトークン使用
+<p className="text-muted">...</p>
+<div className="bg-mued-bg">...</div>
+```
+
+### トークン違反チェック
+
+実装後は以下で違反を確認:
+
+```bash
+# 角丸のTailwind直接指定を検索
+grep -r "rounded-sm\|rounded-md\|rounded-lg\|rounded-xl\|rounded-2xl" components/
+
+# 色のTailwind直接指定を検索
+grep -r "bg-slate-\|bg-gray-\|text-slate-\|text-gray-" components/
+```
+
+検出されたものは順次トークンに置換する。
+
+---
+
 ## デザインスタイル
 
 ### グラスモーフィズム

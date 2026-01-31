@@ -1,11 +1,11 @@
 ---
 name: ios-app-store-submission
-description: "When the user wants to submit an iOS app to the App Store. Use when the user mentions 'App Store,' 'App Store Connect,' 'TestFlight,' 'iOS submission,' 'app review,' 'EAS build,' 'eas submit,' 'Apple review,' 'app rejection,' or 'iOS release.' This skill covers the entire process from EAS setup to App Store review approval."
+description: "When the user wants to submit an iOS app to the App Store. Use when the user mentions 'App Store,' 'App Store Connect,' 'TestFlight,' 'iOS submission,' 'app review,' 'EAS build,' 'eas submit,' 'Apple review,' 'app rejection,' or 'iOS release.' This skill covers the entire process from setup to App Store review approval."
 ---
 
 # iOS App Store Submission
 
-You are an expert in iOS app submission, Apple review guidelines, and EAS (Expo Application Services). Your goal is to guide users through the entire submission process efficiently, avoiding common pitfalls and rejections.
+You are an expert in iOS app submission, Apple review guidelines, and build automation. Your goal is to guide users through the entire submission process efficiently, avoiding common pitfalls and rejections.
 
 ## Core Philosophy
 
@@ -13,50 +13,215 @@ App Store submission is not just about uploading a binary. It's about:
 - Meeting Apple's technical and content requirements
 - Providing accurate metadata and privacy disclosures
 - Preparing for potential review questions
-- Streamlining the process for future releases
+- **Automating the process for fast iteration**
 
 ---
 
-## Quick Reference: Submission Flow
+## Quick Reference: Build Methods
 
+| 方法 | 所要時間 | いつ使う |
+|------|---------|---------|
+| **CLI Local (推奨)** | 10-15分 | 最速。ローカルでArchive→直接アップロード |
+| **Xcode GUI** | 10-15分 | CLIに慣れていない場合 |
+| **EAS Build** | 15-30分+キュー | CI/CD、チーム開発、Free tierはキュー待ちあり |
+
+---
+
+## ⚠️ Known Issues Prevention (ビルド前に必ず確認)
+
+過去のリジェクト事例から学んだ、**ビルド前に必ず確認すべき項目**。
+
+### 1. Provider で `null` を返さない
+
+**問題**: ThemeProvider等がAsyncStorage読み込み中に`null`を返すと、審査時に「黒い画面」でリジェクト。
+
+**確認方法**:
+```bash
+grep -r "return null" src/providers/
 ```
-1. EAS Setup        → eas init, eas.json, credentials
-2. App Store Connect → Create app, fill metadata
-3. Privacy Setup    → ATT, Privacy Manifest, data collection
-4. Build            → eas build --platform ios --profile production
-5. Submit           → eas submit --platform ios
-6. Review           → Wait, respond to questions, fix rejections
+
+**対処**: ローディングUIを返す
+```typescript
+// NG
+if (!isLoaded) return null;
+
+// OK
+if (!isLoaded) {
+  return (
+    <View style={{ flex: 1, backgroundColor: '#1a1a2e', justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color="#059669" />
+    </View>
+  );
+}
+```
+
+### 2. ATT プラグイン設定
+
+**問題**: `expo-tracking-transparency`をベア文字列で設定すると、ATTダイアログが表示されない。
+
+**確認方法**:
+```bash
+# app.json確認
+grep -A5 "expo-tracking-transparency" app.json
+
+# prebuild後のInfo.plist確認
+npx expo prebuild --clean
+grep -A1 "NSUserTrackingUsageDescription" ios/*/Info.plist
+```
+
+**正しい設定**:
+```json
+[
+  "expo-tracking-transparency",
+  {
+    "userTrackingPermission": "This identifier will be used to deliver personalized ads to you."
+  }
+]
+```
+
+### 3. UIRequiredDeviceCapabilities に telephony を入れない
+
+**問題**: `telephony`を設定すると、Mac Apple silicon / Vision Pro で警告が出る。
+
+**確認方法**:
+```bash
+grep -r "telephony" app.json
+grep -r "UIRequiredDeviceCapabilities" ios/*/Info.plist
+```
+
+**対処**: iPhoneのみ対応は `supportsTablet: false` で十分。`telephony`は不要。
+
+### 4. ビルド前検証コマンド
+
+```bash
+# 全チェックを一括実行
+echo "=== Provider null check ===" && grep -r "return null" src/providers/ 2>/dev/null || echo "OK"
+echo "=== ATT config check ===" && grep -A5 "expo-tracking-transparency" app.json
+echo "=== telephony check ===" && grep -r "telephony" app.json 2>/dev/null || echo "OK"
 ```
 
 ---
 
-## Phase 1: EAS Setup
+## Phase 1: Initial Setup (One-time)
 
-### 1.1 Prerequisites
+### 1.1 App-specific Password
 
+CLIでアップロードするために必要。**一度作成すれば全アプリで使い回し可能**。
+
+1. https://appleid.apple.com にアクセス
+2. サインイン → **サインインとセキュリティ** → **アプリ用パスワード**
+3. **+** → ラベル入力（例: `mued-apps`）→ **作成**
+4. パスワードをコピー（`xxxx-xxxx-xxxx-xxxx` 形式）
+5. `.env.local` に保存:
 ```bash
-# Install EAS CLI (if not installed)
-npm install -g eas-cli
-
-# Login to Expo account
-eas login
-
-# Check login status
-eas whoami
+# Apple ID app-specific password
+APPLE_ID=your-apple-id@example.com
+APP_PASSWORD=xxxx-xxxx-xxxx-xxxx
+TEAM_ID=XXXXXXXXXX
 ```
 
-### 1.2 Initialize EAS Project
+### 1.2 ExportOptions.plist
 
-```bash
-cd your-app-directory
-eas init
+プロジェクトルートに作成:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>method</key>
+    <string>app-store-connect</string>
+    <key>teamID</key>
+    <string>YOUR_TEAM_ID</string>
+    <key>uploadSymbols</key>
+    <true/>
+    <key>destination</key>
+    <string>upload</string>
+</dict>
+</plist>
 ```
 
-This creates/updates:
-- `app.json` with `expo.extra.eas.projectId`
-- Links project to your Expo account
+---
 
-### 1.3 Configure eas.json
+## Phase 2: CLI Build & Upload (推奨)
+
+### 2.1 Full CLI Workflow
+
+```bash
+# 1. Prebuild（ネイティブプロジェクト生成）
+npx expo prebuild --clean
+
+# 2. Archive
+xcodebuild -workspace ios/YourApp.xcworkspace \
+  -scheme YourApp \
+  -configuration Release \
+  -archivePath build/YourApp.xcarchive \
+  -destination "generic/platform=iOS" \
+  DEVELOPMENT_TEAM=YOUR_TEAM_ID \
+  CODE_SIGN_STYLE=Automatic \
+  -allowProvisioningUpdates \
+  archive
+
+# 3. Export & Upload（一発でApp Store Connectへ）
+xcodebuild -exportArchive \
+  -archivePath build/YourApp.xcarchive \
+  -exportPath build \
+  -exportOptionsPlist ExportOptions.plist \
+  -allowProvisioningUpdates
+```
+
+### 2.2 よくあるエラーと対処
+
+| エラー | 原因 | 対処 |
+|-------|------|------|
+| `No profiles found` | プロビジョニング未設定 | `-allowProvisioningUpdates` を追加 |
+| `Signing requires development team` | チームID未指定 | `DEVELOPMENT_TEAM=XXXX` を追加 |
+| `No provider associated` | Apple ID未認証 | Xcode → Preferences → Accounts で認証 |
+
+### 2.3 Upload後の確認
+
+1. [App Store Connect](https://appstoreconnect.apple.com) を開く
+2. My Apps → Your App → **TestFlight**
+3. ビルドが「処理中」→「利用可能」になるまで5-15分待つ
+4. **App Store** タブ → ビルドを選択 → **審査に提出**
+
+---
+
+## Phase 3: Xcode GUI Build (Alternative)
+
+CLIが苦手な場合の代替手順。
+
+```bash
+# 1. Prebuild
+npx expo prebuild --clean
+
+# 2. Xcodeで開く
+open ios/YourApp.xcworkspace
+```
+
+### Xcode内の操作
+
+1. **Signing**: Automatically manage signing → Team選択
+2. **Device**: "Any iOS Device (arm64)" を選択
+3. **Product → Archive**
+4. Archiveウィンドウ → **Distribute App**
+5. **App Store Connect** → **Upload**
+
+---
+
+## Phase 4: EAS Build (Cloud)
+
+チーム開発やCI/CDで使用。Free tierはキュー待ちあり（数十分〜数時間）。
+
+```bash
+# Build
+eas build --platform ios --profile production
+
+# Submit
+eas submit --platform ios --latest
+```
+
+### eas.json 設定
 
 ```json
 {
@@ -65,22 +230,9 @@ This creates/updates:
     "appVersionSource": "remote"
   },
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "ios": {
-        "simulator": false
-      }
-    },
-    "preview": {
-      "distribution": "internal"
-    },
     "production": {
       "ios": {
         "autoIncrement": "buildNumber"
-      },
-      "android": {
-        "autoIncrement": "versionCode"
       }
     }
   },
@@ -96,378 +248,24 @@ This creates/updates:
 }
 ```
 
-**Key fields:**
-| Field | Where to find |
-|-------|---------------|
-| `appleId` | Your Apple ID email |
-| `ascAppId` | App Store Connect → App → General → App Information → Apple ID |
-| `appleTeamId` | Apple Developer → Membership → Team ID |
-
-### 1.4 Configure app.json for iOS
-
-```json
-{
-  "expo": {
-    "name": "Your App Name",
-    "slug": "your-app-slug",
-    "version": "1.0.0",
-    "ios": {
-      "bundleIdentifier": "com.yourcompany.yourapp",
-      "buildNumber": "1",
-      "supportsTablet": true,
-      "infoPlist": {
-        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
-        "NSCameraUsageDescription": "Used to take photos for your profile",
-        "NSPhotoLibraryUsageDescription": "Used to select photos from your library"
-      }
-    }
-  }
-}
-```
-
-**Required infoPlist keys by feature:**
-
-| Feature | Key | Example Description |
-|---------|-----|---------------------|
-| Ads (AdMob) | `NSUserTrackingUsageDescription` | "This identifier will be used to deliver personalized ads to you." |
-| Camera | `NSCameraUsageDescription` | "Used to take photos" |
-| Photos | `NSPhotoLibraryUsageDescription` | "Used to select photos" |
-| Microphone | `NSMicrophoneUsageDescription` | "Used for voice recording" |
-| Location | `NSLocationWhenInUseUsageDescription` | "Used to show nearby places" |
-| Contacts | `NSContactsUsageDescription` | "Used to find friends" |
-
 ---
 
-## Phase 2: App Store Connect Setup
+## Phase 5: App Store Connect Setup
 
-### 2.1 Create App in App Store Connect
-
-1. Go to [App Store Connect](https://appstoreconnect.apple.com)
-2. My Apps → "+" → New App
-3. Fill required fields:
-   - **Platform**: iOS
-   - **Name**: App display name (30 chars max)
-   - **Primary Language**: Your main language
-   - **Bundle ID**: Must match `bundleIdentifier` in app.json
-   - **SKU**: Unique identifier (e.g., `yourapp-ios-001`)
-
-### 2.2 App Information
+### 5.1 App Information
 
 | Field | Requirements |
 |-------|--------------|
 | **Name** | 30 chars max, unique on App Store |
-| **Subtitle** | 30 chars max, optional but recommended |
+| **Subtitle** | 30 chars max, optional |
 | **Category** | Primary + optional secondary |
-| **Content Rights** | Does your app contain third-party content? |
-| **Age Rating** | Complete questionnaire honestly |
+| **Age Rating** | Complete questionnaire |
 
-### 2.3 Pricing and Availability
-
-- **Price**: Free or paid tier
-- **Availability**: Countries/regions
-- **Pre-Orders**: Optional, up to 180 days before release
-
-### 2.4 App Privacy (Critical!)
+### 5.2 App Privacy (Critical!)
 
 App Store Connect → App Privacy → Get Started
 
-**Data Types to declare:**
-
-| Category | Examples |
-|----------|----------|
-| Contact Info | Name, email, phone, address |
-| Identifiers | User ID, Device ID, IDFA |
-| Usage Data | Product interaction, advertising data |
-| Diagnostics | Crash data, performance data |
-| Financial | Payment info, credit score |
-| Location | Precise/coarse location |
-
-**For each data type, specify:**
-1. **Collected?** Yes/No
-2. **Linked to identity?** Yes/No
-3. **Used for tracking?** Yes/No
-4. **Purpose**: App functionality, analytics, advertising, etc.
-
-### 2.5 Version Information
-
-| Field | Requirements |
-|-------|--------------|
-| **Screenshots** | See screenshot requirements below |
-| **Promotional Text** | 170 chars, can update without new version |
-| **Description** | 4000 chars max |
-| **Keywords** | 100 chars max, comma-separated |
-| **Support URL** | Required, must be accessible |
-| **Marketing URL** | Optional |
-| **What's New** | Required for updates |
-
----
-
-## Phase 3: Privacy Requirements
-
-### 3.1 App Tracking Transparency (ATT)
-
-Required if you use IDFA for:
-- Advertising
-- Analytics that links to other companies' data
-
-**Implementation (already in app.json):**
-```json
-{
-  "ios": {
-    "infoPlist": {
-      "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you."
-    }
-  }
-}
-```
-
-**In code (if using AdMob):**
-```typescript
-import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
-
-async function requestTracking() {
-  const { status } = await requestTrackingPermissionsAsync();
-  // status: 'granted' | 'denied' | 'undetermined'
-}
-```
-
-### 3.2 Privacy Manifest (iOS 17+)
-
-Required for apps using certain APIs. Expo handles most cases automatically, but verify:
-
-**Required Reasons APIs:**
-- File timestamp APIs
-- System boot time APIs
-- Disk space APIs
-- Active keyboard APIs
-- User defaults APIs
-
-**Check if needed:**
-```bash
-# After building, check the generated Privacy Manifest
-# Located in: ios/YourApp/PrivacyInfo.xcprivacy
-```
-
-### 3.3 Third-Party SDK Privacy
-
-If using SDKs like AdMob, Firebase, etc., ensure they include their own privacy manifests. Expo SDK 50+ handles this automatically for most common SDKs.
-
----
-
-## Phase 4: Screenshots & Assets
-
-### 4.1 Required Screenshots
-
-| Device | Size (pixels) | Required |
-|--------|---------------|----------|
-| 6.7" iPhone | 1290 x 2796 | Yes (iPhone 15 Pro Max) |
-| 6.5" iPhone | 1284 x 2778 | Yes (iPhone 14 Plus) |
-| 5.5" iPhone | 1242 x 2208 | Optional |
-| 12.9" iPad Pro | 2048 x 2732 | If supports iPad |
-| 12.9" iPad Pro (6th gen) | 2048 x 2732 | If supports iPad |
-
-**Tips:**
-- 2-10 screenshots per localization
-- First screenshot is most important (shown in search)
-- Use device frames (optional but professional)
-- Show key features, not onboarding screens
-
-### 4.2 App Icon
-
-Already in `app.json`:
-```json
-{
-  "expo": {
-    "icon": "./assets/icon.png"
-  }
-}
-```
-
-Requirements:
-- 1024 x 1024 pixels
-- PNG format
-- No transparency
-- No rounded corners (iOS adds them)
-
-### 4.3 App Preview (Video)
-
-Optional but effective:
-- 15-30 seconds
-- Shows app in action
-- Device frame optional
-- No prices or "free" in video
-
----
-
-## Phase 5: Build & Submit
-
-### 5.1 Production Build
-
-```bash
-# Build for iOS App Store
-eas build --platform ios --profile production
-
-# Wait for build (15-30 minutes)
-# EAS handles:
-# - Certificate management
-# - Provisioning profiles
-# - Code signing
-```
-
-### 5.2 Submit to App Store
-
-**Option A: EAS Submit (Recommended)**
-```bash
-eas submit --platform ios
-
-# Or specify the build
-eas submit --platform ios --latest
-
-# Or with specific build ID
-eas submit --platform ios --id BUILD_ID
-```
-
-**Option B: Manual (Transporter)**
-1. Download `.ipa` from EAS dashboard
-2. Open Transporter app (Mac)
-3. Upload `.ipa`
-4. Select in App Store Connect
-
-### 5.3 TestFlight (Optional but Recommended)
-
-Before App Store submission:
-1. Build uploads automatically to TestFlight
-2. Add internal testers (up to 100)
-3. Add external testers (up to 10,000, requires review)
-4. Test thoroughly before submitting for review
-
----
-
-## Phase 6: App Review
-
-### 6.1 Review Timeline
-
-| Type | Typical Duration |
-|------|------------------|
-| New App | 24-48 hours |
-| Update | 24 hours |
-| Expedited Review | 24 hours (request required) |
-| Appeal | 3-5 business days |
-
-### 6.2 Common Rejection Reasons & Fixes
-
-#### 1. **Guideline 2.1 - App Completeness**
-> "Your app crashed during review"
-
-**Fix:**
-- Test on physical devices
-- Test with slow network
-- Handle all error states
-- Check crash logs in Xcode Organizer
-
-#### 2. **Guideline 2.3 - Accurate Metadata**
-> "Screenshots don't match app functionality"
-
-**Fix:**
-- Update screenshots to match current version
-- Don't show features that don't exist
-- Ensure descriptions are accurate
-
-#### 3. **Guideline 3.1.1 - In-App Purchase**
-> "Unlocking features requires in-app purchase"
-
-**Fix:**
-- Digital goods must use IAP
-- Physical goods can use external payment
-- Services (subscriptions) must use IAP
-
-#### 4. **Guideline 4.2 - Minimum Functionality**
-> "App is too simple / just a website wrapper"
-
-**Fix:**
-- Add native features
-- Ensure app provides value beyond a website
-- Use device capabilities
-
-#### 5. **Guideline 5.1.1 - Data Collection**
-> "App collects data without disclosure"
-
-**Fix:**
-- Update App Privacy in App Store Connect
-- Add privacy policy
-- Explain data usage in app
-
-#### 6. **Guideline 5.1.2 - Data Use and Sharing**
-> "Third-party analytics without consent"
-
-**Fix:**
-- Implement ATT for tracking
-- Disclose third-party SDKs
-- Provide opt-out option
-
-### 6.3 Responding to Rejection
-
-1. **Read carefully**: Understand exactly what's wrong
-2. **Don't argue**: Fix the issue, don't debate guidelines
-3. **Be specific**: Explain exactly what you changed
-4. **Provide demo**: If feature is hidden, explain how to access it
-5. **Use Resolution Center**: Respond through App Store Connect
-
-### 6.4 Requesting Expedited Review
-
-When to request:
-- Critical bug fix
-- Security issue
-- Time-sensitive event
-
-How to request:
-1. App Store Connect → Your App → App Review
-2. Contact Us → Request Expedited Review
-3. Explain the urgency clearly
-
----
-
-## AdMob-Specific Requirements
-
-### Configuration
-
-**app.json:**
-```json
-{
-  "plugins": [
-    [
-      "react-native-google-mobile-ads",
-      {
-        "androidAppId": "ca-app-pub-XXXXXXX~YYYYYYY",
-        "iosAppId": "ca-app-pub-XXXXXXX~YYYYYYY"
-      }
-    ]
-  ]
-}
-```
-
-### ATT Implementation
-
-```typescript
-import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
-import mobileAds, { AdsConsent } from 'react-native-google-mobile-ads';
-
-async function initializeAds() {
-  // 1. Request ATT permission
-  const { status } = await requestTrackingPermissionsAsync();
-
-  // 2. Configure consent (GDPR)
-  await AdsConsent.requestInfoUpdate();
-  const consentInfo = await AdsConsent.loadAndShowConsentFormIfRequired();
-
-  // 3. Initialize ads
-  await mobileAds().initialize();
-}
-```
-
-### App Privacy Declaration for AdMob
-
-In App Store Connect → App Privacy, declare:
+**AdMob使用時の宣言:**
 
 | Data Type | Collected | Linked | Tracking |
 |-----------|-----------|--------|----------|
@@ -476,71 +274,224 @@ In App Store Connect → App Privacy, declare:
 | Advertising Data | Yes | Yes | Yes |
 | Crash Data | Yes | No | No |
 
+### 5.3 Screenshots
+
+| Device | Size (pixels) | Required |
+|--------|---------------|----------|
+| 6.7" iPhone | 1290 x 2796 | Yes |
+| 6.5" iPhone | 1284 x 2778 | Yes |
+| 12.9" iPad Pro | 2048 x 2732 | If supports iPad |
+
+---
+
+## Phase 6: Privacy Requirements
+
+### 6.1 App Tracking Transparency (ATT)
+
+AdMob等の広告SDKを使う場合は必須。
+
+**app.json設定（プラグイン経由が推奨）:**
+```json
+{
+  "plugins": [
+    [
+      "expo-tracking-transparency",
+      {
+        "userTrackingPermission": "This identifier will be used to deliver personalized ads to you."
+      }
+    ]
+  ]
+}
+```
+
+⚠️ **注意**: `infoPlist`に直接書くのではなく、プラグイン設定を使う。prebuild時にInfo.plistに正しく反映される。
+
+**コード実装:**
+```typescript
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
+
+async function requestTracking() {
+  const { status } = await requestTrackingPermissionsAsync();
+  // 'granted' | 'denied' | 'undetermined'
+}
+```
+
+### 6.2 ATT設定の検証
+
+```bash
+npx expo prebuild --clean
+grep -A1 "NSUserTrackingUsageDescription" ios/YourApp/Info.plist
+```
+
+---
+
+## Phase 7: App Review
+
+### 7.1 Review Timeline
+
+| Type | Typical Duration |
+|------|------------------|
+| New App | 24-48 hours |
+| Update | 24 hours |
+| Expedited Review | 24 hours (request required) |
+
+### 7.2 Common Rejection Reasons & Fixes
+
+#### 1. **Guideline 2.1 - App Completeness**
+> "Your app crashed during review" / "Black screen on launch"
+
+**原因:**
+- Provider（ThemeProvider等）がローディング中に`null`を返している
+- AsyncStorage読み込み中に画面が真っ黒
+
+**Fix:**
+```typescript
+// Before (NG)
+if (!isLoaded) {
+  return null;
+}
+
+// After (OK)
+if (!isLoaded) {
+  return (
+    <View style={{ flex: 1, backgroundColor: '#1a1a2e', justifyContent: 'center', alignItems: 'center' }}>
+      <ActivityIndicator size="large" color="#059669" />
+    </View>
+  );
+}
+```
+
+#### 2. **Guideline 5.1.2 - ATT Not Shown**
+> "App doesn't show ATT dialog"
+
+**原因:**
+- `expo-tracking-transparency`がベア文字列でプラグイン設定されている
+- `NSUserTrackingUsageDescription`がInfo.plistに含まれていない
+
+**Fix:**
+```json
+// Before (NG)
+"plugins": ["expo-tracking-transparency"]
+
+// After (OK)
+"plugins": [
+  [
+    "expo-tracking-transparency",
+    {
+      "userTrackingPermission": "This identifier will be used to deliver personalized ads to you."
+    }
+  ]
+]
+```
+
+#### 3. **Guideline 2.3 - Accurate Metadata**
+> "Screenshots don't match app functionality"
+
+**Fix:**
+- スクリーンショットを最新版に更新
+- 存在しない機能を表示しない
+
+### 7.3 Responding to Rejection
+
+1. **Resolution Centerで返信** (App Store Connect → Your App → Resolution Center)
+2. **修正内容を具体的に説明**
+3. **再ビルド→再アップロード→再提出**
+
+### 7.4 Resolution Center コメントテンプレート
+
+審査員に修正内容を伝えるコメント。**英語で、具体的に**書く。
+
+#### Black Screen / Crash 修正時
+```
+We have addressed the issue identified in the previous review:
+
+**[Issue description] (fixed)**
+- Root cause: [Technical explanation of what was wrong]
+- Fix: [What was changed]
+- File changed: [File path]
+
+Build [N] contains this fix. Thank you for your review.
+```
+
+#### ATT Not Shown 修正時
+```
+We have addressed the ATT (App Tracking Transparency) issue:
+
+**ATT dialog not shown (fixed)**
+- Root cause: `expo-tracking-transparency` was configured as a bare string, causing `NSUserTrackingUsageDescription` to not be included in Info.plist
+- Fix: Changed plugin configuration to include `userTrackingPermission` parameter
+- Verified: Confirmed the description is now present in Info.plist via prebuild
+
+Build [N] contains this fix. Thank you for your review.
+```
+
+#### UIRequiredDeviceCapabilities 警告修正時
+```
+We have addressed the compatibility warning:
+
+**Mac/Vision Pro compatibility (fixed)**
+- Removed `UIRequiredDeviceCapabilities: ["telephony"]` from Info.plist
+- The app targets iPhone only via `supportsTablet: false` setting
+
+Build [N] contains this fix. Thank you for your review.
+```
+
+**ポイント:**
+- 何が問題だったか（Root cause）
+- 何を変更したか（Fix）
+- どのビルドに含まれているか（Build N）
+- 簡潔に、技術的に正確に
+
+### 7.5 Requesting Expedited Review
+
+緊急時のみ:
+1. App Store Connect → Your App → App Review
+2. Contact Us → Request Expedited Review
+3. 理由を明確に説明
+
 ---
 
 ## Checklist: Pre-Submission
 
 ### Technical
-- [ ] `eas.json` configured with correct Apple credentials
-- [ ] `app.json` has correct `bundleIdentifier`, `version`, `buildNumber`
-- [ ] All `infoPlist` permissions have descriptions
-- [ ] No hardcoded test/development values
-- [ ] Tested on physical device
-- [ ] No crashes or critical bugs
+- [ ] `ExportOptions.plist` 作成済み
+- [ ] `app.json` の `bundleIdentifier`, `version` 設定済み
+- [ ] ATTプラグイン設定済み（広告使用時）
+- [ ] ローディング状態でUIを表示（`null`を返さない）
+- [ ] 実機でテスト済み
 
 ### App Store Connect
-- [ ] App created with correct Bundle ID
-- [ ] App Information completed
-- [ ] Pricing set
-- [ ] Age Rating completed
-- [ ] App Privacy completed
-- [ ] All screenshots uploaded
-- [ ] Description and keywords set
-- [ ] Support URL accessible
-- [ ] Privacy Policy URL set
-
-### Privacy
-- [ ] ATT implemented (if using ads)
-- [ ] Privacy policy published and linked
-- [ ] Data collection accurately declared
-- [ ] Third-party SDK disclosures complete
-
-### Final
-- [ ] Tested on TestFlight (recommended)
-- [ ] Version number makes sense
-- [ ] "What's New" written (for updates)
-- [ ] Marketing materials ready for launch
+- [ ] App Privacy 設定済み
+- [ ] Screenshots アップロード済み
+- [ ] Description, Keywords 設定済み
+- [ ] Support URL 設定済み
 
 ---
 
-## Useful Commands Reference
+## Quick Commands Reference
 
 ```bash
-# EAS Setup
-eas login                    # Login to Expo
-eas init                     # Initialize project
-eas credentials              # Manage certificates
+# === CLI Build (推奨) ===
+npx expo prebuild --clean
+xcodebuild -workspace ios/App.xcworkspace -scheme App -configuration Release \
+  -archivePath build/App.xcarchive -destination "generic/platform=iOS" \
+  DEVELOPMENT_TEAM=XXXX CODE_SIGN_STYLE=Automatic -allowProvisioningUpdates archive
+xcodebuild -exportArchive -archivePath build/App.xcarchive -exportPath build \
+  -exportOptionsPlist ExportOptions.plist -allowProvisioningUpdates
 
-# Building
-eas build --platform ios --profile production    # Production build
-eas build --platform ios --profile preview       # Internal testing
-eas build:list                                   # List builds
+# === EAS Build ===
+eas build --platform ios --profile production
+eas submit --platform ios --latest
 
-# Submitting
-eas submit --platform ios                        # Submit latest
-eas submit --platform ios --latest               # Submit most recent build
-eas submit --platform ios --id BUILD_ID          # Submit specific build
-
-# Debugging
-eas build:inspect --platform ios                 # Inspect build config
-eas diagnostics                                  # Check EAS setup
+# === Debugging ===
+grep -A1 "NSUserTrackingUsageDescription" ios/App/Info.plist  # ATT確認
+eas build:view BUILD_ID --json  # ビルドステータス確認
 ```
 
 ---
 
 ## Related Skills
 
-- **android-play-store-submission**: For Google Play Store submission
-- **launch-strategy**: For planning your app launch
-- **marketing-psychology**: For App Store optimization (ASO)
-- **analytics-tracking**: For setting up analytics properly
+- **android-play-store-submission**: Google Play Store submission
+- **launch-strategy**: App launch planning
+- **marketing-psychology**: App Store optimization (ASO)
