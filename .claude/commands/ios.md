@@ -1,199 +1,89 @@
-# /ios - iOS App Store 審査提出ワークフロー
+# /ios - iOS ローカルビルド & 提出ワークフロー
 
-iOS アプリを App Store Connect に提出するための完全ワークフロー。
+iOS アプリのローカルビルド → App Store Connect アップロード → TestFlight / 審査提出を実行する。
 
----
+**EAS Build は使わない。ローカルビルドのみ。**
 
-## ビルド方法の選択
+## スキル参照
 
-| 方法 | 所要時間 | いつ使う |
-|------|---------|---------|
-| **CLI Local (推奨)** | 10-15分 | 最速。EASキュー回避 |
-| **EAS Build** | 15-30分+キュー | CI/CD、チーム開発 |
+`.claude/skills/ios-app-store-submission/SKILL.md` を読み込んでから作業を開始すること。
 
-**推奨: CLI Local**（Free tierのキュー待ち回避、実機テストと同じ環境）
+## 実行手順
 
----
+### Step 1: 対象アプリと目的の特定
 
-## Step 1: Known Issues Prevention (必須)
+`$ARGUMENTS` から以下を判断:
+- **アプリ**: muednote / muedear
+- **目的**: testflight（テスト配信） / review（審査提出）
 
-過去のリジェクト事例を防ぐ事前チェック。**ビルド前に必ず実行**。
+不明な場合はユーザーに確認。
+
+### Step 2: 事前チェック
+
+1. **ブランチ確認**: 審査提出 = main、TestFlight = feature OK
+2. **app.json**: version / buildNumber を確認。buildNumber は App Store Connect の最新 + 1
+3. **.env**: 目的に合った環境変数か確認
+   - 審査提出 → `pk_live_...` + `https://mued.jp`
+   - TestFlight → `pk_test_...` + preview URL
+4. **バックアップ**: `cp .env .env.backup`
+
+### Step 3: ビルド前検証
 
 ```bash
-# 1. Provider で null を返していないか
-echo "=== Provider null check ==="
-grep -r "return null" src/providers/ 2>/dev/null && echo "⚠️ ローディングUIに変更必要" || echo "✅ OK"
+# Provider null チェック
+grep -r "return null" src/providers/ 2>/dev/null
 
-# 2. ATT プラグイン設定（広告使用時）
-echo "=== ATT config check ==="
+# gitignore チェック（/ios/ であること、ios/ はNG）
+grep "^ios/" .gitignore
+
+# ATT チェック（MUEDear のみ）
 grep -A5 "expo-tracking-transparency" app.json
-
-# 3. telephony 設定がないか
-echo "=== telephony check ==="
-grep -r "telephony" app.json 2>/dev/null && echo "⚠️ 削除必要" || echo "✅ OK"
 ```
 
-**問題があれば修正してから次へ進む。**
-
----
-
-## Step 2: プロジェクト状態確認
+### Step 4: ローカルビルド
 
 ```bash
-# 必要なファイルの存在確認
-ls -la app.json ExportOptions.plist 2>/dev/null
-
-# バージョン確認
-cat app.json | grep -E '"version"|"buildNumber"'
-
-# iOS設定確認
-cat app.json | grep -A15 '"ios"'
-```
-
-**チェック項目:**
-- [ ] app.json に iOS 設定がある
-- [ ] bundleIdentifier が設定済み
-- [ ] version / buildNumber が設定済み
-- [ ] ExportOptions.plist が存在する（CLI用）
-
----
-
-## Step 3: 初回セットアップ（未設定の場合）
-
-### ExportOptions.plist がない場合
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>method</key>
-    <string>app-store-connect</string>
-    <key>teamID</key>
-    <string>YOUR_TEAM_ID</string>
-    <key>uploadSymbols</key>
-    <true/>
-    <key>destination</key>
-    <string>upload</string>
-</dict>
-</plist>
-```
-
-### ATT設定（広告使用時）
-
-```json
-// app.json plugins
-[
-  "expo-tracking-transparency",
-  {
-    "userTrackingPermission": "This identifier will be used to deliver personalized ads to you."
-  }
-]
-```
-
----
-
-## Step 4: CLI Build & Upload (推奨)
-
-```bash
-# 1. Prebuild
+npm install
 npx expo prebuild --clean
-
-# 2. Archive
-xcodebuild -workspace ios/YourApp.xcworkspace \
-  -scheme YourApp \
-  -configuration Release \
-  -archivePath build/YourApp.xcarchive \
+xcodebuild -workspace ios/<SCHEME>.xcworkspace \
+  -scheme <SCHEME> -configuration Release \
+  -archivePath build/<SCHEME>.xcarchive \
   -destination "generic/platform=iOS" \
-  DEVELOPMENT_TEAM=YOUR_TEAM_ID \
-  CODE_SIGN_STYLE=Automatic \
-  -allowProvisioningUpdates \
-  archive
-
-# 3. Export & Upload
+  DEVELOPMENT_TEAM=F529L4WT3V CODE_SIGN_STYLE=Automatic \
+  -allowProvisioningUpdates archive
 xcodebuild -exportArchive \
-  -archivePath build/YourApp.xcarchive \
-  -exportPath build \
-  -exportOptionsPlist ExportOptions.plist \
+  -archivePath build/<SCHEME>.xcarchive \
+  -exportPath build -exportOptionsPlist ExportOptions.plist \
   -allowProvisioningUpdates
 ```
 
-### よくあるエラー
+### Step 5: App Store Connect 操作
 
-| エラー | 対処 |
-|-------|------|
-| `No profiles found` | `-allowProvisioningUpdates` を追加 |
-| `Signing requires development team` | `DEVELOPMENT_TEAM=XXXX` を追加 |
+**Chrome 拡張が使える場合:**
+1. `tabs_context_mcp` で接続確認
+2. `appstoreconnect.apple.com` にナビゲート
+3. ユーザーにログインしてもらう（パスワード入力禁止）
+4. TestFlight: ビルドが Internal Testers に自動追加されているか確認
+5. 審査提出: 新バージョン作成 → ビルド選択 → What's New 入力 → 保存 → 審査用に追加 → 審査へ提出
 
----
+**Chrome 拡張が使えない場合:**
+手順を日本語で説明してユーザーに手動操作してもらう。
 
-## Step 5: EAS Build (Alternative)
+### Step 6: 後片付け
 
-チーム開発やCI/CDで使用。Free tierはキュー待ちあり。
-
-```bash
-# Build
-eas build --platform ios --profile production
-
-# Submit
-eas submit --platform ios --latest
-```
-
----
-
-## Step 6: App Store Connect で確認
-
-1. [App Store Connect](https://appstoreconnect.apple.com) を開く
-2. My Apps → Your App → **TestFlight**
-3. ビルドが「処理中」→「利用可能」になるまで5-15分待つ
-4. **App Store** タブ → ビルドを選択 → **審査に提出**
-
----
-
-## Step 7: 審査対応
-
-### リジェクトされた場合
-
-1. **Resolution Center** で理由を確認
-2. 問題を修正
-3. **再ビルド → 再アップロード**
-4. Resolution Center で返答
-
-### よくあるリジェクト
-
-| 原因 | 対処 |
-|------|------|
-| Black screen on launch | Provider の `return null` を Loading UI に変更 |
-| ATT not shown | プラグイン設定で `userTrackingPermission` を指定 |
-| Screenshots mismatch | 最新スクリーンショットに更新 |
-
----
-
-## クイックコマンド
-
-```bash
-# === CLI Build (推奨) ===
-npx expo prebuild --clean
-xcodebuild -workspace ios/App.xcworkspace -scheme App -configuration Release \
-  -archivePath build/App.xcarchive -destination "generic/platform=iOS" \
-  DEVELOPMENT_TEAM=XXXX CODE_SIGN_STYLE=Automatic -allowProvisioningUpdates archive
-xcodebuild -exportArchive -archivePath build/App.xcarchive -exportPath build \
-  -exportOptionsPlist ExportOptions.plist -allowProvisioningUpdates
-
-# === EAS Build ===
-eas build --platform ios --profile production
-eas submit --platform ios --latest
-
-# === Debug ===
-grep -A1 "NSUserTrackingUsageDescription" ios/App/Info.plist
-```
-
----
+1. `.env` を本番値に復元: `cp .env.backup .env`
+2. バージョン変更をコミット（`/commit` 使用）
 
 ## 引数
 
-- `$ARGUMENTS`: 追加の指示やスキップするステップを指定可能
+- `/ios muednote testflight` → MUEDnote を TestFlight ビルド
+- `/ios muedear review` → MUEDear を審査提出ビルド
+- `/ios muednote` → 目的を確認してから実行
 
----
+## 注意事項
 
-不足している設定は具体的に指摘し、修正手順を提供すること。
+- **EAS Build は使わない**。月30ビルド制限 + git clone ベースで事故る
+- Apple ID / パスワードは絶対に入力しない
+- 「審査へ提出」は実行前にユーザー確認
+- ビルド後は必ず .env を本番値に復元
+- buildNumber は App Store Connect で実際に使用済みの番号を確認してからインクリメント
