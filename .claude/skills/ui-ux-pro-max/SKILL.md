@@ -1,6 +1,6 @@
 ---
 name: ui-ux-pro-max
-description: "UI/UX design intelligence. Plan, build, design, implement, review, improve UI/UX code. Styles: glassmorphism, minimalism, dark mode, responsive. Projects: landing page, dashboard, SaaS, mobile app."
+description: "UI/UX design intelligence. Plan, build, design, implement, review, improve UI/UX code. Styles: image-first, editorial design, minimalism, dark mode, responsive. Projects: landing page, dashboard, SaaS, mobile app."
 ---
 
 # UI/UX Pro Max
@@ -62,6 +62,81 @@ UI/UXデザインおよび実装の専門スキル。
 
 ---
 
+## プレミアムデザインの公式
+
+```
+Premium = (画像の質 × サイズ) + (余白) - (装飾)
+```
+
+**3つの柱:**
+
+1. **大きな画像** - カードの70-85%を画像が占める
+2. **大胆な余白** - セクション間112px以上
+3. **抑制** - すべての効果に理由が必要
+
+**参照ブランド:** Spitfire Audio, Native Instruments, iZotope
+
+---
+
+## 画像ガイドライン
+
+| コンテキスト | 画像サイズ | アスペクト比 |
+|-------------|-----------|-------------|
+| 製品カード | カード面積の70-85% | 16:9 or 4:3 |
+| ヒーローセクション | フルビューポート幅 | 可変 |
+| ギャラリーグリッド | 高さ統一、幅可変 | 混合 |
+
+**画像の扱い:**
+
+- 画像がコンテンツの主役
+- テキストは最小限（名前 + 1行説明）
+- 画像上に機能リストを重ねない
+- 高品質なスクリーンショット/レンダリングを使用
+
+---
+
+## 余白トークン
+
+| トークン | 値 | 用途 |
+|---------|-----|------|
+| `--space-section` | 112px | セクション間 |
+| `--space-group` | 64px | 関連コンテンツ間 |
+| `--space-element` | 24px | 要素間 |
+
+**セクションパディング:**
+
+```css
+/* プレミアムセクション */
+padding-top: 112px;    /* py-28 */
+padding-bottom: 112px;
+
+/* コンパクトセクション */
+padding-top: 64px;     /* py-16 */
+padding-bottom: 64px;
+```
+
+**Tailwind対応:**
+
+```tsx
+// プレミアムセクション
+<section className="py-28">...</section>
+
+// コンパクトセクション
+<section className="py-16">...</section>
+```
+
+---
+
+## グリッドシステム
+
+| 列数 | 用途 | ギャップ |
+|-----|------|---------|
+| 4列 | 製品ショーケース | 24px (gap-6) |
+| 3列 | 機能カード、価格 | 32px (gap-8) |
+| 2列 | ヒーロー、比較 | 48px (gap-12) |
+
+---
+
 ## 視覚階層チェックリスト
 
 ### 作業開始前
@@ -111,31 +186,6 @@ UI/UXデザインおよび実装の専門スキル。
 ```
 
 実装前に必ず `app/globals.css` を確認し、定義済みトークンを把握すること。
-
-### Glassmorphism とアクセシビリティの両立
-
-**警告: 半透明背景はコントラスト計算を複雑にする**
-
-| 背景タイプ | 問題 | 対策 |
-|-----------|------|------|
-| `bg-white/5` | 実効背景色が不確定 | テキストは `text-white` or 十分明るい色を使用 |
-| `bg-black/45` オーバーレイ | 下層と混ざる | 重要テキストは `text-white` を使用 |
-| 半透明セクション | 背景画像と混ざる | muted text は避け、白系を使用 |
-
-**安全な組み合わせ:**
-
-```tsx
-// Glass card 内のテキスト
-<div className="bg-white/5 backdrop-blur-xl ...">
-  <h3 className="text-white">タイトル</h3>       {/* OK: 白は常に安全 */}
-  <p className="text-white/80">説明文</p>         {/* OK: 80%白は十分 */}
-</div>
-
-// 危険な組み合わせ（避ける）
-<div className="bg-white/5 ...">
-  <p className="text-slate-400">説明文</p>        {/* NG: コントラスト不足の可能性 */}
-</div>
-```
 
 ### バッジ・タグのコントラスト
 
@@ -260,88 +310,207 @@ grep -r "bg-slate-\|bg-gray-\|text-slate-\|text-gray-" components/
 
 ---
 
-## デザインスタイル
+## ボタンスタイル
 
-### グラスモーフィズム
-
-```css
-/* Glass card - a11y compliant */
-.glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-}
-```
-
-**注意:** Glass card 内のテキストは `text-white` または `text-white/80` 以上を使用。
-
-### ダークモード優先
-
-```css
-/* Dark mode base - WCAG compliant */
-:root {
-  --bg-primary: #0F0F1A;
-  --bg-secondary: #1A1A2E;
-  --text-primary: #FFFFFF;
-  --text-muted: #CBD5E1;    /* slate-300: 4.5:1+ on dark */
-  --text-subtle: #9CA3AF;   /* gray-400: 使用注意 */
-  --accent: #4F46E5;
-}
-```
-
-### ミニマリズム
-
-- 余白を恐れない
-- 1画面1アクション
-- 視覚的ノイズを減らす
-
----
-
-## コンポーネント規約
-
-### ボタン
+### Primary CTA（デフォルト: 白ベース）
 
 ```tsx
-// Primary CTA
-<button className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg transition-colors cursor-pointer">
-  CTA
+<button className="bg-white text-black px-8 py-4 text-lg font-medium rounded-[var(--radius-md)] hover:bg-white/90 transition-colors cursor-pointer">
+  Download Now
 </button>
+```
 
-// Secondary
-<button className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-lg transition-colors cursor-pointer">
-  Secondary
+### Secondary（枠線のみ）
+
+```tsx
+<button className="border-2 border-white text-white px-8 py-4 text-lg font-medium rounded-[var(--radius-md)] hover:bg-white/10 transition-colors cursor-pointer">
+  Learn More
 </button>
+```
 
-// Disabled - コントラスト維持
+### ブランド固有（限定的に使用）
+
+色付きボタンの使用条件:
+- ブランド固有セクション（MUEDear amber等）のみ
+- 1ページに1-2箇所まで
+- デフォルトにはしない
+
+```tsx
+// MUEDear用: amber
+<button className="border-2 border-amber-500 text-amber-400 hover:bg-amber-500 hover:text-white ...">
+  Download App
+</button>
+```
+
+### Disabled
+
+```tsx
 <button className="bg-white/5 text-white/70 cursor-not-allowed" disabled>
   Disabled
 </button>
 ```
 
-### カード
+---
+
+## 背景スタイル
+
+### 使用する背景
 
 ```tsx
-// Glass card with accessible text
-<div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
-  <h3 className="text-white font-semibold">Title</h3>
-  <p className="text-white/80">Description with sufficient contrast</p>
+// プレミアム: 単色のみ
+<section className="bg-black">...</section>
+<section className="bg-[#0f0f0f]">...</section>
+<section className="bg-white">...</section>
+```
+
+### 避ける装飾
+
+| パターン | 問題 | 代替案 |
+|---------|------|-------|
+| フローティンググローオーブ | 気が散る | 削除 |
+| `bg-gradient-to-b from-violet-900/20` | 装飾的ノイズ | 単色 |
+| グレインテクスチャ | 不要な複雑さ | 削除 |
+| アニメーション背景 | パフォーマンス悪化 | 静的 |
+
+---
+
+## カードスタイル
+
+### 画像中心カード（デフォルト）
+
+```tsx
+<div className="bg-[#0f0f0f] rounded-[var(--radius-lg)] overflow-hidden">
+  {/* 画像: カードの70-85% */}
+  <div className="aspect-video">
+    <Image src="..." alt="..." fill className="object-cover" />
+  </div>
+  {/* テキスト: 最小限 */}
+  <div className="p-6">
+    <h3 className="text-white text-lg font-medium">製品名</h3>
+    <p className="text-white/60 text-sm">一行の説明</p>
+  </div>
 </div>
 ```
 
-### テキスト階層
+### Glass Card（限定的に使用）
+
+**注意:** Glassmorphism は特定のコンテキスト（価格表、機能比較など）でのみ使用。デフォルトにしない。
 
 ```tsx
-// ソリッド背景（#0F0F1A 等）での使用
-<h1 className="text-4xl font-bold text-white">見出し</h1>
-<h2 className="text-2xl font-semibold text-white">サブ見出し</h2>
-<p className="text-lg text-muted">本文（プロジェクトトークン使用）</p>
-<span className="text-sm text-subtle">補足</span>
-
-// Glass card 内での使用
-<h3 className="text-white">タイトル</h3>
-<p className="text-white/80">説明文</p>
+<div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[var(--radius-lg)] p-6">
+  <h3 className="text-white font-semibold">Title</h3>
+  <p className="text-white/80">Description</p>
+</div>
 ```
+
+**Glass Card 使用時の注意:**
+- テキストは `text-white` または `text-white/80` 以上
+- `text-slate-*` や `text-gray-*` は使用しない
+- 背景が半透明なためコントラスト計算が複雑
+
+---
+
+## 指示エスカレーションプロトコル
+
+ユーザーの表現に応じて対応レベルを変える:
+
+| ユーザーの表現 | 解釈 | 必要な対応 |
+|--------------|------|-----------|
+| 「Spitfireレベル」「Native Instrumentsレベル」 | 全面的な視覚改修 | 微調整ではなく完全リデザイン |
+| 「もっとプレミアムに」 | 実質的な変更 | 効果を削除、余白を増加 |
+| 「クリーンに」 | 中程度のクリーンアップ | 装飾要素の30%削除 |
+| 「調整」「微調整」 | 小さな修正 | CSS変更のみ |
+
+**重要ルール:** 参照ブランドが名指しされたら、提案前に現在の実装をそのブランドと比較すること。
+
+---
+
+## 実装チェックリスト
+
+### 実装前チェック
+
+- [ ] 高品質な製品スクリーンショットはあるか？
+- [ ] テキストを50%削減できるか？
+- [ ] 参照したい美的水準を確認したか？
+- [ ] その抑制レベルに合わせているか？
+
+### 実装中チェック
+
+| 質問 | 「No」の場合のアクション |
+|------|------------------------|
+| セクションパディング >= 100px？ | `py-28`以上に増加 |
+| 画像がカード面積の60%以上？ | 画像を拡大 |
+| ボタンは白または枠線のみ？ | 色付きから変更 |
+| 背景は単色（グラデーションなし）？ | 装飾要素を削除 |
+
+### 実装後チェック
+
+1. **スキントテスト:** 目を細めて見る。製品を識別できるか？効果が支配的なら削減。
+2. **「1つ削除」テスト:** 各セクションから1要素削除。まだ機能するか？機能するなら不要だった。
+3. **Spitfire比較:** スクリーンショットをSpitfire.comと並べる。視覚的「重さ」は似ているか？
+
+---
+
+## 避けるべきパターン（明示的禁止リスト）
+
+> "Claude defaults to safe choices" - 明示的に禁止しないと汎用的な選択に収束する
+
+### 背景・装飾
+
+| 禁止パターン | 問題 | 代替案 |
+|-------------|------|-------|
+| `bg-white/5 backdrop-blur-xl` 多用 | 「2023テンプレート」感 | `bg-black` or `bg-[#0f0f0f]` |
+| `bg-gradient-to-b from-violet-900/20` | 装飾的ノイズ | 削除 |
+| `bg-gradient-to-br from-indigo-500/10` | 同上 | 削除 |
+| アニメーションブロブ背景 | 気が散る、パフォーマンス悪化 | 静的、単色 |
+| グレインテクスチャ (`noise.svg`) | 不要な複雑さ | 削除 |
+| フローティンググローオーブ | 2020年代前半のトレンド | 削除 |
+
+### 影・グロー
+
+| 禁止パターン | 問題 | 代替案 |
+|-------------|------|-------|
+| `shadow-lg shadow-indigo-500/20` | 人工的な「ポップ」 | 影なし or `shadow-sm shadow-black/20` |
+| `shadow-xl shadow-violet-500/30` | 同上 | 同上 |
+| `shadow-2xl shadow-amber-500/25` | 同上 | 同上 |
+| `hover:shadow-*-500/40` | ホバー時のグロー強調 | `hover:bg-white/10` など控えめに |
+| `drop-shadow-[0_0_*px_rgba()]` | カスタムグロー | 削除 |
+
+### レイアウト
+
+| 禁止パターン | 問題 | 代替案 |
+|-------------|------|-------|
+| アイコン付き3列機能グリッド | 汎用SaaSデザイン | 大きな画像 + 最小テキスト |
+| 均等な3列カード（同サイズ） | 「全部同じ存在感」 | 1つを大きく、残りを小さく |
+| `py-12` 以下のセクション間隔 | 窮屈 | `py-28` (112px) 以上 |
+| 中央寄せのすべて | 安全すぎる | 左寄せ or 非対称を検討 |
+
+### コンポーネント
+
+| 禁止パターン | 問題 | 代替案 |
+|-------------|------|-------|
+| `hover:scale-105` + `hover:shadow-*` | 過剰なホバーエフェクト | `hover:bg-white/10` のみ |
+| `transition-all duration-300` | 重い、予測不能 | `transition-colors duration-200` |
+| `group-hover:translate-x-2` 矢印 | よく見るパターン | 削除 or `translate-x-1` |
+| 色付きCTAボタン（デフォルト使用） | AI safe choice | 白背景 or 白枠線 |
+
+### アニメーション
+
+| 禁止パターン | 問題 | 代替案 |
+|-------------|------|-------|
+| 散らばったマイクロインタラクション | 統一感なし | 1つのページロード演出に集中 |
+| `animate-pulse` 多用 | 気が散る | 削除 or 1箇所のみ |
+| `animate-bounce` 常時 | 同上 | ユーザーアクション時のみ |
+| 複数要素の同時アニメーション | カオス | staggered delays で順次 |
+
+### 色（AI Safe Choices）
+
+| 禁止パターン | 問題 | 代替案 |
+|-------------|------|-------|
+| 紫グラデーション on 白背景 | 最も汎用的なAI選択 | 単色ダーク |
+| `from-violet-600 to-indigo-600` | 同上 | 削除 |
+| `text-indigo-400` をデフォルトに | ブランド色の乱用 | `text-white` or `text-white/80` |
+| 同系色バッジ（indigo on indigo） | コントラスト不足 | 白背景 + 黒テキスト |
 
 ---
 
@@ -379,11 +548,12 @@ import { Music, Brain, Sparkles, Check, X } from 'lucide-react';
 
 - [ ] **Lighthouse アクセシビリティ 100%**（最重要）
 - [ ] プロジェクトの globals.css トークンを使用
-- [ ] Glass card 内テキストは text-white/80 以上
-- [ ] バッジのコントラスト確認
+- [ ] 画像が主役になっているか
+- [ ] セクション間余白 >= 112px (py-28)
+- [ ] ボタンは白/枠線ベースか
+- [ ] 背景は単色か
 - [ ] 絵文字アイコン不使用（Lucide使用）
 - [ ] ダークモード対応
-- [ ] グラスモーフィズム適用
 - [ ] cursor-pointer on clickables
 - [ ] レスポンシブ対応
 - [ ] パフォーマンス最適化（画像、アニメーション）

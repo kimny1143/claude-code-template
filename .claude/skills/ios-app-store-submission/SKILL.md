@@ -199,6 +199,12 @@ Claude in Chrome 拡張で App Store Connect を操作できる。
 
 ### 2.3 App Store 審査提出
 
+**⚠ ビルド前にデバッグ残骸を除去:**
+- Settings画面の Diagnose ボタン → 削除
+- `apiClient.ts` 等のデバッグ `console.log` → 削除
+- 一時的なデバッグUI（ステータスバナー等） → 削除
+- `.env` が本番値であること → 確認
+
 1. App Store Connect → アプリ → **配信** タブ
 2. 新バージョンを作成（＋ボタン → バージョン番号入力）
 3. 必須項目を確認:
@@ -217,9 +223,64 @@ Claude in Chrome 拡張で App Store Connect を操作できる。
 
 ---
 
-## Phase 3: ビルド前検証
+## Phase 3: TestFlight 検証（UIデバッグ）
 
-### 3.1 Provider で null を返さない
+**TestFlight では `console.log` は見えない。** 問題の切り分けにはUI上のデバッグ表示が必須。
+
+### 3.0 TestFlight 向けデバッグ診断の実装
+
+TestFlight ビルドで新機能やAPI連携をテストする場合、Settings画面に **Diagnose ボタン** を必ず設置する:
+
+```typescript
+// Settings画面に追加
+const handleDiagnose = async () => {
+  const lines: string[] = [];
+
+  // 1. 認証状態
+  lines.push(`Clerk isSignedIn: ${clerkIsSignedIn}`);
+  lines.push(`Clerk userId: ${clerkUserId ?? 'null'}`);
+
+  // 2. トークン取得テスト
+  try {
+    const token = await getToken();
+    lines.push(`Token: ${token ? `OK (len=${token.length})` : 'NULL'}`);
+  } catch (err: any) {
+    lines.push(`Token ERROR: ${err.message}`);
+  }
+
+  // 3. API疎通テスト（直接 fetch で生レスポンスを確認）
+  try {
+    const resp = await fetch(`${BASE_URL}/api/target-endpoint`, { headers });
+    const raw = await resp.json();
+    // apiSuccess ラップの有無を確認
+    lines.push(`API: ${resp.status}`);
+    lines.push(`Has data wrapper: ${'data' in raw}`);
+    lines.push(`Response keys: ${Object.keys(raw).join(', ')}`);
+  } catch (err: any) {
+    lines.push(`API ERROR: ${err.message}`);
+  }
+
+  Alert.alert('Diagnose', lines.join('\n'));
+};
+```
+
+**確認ポイント:**
+- トークンが `NULL` → Clerk セッションの問題
+- トークン OK だが API が 401 → サーバー側のJWT検証の問題
+- API 200 だがデータが `undefined` → レスポンスラッパー（`apiSuccess`）の unwrap 漏れ
+- `Has data wrapper: true` → `apiClient.handleResponse` でアンラップが必要
+
+**リリース（審査提出）前に必ず:**
+1. Diagnose ボタンを削除（またはタップ回数イースターエッグ化）
+2. `apiClient.ts` 等の `console.log('[API] Token obtained...')` 等のデバッグログを削除
+3. デバッグ用の一時UIコンポーネント（バナー、ステータス表示等）を削除
+4. これらを確認してからビルド → 審査提出する。**デバッグUIが残ったまま審査提出しない**
+
+---
+
+## Phase 4: ビルド前検証
+
+### 4.1 Provider で null を返さない
 
 ```bash
 grep -r "return null" <APP_DIR>/src/providers/ 2>/dev/null
@@ -228,7 +289,7 @@ grep -r "return null" <APP_DIR>/src/providers/ 2>/dev/null
 NG: `if (!isLoaded) return null;`
 OK: ローディング UI を返す
 
-### 3.2 ATT プラグイン設定（広告使用アプリのみ）
+### 4.2 ATT プラグイン設定（広告使用アプリのみ）
 
 ```bash
 grep -A5 "expo-tracking-transparency" <APP_DIR>/app.json
@@ -236,7 +297,7 @@ grep -A5 "expo-tracking-transparency" <APP_DIR>/app.json
 
 ベア文字列 `"expo-tracking-transparency"` はNG。オブジェクト形式が必須。
 
-### 3.3 gitignore の確認
+### 4.3 gitignore の確認
 
 ```bash
 # modules/*/ios/ が除外されていないか確認
