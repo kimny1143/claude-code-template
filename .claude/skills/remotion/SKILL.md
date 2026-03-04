@@ -1,300 +1,284 @@
 ---
 name: remotion
 description: |
-  MUEDnote動画制作スキル。プロモーション動画、Hooキャラクターアニメーション、
-  LP用動画、アプリ内チュートリアル動画の制作に使用。Remotionベース。
-  トリガー: "プロモ動画", "Hooアニメーション", "MUEDnote動画",
-  "動画を作って", "アニメーションを作成"
+  汎用Remotion動画制作スキル。プロモーション動画、マスコットアニメーション、
+  LP用動画、チュートリアル動画、SNS短尺動画の制作に使用。
+  トリガー: "プロモ動画", "アニメーション", "動画を作って", "Remotion",
+  "動画コンテンツ", "ビデオ制作", "モーショングラフィックス",
+  "LP動画", "チュートリアル動画", "OGP動画", "動画素材"
+  Remotionを使ったReactベースの動画生成全般でこのスキルを使うこと。
+  プロモーション映像やアニメーション素材の話が出たら積極的にこのスキルを参照すること。
 ---
 
-# MUEDnote Video Skill (Remotion)
+# Remotion Video Skill
 
-Remotionを使用したMUEDnote動画制作スキル。
+Reactで動画を生成する Remotion を使い、動画コンテンツを制作する汎用スキル。
 
-## 注意事項
+## ブランド設定について
 
-このスキルは**新規Remotionプロジェクト作成時のテンプレート**。
-mued_v2にはRemotionは未インストール。動画制作時は別ディレクトリで作業するか、
-mued_v2にRemotionをセットアップすること。
+> **カラーパレット、フォント、マスコットキャラクターの仕様は、各プロジェクトの `CLAUDE.md` で定義すること。**
+> このスキルにはブランド固有の情報を含めない。
+> プロジェクト側に以下のようなセクションを用意する想定：
+>
+> ```markdown
+> ## Video Branding
+> - Primary: #XXXXXX
+> - Accent: #XXXXXX
+> - Background: #XXXXXX
+> - Font Heading: ...
+> - Font Body: ...
+> - Mascot: （キャラ名、デザイン仕様、アニメーションパターン等）
+> ```
 
-### Remotionセットアップ（必要時）
+## クイックスタート
 
 ```bash
-# 別ディレクトリで新規作成
-npx create-video@latest muednote-videos
+# 1. プロジェクト初期化（スキル付属スクリプト）
+bash <path-to-skill>/scripts/init-remotion.sh <project-name>
 
-# または mued_v2 に追加（推奨しない - 依存関係が複雑になる）
+# 2. プレビュー
+cd <project-name> && npx remotion studio
+
+# 3. レンダリング
+npx remotion render src/index.ts <CompositionId> out/video.mp4
+```
+
+### 手動セットアップ
+
+```bash
+# 新規作成
+npx create-video@latest my-video
+
+# 既存プロジェクトに追加（依存関係が複雑になるため別ディレクトリ推奨）
 npm install remotion @remotion/cli @remotion/player
 ```
-
----
-
-## ブランドガイドライン
-
-### カラーパレット
-```typescript
-// src/styles/theme.ts
-export const colors = {
-  primary: '#2D3748',      // ダークグレー（メインUI）
-  accent: '#6366F1',       // インディゴ（CTAボタン等）
-  background: '#1A202C',   // ダークBG
-  backgroundLight: '#2D3748',
-  text: '#E2E8F0',         // ライトグレー（本文）
-  textMuted: '#A0AEC0',    // ミュートテキスト
-  hoo: '#FFFFFF',          // Hooは白ラインアート
-  success: '#48BB78',      // 成功
-  error: '#F56565',        // エラー
-};
-```
-
-### タイポグラフィ
-- 見出し: `Noto Sans JP Bold` / `font-weight: 700`
-- 本文: `Noto Sans JP Regular` / `font-weight: 400`
-- コード/数字: `JetBrains Mono`
-
-### 動画設定デフォルト
-- 解像度: 1920×1080 (16:9)
-- FPS: 30
-- コーデック: h264
-
----
-
-## Hooキャラクター仕様
-
-### デザインコンセプト
-**フクロウ + オープンリールテープレコーダー** のハイブリッド
-- 目 = テープリール（2つの円）
-- リール間にテープが張っている
-- 音楽記録アプリの象徴的デザイン
-
-### 基本情報
-- 名前: Hoo（フー）
-- キャッチフレーズ: "ほほう (Ho Hoo)"
-- 役割: MUEDnoteのAIアシスタント、マーケティングマスコット
-- **スタイル**: 白いラインアート（モノトーン）
-- **ベースカラー**: `#FFFFFF`（白ストローク、塗りなし）
-- **参照**: `/public/logo.png`
-
-### アニメーション可能パーツ
-| パーツ | 説明 | アニメーション |
-|-------|------|--------------|
-| left-reel | 左目（テープリール） | 回転 |
-| right-reel | 右目（テープリール） | 回転（逆方向） |
-| tape | リール間のテープ | 流れる動き |
-| body | 本体輪郭 | 揺れ、傾き |
-| ears | 耳（羽角） | 軽い揺れ |
-
-### 表情・状態
-| 状態 | 用途 | アニメーション |
-|------|------|--------------|
-| idle | 待機 | リールゆっくり回転 + 軽い呼吸 |
-| recording | 録音中 | リール高速回転 + テープ流れ |
-| curious | 興味・説明 | 首を傾ける + リール回転 |
-| happy | 喜び・完了 | リール高速 + 上下バウンス |
-
-### アニメーションコード
-
-```typescript
-// リール回転（常時）
-const reelRotation = (frame / fps) * 30; // 1秒で30度
-
-// 首傾げ（curious時）
-const tilt = spring({
-  frame: frame - startFrame,
-  fps,
-  config: { damping: 15, stiffness: 80 },
-}) * 15;
-
-// リール高速回転（recording/happy時）
-const fastRotation = (frame / fps) * 180;
-
-// テープ流れ（strokeDashoffsetで表現）
-const tapeOffset = (frame / fps) * 50;
-```
-
-**詳細**: `hoo-animation.md` 参照
-
----
 
 ## 動画テンプレート
 
 ### 1. プロモーション動画（30秒）
-
 ```
-構成:
-├── Hook (0-5秒)
-│   └── 問題提起テキスト + Hooが右下から登場
-├── Problem (5-12秒)
-│   └── 課題の可視化 + Hoo心配顔
-├── Solution (12-25秒)
-│   └── MUEDnote機能デモ + Hooが説明
-└── CTA (25-30秒)
-    └── ダウンロード促し + Hoo喜び
+0-5秒   : Hook — 問題提起 + キャッチーなビジュアル
+5-10秒  : Problem — 課題の可視化
+10-20秒 : Solution — プロダクトの世界観・機能デモ
+20-28秒 : Social Proof — 数字 or ユーザーの声
+28-30秒 : CTA — ロゴ + URL
 ```
 
-**指示例:**
-```
-MUEDnoteの30秒プロモ動画を作成。
-Hook: "音楽制作、記録してる？"
-Problem: アイデアが消えていく様子
-Solution: MUEDnoteの3つの機能をハイライト
-CTA: App Storeへ誘導
-Hooを各シーンで使用。
-```
+コンポジション設定:
+- 解像度: 1920x1080（16:9）
+- FPS: 30
+- 総フレーム数: 900
 
 ### 2. 機能紹介動画（15秒）
+```
+0-3秒   : 機能名タイトル（テキストアニメーション）
+3-12秒  : 実演デモ（スクリーンキャプチャ or モック）
+12-15秒 : 締めのメッセージ + 次のアクション誘導
+```
 
-```
-構成:
-├── タイトル (0-3秒): 機能名 + アイコン
-├── デモ (3-12秒): 操作画面のアニメーション
-└── 締め (12-15秒): Hoo「ほほう」+ ロゴ
-```
+コンポジション設定:
+- 解像度: 1080x1080（1:1、SNS向け）or 1080x1920（9:16、リール向け）
+- FPS: 30
 
 ### 3. チュートリアル動画（60秒）
-
 ```
-構成:
-├── 導入 (0-5秒): Hoo挨拶「こんにちは！」
-├── ステップ1 (5-20秒): 最初の操作説明
-├── ステップ2 (20-35秒): 次の操作説明
-├── ステップ3 (35-50秒): 最後の操作説明
-└── まとめ (50-60秒): Hoo「ほほう、簡単でしょう？」
+0-5秒   : 導入 — タイトル + 挨拶
+5-50秒  : ステップ1-3 — 操作説明（画面録画 + オーバーレイ）
+50-58秒 : まとめ — 要点の振り返り
+58-60秒 : CTA
 ```
 
----
+### 4. SNS短尺動画（5-10秒）
+```
+0-2秒   : アイキャッチ（動き or テキスト）
+2-8秒   : ワンポイント情報
+8-10秒  : ロゴ + CTA
+```
 
-## 推奨プロジェクト構造
+コンポジション設定:
+- 解像度: 1080x1920（9:16）
+- FPS: 30
+
+## プロジェクト構成
 
 ```
-muednote-videos/           # 別ディレクトリ推奨
+my-video/
 ├── src/
-│   ├── Root.tsx
+│   ├── Root.tsx                    # コンポジション登録
 │   ├── compositions/
-│   │   ├── PromoVideo.tsx
-│   │   ├── FeatureDemo.tsx
-│   │   └── Tutorial.tsx
+│   │   ├── Promo.tsx               # 30秒プロモ
+│   │   ├── FeatureIntro.tsx        # 15秒機能紹介
+│   │   ├── Tutorial.tsx            # 60秒チュートリアル
+│   │   └── SnsShort.tsx            # 5-10秒SNS
 │   ├── components/
-│   │   ├── Hoo/
-│   │   │   ├── HooCharacter.tsx
-│   │   │   ├── HooExpressions.tsx
-│   │   │   └── animations.ts
-│   │   ├── Text/
-│   │   │   ├── TitleText.tsx
-│   │   │   ├── TypewriterText.tsx
-│   │   │   └── HighlightText.tsx
+│   │   ├── Character/              # マスコット / キャラクター
+│   │   │   ├── CharacterBase.tsx
+│   │   │   ├── Expressions.tsx
+│   │   │   └── Animations.tsx
+│   │   ├── Typography/
+│   │   │   ├── TitleReveal.tsx
+│   │   │   └── SubtitleFade.tsx
 │   │   ├── Transitions/
-│   │   │   ├── FadeSlide.tsx
-│   │   │   ├── ScaleIn.tsx
-│   │   │   └── WipeTransition.tsx
-│   │   └── UI/
-│   │       ├── PhoneMockup.tsx
-│   │       ├── AppStoreBadge.tsx
-│   │       └── Logo.tsx
-│   ├── styles/
-│   │   └── theme.ts
-│   └── utils/
-│       └── animations.ts
+│   │   │   ├── WipeTransition.tsx
+│   │   │   └── FadeTransition.tsx
+│   │   └── Branding/
+│   │       ├── Logo.tsx
+│   │       └── CallToAction.tsx
+│   └── styles/
+│       └── theme.ts                # カラー・フォント定義
 ├── public/
-│   └── assets/           # ロゴ、スクリーンショット等
-└── out/                  # レンダリング出力
+│   ├── fonts/
+│   ├── images/
+│   └── audio/
+├── remotion.config.ts
+└── package.json
 ```
 
----
+## 開発ルール
 
-## よく使うアニメーションパターン
+### コンポジション
+- 1ファイル1コンポーネント
+- アニメーションパラメータは props で外出し（後で調整しやすく）
+- `<Sequence>` でシーンを時間管理
 
-### フェードイン + スライドアップ
+### アニメーション
+- `interpolate()` でスムーズな値の補間
+- `spring()` で自然な物理アニメーション
+- キャラクターの動きは `spring({ damping: 12 })` ベースで統一感を出す
+
+### 音声
+- BGMは `/public/audio/` に配置
+- `<Audio>` コンポーネントで同期再生
+
+### テーマ（theme.ts テンプレート）
 ```typescript
-const FadeSlideIn: React.FC<{children: React.ReactNode; delay?: number}> = ({
-  children,
-  delay = 0,
-}) => {
-  const frame = useCurrentFrame();
-  const adjustedFrame = frame - delay;
-
-  const opacity = interpolate(adjustedFrame, [0, 20], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-
-  const translateY = interpolate(adjustedFrame, [0, 20], [30, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-
-  return (
-    <div style={{ opacity, transform: `translateY(${translateY}px)` }}>
-      {children}
-    </div>
-  );
-};
-```
-
-### タイプライター効果
-```typescript
-const TypewriterText: React.FC<{text: string; startFrame?: number}> = ({
-  text,
-  startFrame = 0,
-}) => {
-  const frame = useCurrentFrame();
-  const adjustedFrame = frame - startFrame;
-
-  const charsToShow = Math.floor(
-    interpolate(adjustedFrame, [0, text.length * 3], [0, text.length], {
-      extrapolateRight: 'clamp',
-    })
-  );
-
-  return <span>{text.slice(0, charsToShow)}</span>;
-};
-```
-
-### スケールバウンス（登場演出）
-```typescript
-const scaleValue = spring({
-  frame: frame - delay,
-  fps,
-  config: {
-    damping: 10,
-    stiffness: 100,
-    mass: 0.5,
+export const theme = {
+  colors: {
+    primary: '#XXXXXX',       // メインカラー
+    accent: '#XXXXXX',        // アクセントカラー
+    background: '#XXXXXX',    // 背景色
+    text: '#XXXXXX',          // テキスト色
+    subAccent: '#XXXXXX',     // サブアクセント
   },
-});
+  fonts: {
+    heading: 'Your Heading Font',
+    body: 'Your Body Font',
+    mono: 'JetBrains Mono',
+  },
+  animation: {
+    characterSpring: { damping: 12, mass: 0.5 },
+    textReveal: { damping: 15, mass: 0.8 },
+    fadeIn: { durationInFrames: 15 },
+  },
+} as const;
+
+export type Theme = typeof theme;
 ```
 
----
+> プロジェクトの `CLAUDE.md` に定義したブランドカラー・フォントで上記プレースホルダーを埋めること。
+
+## マスコットキャラクター汎用パターン
+
+プロジェクトにマスコットキャラクターがある場合の汎用アニメーションパターン。
+キャラクター名や見た目はプロジェクトごとに異なるため、ここではモーションパターンのみ定義する。
+
+### 状態別アニメーション
+| 状態 | 用途 | アニメーション |
+|------|------|--------------|
+| idle | 待機 | 軽い呼吸（上下2px、2秒周期） + まばたき |
+| curious | 興味・説明 | 首を傾ける + 目を見開く |
+| happy | 喜び・完了 | バウンス + 表情変化 |
+| pointing | 指し示す | 体を向ける + 腕/羽を伸ばす |
+
+### 登場・退場アニメーション
+```typescript
+// 登場: 画面外からspring付きスライドイン
+const entrance = (
+  frame: number, fps: number,
+  from: 'left' | 'right' | 'bottom' = 'right'
+) => {
+  const progress = spring({ frame, fps, config: { damping: 12, stiffness: 80 } });
+  const offsets = { left: { x: -300, y: 0 }, right: { x: 300, y: 0 }, bottom: { x: 0, y: 200 } };
+  const dir = offsets[from];
+  return {
+    translateX: dir.x * (1 - progress),
+    translateY: dir.y * (1 - progress),
+    opacity: progress,
+    scale: 0.5 + progress * 0.5,
+  };
+};
+```
 
 ## レンダリング
 
-### 標準（YouTube/LP用）
 ```bash
-npx remotion render src/index.ts CompositionName out/video.mp4
+# MP4（汎用）
+npx remotion render src/index.ts Promo out/promo.mp4
+
+# 高品質
+npx remotion render src/index.ts Promo out/promo-hq.mp4 --codec=h264 --quality=100
+
+# GIF（短尺・ループ用）
+npx remotion render src/index.ts SnsShort out/short.gif --codec=gif
+
+# SNS向け縦型（9:16）
+npx remotion render src/index.ts VerticalComp out/vertical.mp4 --height=1920 --width=1080
+
+# 一括レンダリング
+bash <path-to-skill>/scripts/render-all.sh
 ```
 
-### 高品質
-```bash
-npx remotion render src/index.ts CompositionName out/video-hq.mp4 \
-  --codec=h264 \
-  --quality=100
+### SNS別推奨設定
+- Twitter/X: 1280x720, 30fps, 最大140秒
+- Instagram Reels: 1080x1920 (9:16), 30fps
+- TikTok: 1080x1920 (9:16), 30fps
+
+## @remotion/player でアプリ内埋め込み
+
+事前レンダリング不要でインタラクティブに再生できる。
+
+```tsx
+import { Player } from '@remotion/player';
+import { FeatureIntro } from './compositions/FeatureIntro';
+
+<Player
+  component={FeatureIntro}
+  durationInFrames={450}
+  fps={30}
+  compositionWidth={1080}
+  compositionHeight={1080}
+  style={{ width: '100%' }}
+  controls
+/>
 ```
 
-### SNS向け縦型
-```bash
-# Instagram Reels / TikTok
-npx remotion render src/index.ts VerticalComp out/vertical.mp4 \
-  --height=1920 --width=1080
+### 動的 props で制御
+```tsx
+<Player
+  component={Tutorial}
+  inputProps={{
+    message: "操作してみましょう",
+    stepNumber: 1,
+  }}
+  durationInFrames={300}
+  fps={30}
+  compositionWidth={1920}
+  compositionHeight={1080}
+  controls
+  autoPlay
+  loop
+/>
 ```
 
-### GIF（短尺・ループ用）
-```bash
-npx remotion render src/index.ts ShortLoop out/loop.gif \
-  --codec=gif
-```
+## ライセンス
 
----
+Remotionは **3人以下の会社は無料**（商用利用OK）。
+4人以上になった場合は Company License（$25/開発者/月）が必要。
+詳細: https://www.remotion.dev/license
 
-## 関連ファイル
+## 参考リソース
 
-- `hoo-animation.md` - Hooアニメーション詳細仕様
-- `remotion-handson-glasswerks.md` - Remotionハンズオンメモ
+- Remotion公式ドキュメント: https://www.remotion.dev/docs
+- Remotion + AI ガイド: https://www.remotion.dev/docs/ai/
+- Remotion公式スキル: `npx add-skill remotion-dev/skills`
+- アニメーションパターン集: `references/animation-patterns.md`
