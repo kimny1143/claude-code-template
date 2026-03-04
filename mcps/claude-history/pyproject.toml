@@ -1,0 +1,10 @@
+[project]
+name = "claude-history-mcp"
+version = "0.1.0"
+description = "claude.ai の会話履歴を Claude Code から検索する MCP サーバー"
+requires-python = ">=3.10"
+dependencies = ["mcp[cli]>=1.0.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

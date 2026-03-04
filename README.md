@@ -42,6 +42,12 @@ Affaan Mustafa の「[Everything Claude Code](https://github.com/affaan-m/everyt
 | `validate-dangerous-ops.sh` | PreToolUse | 危険操作ブロック |
 | `suggest-git-cleanup.sh` | Stop | Git 整理提案 |
 
+### MCPs（MCP サーバー）
+
+| MCP | 用途 |
+|-----|------|
+| `claude-history` | claude.ai 会話履歴の検索 |
+
 ## 使い方
 
 ### 方法 A: シンボリックリンクで共有（推奨）
@@ -191,6 +197,13 @@ cp CLAUDE.md.template /path/to/your/project/CLAUDE.md
 │   ├── validate-dangerous-ops.sh
 │   └── suggest-git-cleanup.sh
 └── settings.local.json.example
+
+mcps/                   # MCP サーバー
+└── claude-history/
+    ├── server.py
+    ├── pyproject.toml
+    ├── data/           # conversations.json 配置先
+    └── README.md
 
 CLAUDE.md.template      # プロジェクト説明テンプレート
 ```

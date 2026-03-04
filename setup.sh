@@ -128,6 +128,24 @@ if [ -d "$TEMPLATE/agents" ] && [ "$(ls -A "$TEMPLATE/agents" 2>/dev/null)" ]; t
   done
 fi
 
+# MCPs の案内
+TEMPLATE_ROOT="${TEMPLATE%/.claude}"
+echo ""
+echo "📁 MCPs available:"
+if [ -d "$TEMPLATE_ROOT/mcps" ]; then
+  for mcp_dir in "$TEMPLATE_ROOT/mcps"/*/; do
+    [ -d "$mcp_dir" ] || continue
+    mcp_name=$(basename "$mcp_dir")
+    echo "   • $mcp_name (see $TEMPLATE_ROOT/mcps/$mcp_name/README.md)"
+  done
+  echo ""
+  echo "   To register an MCP server, run:"
+  echo "   claude mcp add -s user <name> -e KEY=VALUE -- python /path/to/server.py"
+  echo "   (See each MCP's README.md for the exact command)"
+else
+  echo "   (none found)"
+fi
+
 echo ""
 echo "════════════════════════════════════════════"
 echo "✅ Setup complete!"
@@ -139,3 +157,4 @@ echo "Next steps:"
 echo "  1. Add project-specific skills to $TARGET/skills/"
 echo "  2. Configure $TARGET/settings.local.json"
 echo "  3. Create CLAUDE.md from CLAUDE.md.template"
+echo "  4. Register MCP servers (see above)"
