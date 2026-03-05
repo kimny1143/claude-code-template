@@ -12,10 +12,14 @@ Affaan Mustafa の「[Everything Claude Code](https://github.com/affaan-m/everyt
 |---------|------|
 | `/commit` | Git コミットワークフロー |
 | `/pr` | Pull Request 作成 |
+| `/ship` | Commit → Push → PR 一括実行 |
 | `/build-fix` | ビルドエラー自動修正 |
 | `/security` | セキュリティ監査 |
+| `/learn` | CLAUDE.md 育成 |
 
 ### Skills（詳細ガイド）
+
+**開発**
 
 | スキル | 用途 |
 |-------|------|
@@ -25,6 +29,33 @@ Affaan Mustafa の「[Everything Claude Code](https://github.com/affaan-m/everyt
 | `git-worktree` | Git worktree 操作 |
 | `hooks` | Claude Code Hook 作成 |
 | `mcp` | MCP サーバー作成 |
+| `remotion` | Remotion 動画制作 |
+
+**マーケティング・CRO**
+
+| スキル | 用途 |
+|-------|------|
+| `lp-optimizer` | LP/ページ分析・改善 |
+| `copywriting` | マーケティングコピー作成 |
+| `seo-audit` | SEO 監査・診断 |
+| `marketing-audit` | マーケティング総合監査 |
+| `marketing-psychology` | 心理学ベースのマーケティング |
+| `launch-strategy` | ローンチ・GTM 戦略 |
+| `pricing-strategy` | 価格設定・パッケージング |
+| `ab-test-setup` | A/B テスト設計・実装 |
+| `analytics-tracking` | アナリティクス実装 |
+| `email-sequence` | メールシーケンス作成 |
+| `referral-program` | リファラルプログラム設計 |
+| `signup-flow-cro` | サインアップフロー最適化 |
+| `onboarding-cro` | オンボーディング最適化 |
+| `form-cro` | フォーム最適化 |
+| `paywall-upgrade-cro` | ペイウォール・アップグレード最適化 |
+
+**UX**
+
+| スキル | 用途 |
+|-------|------|
+| `ux-psychology` | UX 心理学効果の適用 |
 
 ### Agents（サブエージェント）
 
@@ -34,6 +65,8 @@ Affaan Mustafa の「[Everything Claude Code](https://github.com/affaan-m/everyt
 | `security-reviewer` | セキュリティ監査 |
 | `codebase-optimizer` | コード最適化・重複検出 |
 | `docs-curator` | ドキュメント整理 |
+| `code-simplifier` | コード簡素化 |
+| `verify-app` | アプリ動作検証 |
 
 ### Hooks（自動実行）
 
