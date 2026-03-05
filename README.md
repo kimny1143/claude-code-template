@@ -31,6 +31,13 @@ Affaan Mustafa の「[Everything Claude Code](https://github.com/affaan-m/everyt
 | `mcp` | MCP サーバー作成 |
 | `remotion` | Remotion 動画制作 |
 
+**コンテンツ制作**
+
+| スキル | 用途 |
+|-------|------|
+| `ai-interview-article` | インタビュー形式 note 記事作成 |
+| `note-serial-monetization` | note 連載の有料/無料設計 |
+
 **マーケティング・CRO**
 
 | スキル | 用途 |
