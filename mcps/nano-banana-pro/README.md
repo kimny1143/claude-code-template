@@ -12,19 +12,39 @@ Google Gemini の画像生成機能を Claude Code から使える MCP サーバ
 1. [Google AI Studio](https://aistudio.google.com/apikey) にアクセス
 2. API キーを作成（無料枠: 500リクエスト/日）
 
-### 2. Claude Code に MCP サーバーを登録
+### 2. プロジェクトの `.env.local` に API キーを追加
+
+```bash
+# .env.local
+GEMINI_API_KEY=your_api_key
+IMAGE_OUTPUT_DIR=/path/to/output/images
+IMAGE_QUALITY=fast
+```
+
+### 3. Claude Code に MCP サーバーを登録
+
+**方法 A: ラッパースクリプト経由（推奨）**
+
+プロジェクトの `.env.local` から自動的に API キーを読み込む：
+
+```bash
+claude mcp add mcp-image -s user \
+  -- /path/to/claude-code-template/mcps/nano-banana-pro/launch.sh
+```
+
+`launch.sh` はプロジェクトの `.env.local` → `.env` の順に `GEMINI_API_KEY` を探す。
+プロジェクトごとに異なる API キーや設定を使い分けられる。
+
+**方法 B: 直接指定（全プロジェクト共通の場合）**
 
 ```bash
 claude mcp add mcp-image -s user \
   -e GEMINI_API_KEY=your_api_key \
   -e IMAGE_OUTPUT_DIR=/path/to/output/images \
-  -e IMAGE_QUALITY=fast \
   -- npx -y mcp-image
 ```
 
-`-s user` でユーザーレベル登録すると、どのプロジェクトからでも使える。
-
-### 3. 動作確認
+### 4. 動作確認
 
 Claude Code で：
 
