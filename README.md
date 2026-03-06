@@ -87,6 +87,7 @@ Affaan Mustafa の「[Everything Claude Code](https://github.com/affaan-m/everyt
 | MCP | 用途 |
 |-----|------|
 | `claude-history` | claude.ai 会話履歴の検索 |
+| `nano-banana-pro` | Gemini 画像生成・編集 |
 
 ## 使い方
 
@@ -239,11 +240,13 @@ cp CLAUDE.md.template /path/to/your/project/CLAUDE.md
 └── settings.local.json.example
 
 mcps/                   # MCP サーバー
-└── claude-history/
-    ├── server.py
-    ├── pyproject.toml
-    ├── data/           # conversations.json 配置先
-    └── README.md
+├── claude-history/
+│   ├── server.py
+│   ├── pyproject.toml
+│   ├── data/           # conversations.json 配置先
+│   └── README.md
+└── nano-banana-pro/
+    └── README.md       # セットアップ手順（npx で実行）
 
 CLAUDE.md.template      # プロジェクト説明テンプレート
 ```
