@@ -58,11 +58,12 @@ Affaan Mustafa の「[Everything Claude Code](https://github.com/affaan-m/everyt
 | `form-cro` | フォーム最適化 |
 | `paywall-upgrade-cro` | ペイウォール・アップグレード最適化 |
 
-**UX**
+**UX・プロダクト**
 
 | スキル | 用途 |
 |-------|------|
 | `ux-psychology` | UX 心理学効果の適用 |
+| `app-onboarding` | アプリオンボーディング設計・改善 |
 
 ### Agents（サブエージェント）
 
