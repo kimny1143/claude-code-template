@@ -1,4 +1,9 @@
-"""claude-history-mcp: Claude Code -> claude.ai conversation history search MCP server"""
+"""claude-history-mcp: Claude conversation history search MCP server.
+
+Supports two data sources:
+1. claude.ai export (conversations.json) — DATA_DIR/*.json
+2. Claude Code local transcripts (~/.claude/projects/**/*.jsonl) — CLAUDE_CODE_DIR
+"""
 
 import json, os, re, math
 from pathlib import Path
@@ -6,11 +11,12 @@ from collections import defaultdict
 from mcp.server.fastmcp import FastMCP
 
 DATA_DIR = Path(os.environ.get("CLAUDE_HISTORY_DIR", "./data"))
-mcp = FastMCP("claude-history", description="claude.ai conversation history search")
+CLAUDE_CODE_DIR = Path(os.environ.get("CLAUDE_CODE_DIR", str(Path.home() / ".claude" / "projects")))
+mcp = FastMCP("claude-history")
 
 
 class ConversationIndex:
-    """In-memory TF-IDF index over exported claude.ai conversations."""
+    """In-memory TF-IDF index over Claude conversations."""
 
     def __init__(self):
         self.conversations = []
@@ -21,6 +27,16 @@ class ConversationIndex:
     def load(self):
         if self._loaded:
             return
+        self._load_claude_ai()
+        self._load_claude_code()
+        self._build()
+        self._loaded = True
+
+    # ── claude.ai export (JSON) ───────────────────────
+
+    def _load_claude_ai(self):
+        if not DATA_DIR.exists():
+            return
         jfiles = [f for f in sorted(DATA_DIR.glob("*.json")) if f.name != "_index.json"]
         all_c = []
         for jf in jfiles:
@@ -28,32 +44,121 @@ class ConversationIndex:
                 d = json.load(f)
                 all_c.extend(d) if isinstance(d, list) else all_c.append(d)
         for i, c in enumerate(all_c):
-            n = self._norm(c, i)
+            n = self._norm_web(c, i)
             if n:
                 self.conversations.append(n)
-        self._build()
-        self._loaded = True
 
-    # -- Normalize: supports multiple claude.ai export formats --
+    # ── Claude Code local transcripts (JSONL) ────────
 
-    def _norm(self, raw, idx):
+    def _load_claude_code(self):
+        if not CLAUDE_CODE_DIR.exists():
+            return
+        for jsonl_file in sorted(CLAUDE_CODE_DIR.glob("*/*.jsonl")):
+            try:
+                n = self._norm_code(jsonl_file)
+                if n:
+                    self.conversations.append(n)
+            except Exception:
+                continue
+
+    def _norm_code(self, jsonl_path):
+        """Parse a Claude Code JSONL transcript into normalized format."""
+        msgs = []
+        session_id = jsonl_path.stem
+        project_dir = jsonl_path.parent.name
+
+        first_ts = None
+        last_ts = None
+
+        with open(jsonl_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    d = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+
+                msg_type = d.get("type", "")
+                if msg_type not in ("user", "assistant"):
+                    continue
+
+                message = d.get("message", {})
+                content = message.get("content", [])
+                text = ""
+                if isinstance(content, str):
+                    text = content
+                elif isinstance(content, list):
+                    text_parts = []
+                    for c in content:
+                        if isinstance(c, dict) and c.get("type") == "text":
+                            text_parts.append(c.get("text", ""))
+                        elif isinstance(c, str):
+                            text_parts.append(c)
+                    text = " ".join(text_parts)
+
+                if not text or len(text) < 5:
+                    continue
+                if text.startswith("[Request interrupted") or text.startswith("[Tool Result"):
+                    continue
+
+                ts = d.get("timestamp", "")
+                if ts and not first_ts:
+                    first_ts = ts
+                if ts:
+                    last_ts = ts
+
+                msgs.append({
+                    "role": msg_type,
+                    "text": text,
+                    "created_at": ts,
+                })
+
+        if not msgs:
+            return None
+
+        first_user = next((m for m in msgs if m["role"] == "user"), None)
+        title = ""
+        if first_user:
+            title = first_user["text"][:80].replace("\n", " ")
+
+        ft = title + " " + " ".join(m["text"] for m in msgs)
+        created = first_ts or ""
+        updated = last_ts or created
+
+        return {
+            "id": session_id,
+            "title": title,
+            "created_at": created,
+            "updated_at": updated,
+            "messages": msgs,
+            "full_text": ft,
+            "message_count": len(msgs),
+            "source": "claude-code",
+            "project": project_dir,
+        }
+
+    # ── claude.ai normalize ──────────────────────────
+
+    def _norm_web(self, raw, idx):
         uid = raw.get("uuid") or raw.get("id") or raw.get("conversation_id") or f"conv_{idx}"
         title = raw.get("name") or raw.get("title") or ""
         created = raw.get("created_at") or raw.get("create_time") or ""
         updated = raw.get("updated_at") or raw.get("update_time") or created
-        msgs = self._msgs(raw)
+        msgs = self._msgs_web(raw)
         if not msgs:
             return None
         ft = title + " " + " ".join(m["text"] for m in msgs)
         return {"id": uid, "title": title, "created_at": created,
                 "updated_at": updated, "messages": msgs,
-                "full_text": ft, "message_count": len(msgs)}
+                "full_text": ft, "message_count": len(msgs),
+                "source": "claude-ai"}
 
-    def _msgs(self, raw):
+    def _msgs_web(self, raw):
         """Parse 3 message format patterns."""
         msgs = []
 
-        # Pattern 1: chat_messages (claude.ai standard export)
         if "chat_messages" in raw:
             for m in raw["chat_messages"]:
                 txt = ""
@@ -73,7 +178,6 @@ class ConversationIndex:
                     "created_at": m.get("created_at", ""),
                 })
 
-        # Pattern 2: messages array (generic)
         elif "messages" in raw:
             for m in raw["messages"]:
                 r = m.get("role", m.get("sender", ""))
@@ -89,7 +193,6 @@ class ConversationIndex:
                         "created_at": m.get("created_at", ""),
                     })
 
-        # Pattern 3: mapping (OpenAI-style, fallback)
         elif "mapping" in raw:
             for node in raw["mapping"].values():
                 m = node.get("message")
@@ -104,7 +207,7 @@ class ConversationIndex:
 
         return msgs
 
-    # -- Index --
+    # ── Index ────────────────────────────────────────
 
     def _build(self):
         n = len(self.conversations)
@@ -133,9 +236,9 @@ class ConversationIndex:
                     exp.append(t[j : j + 2])
         return exp
 
-    # -- Search --
+    # ── Search ───────────────────────────────────────
 
-    def search(self, query, max_results=5):
+    def search(self, query, max_results=5, source=None):
         self.load()
         qt = self._tok(query)
         if not qt:
@@ -148,20 +251,30 @@ class ConversationIndex:
                     sc[did] += iv
         ranked = sorted(sc.items(), key=lambda x: x[1], reverse=True)
         res = []
-        for did, score in ranked[:max_results]:
+        for did, score in ranked:
+            if len(res) >= max_results:
+                break
             c = self.conversations[did]
+            if source and c.get("source") != source:
+                continue
             snip = self._snip(c, set(qt))
-            res.append({
+            entry = {
                 "id": c["id"], "title": c["title"],
                 "created_at": c["created_at"], "updated_at": c["updated_at"],
                 "message_count": c["message_count"],
+                "source": c.get("source", "unknown"),
                 "score": round(score, 3), "snippet": snip,
-            })
+            }
+            if c.get("project"):
+                entry["project"] = c["project"]
+            res.append(entry)
         return res
 
-    def recent(self, n=5, before=None, after=None):
+    def recent(self, n=5, before=None, after=None, source=None):
         self.load()
         fl = self.conversations[:]
+        if source:
+            fl = [c for c in fl if c.get("source") == source]
         if before:
             fl = [c for c in fl if c["updated_at"] < before]
         if after:
@@ -174,23 +287,31 @@ class ConversationIndex:
                 sm.append(c["messages"][0]["text"][:200])
                 if len(c["messages"]) > 1:
                     sm.append(c["messages"][-1]["text"][:200])
-            res.append({
+            entry = {
                 "id": c["id"], "title": c["title"],
                 "created_at": c["created_at"], "updated_at": c["updated_at"],
                 "message_count": c["message_count"],
+                "source": c.get("source", "unknown"),
                 "summary": " ... ".join(sm),
-            })
+            }
+            if c.get("project"):
+                entry["project"] = c["project"]
+            res.append(entry)
         return res
 
     def get(self, cid):
         self.load()
         for c in self.conversations:
             if c["id"] == cid:
-                return {
+                result = {
                     "id": c["id"], "title": c["title"],
                     "created_at": c["created_at"], "updated_at": c["updated_at"],
                     "messages": c["messages"],
+                    "source": c.get("source", "unknown"),
                 }
+                if c.get("project"):
+                    result["project"] = c["project"]
+                return result
         return None
 
     def _snip(self, conv, qs):
@@ -204,11 +325,16 @@ class ConversationIndex:
 
     def stats(self):
         self.load()
+        web_count = sum(1 for c in self.conversations if c.get("source") == "claude-ai")
+        code_count = sum(1 for c in self.conversations if c.get("source") == "claude-code")
         return {
             "total_conversations": len(self.conversations),
+            "claude_ai_conversations": web_count,
+            "claude_code_conversations": code_count,
             "total_messages": sum(c["message_count"] for c in self.conversations),
             "index_terms": len(self.inv),
             "data_dir": str(DATA_DIR.resolve()),
+            "claude_code_dir": str(CLAUDE_CODE_DIR.resolve()),
         }
 
 
@@ -216,32 +342,35 @@ class ConversationIndex:
 ix = ConversationIndex()
 
 
-# -- MCP Tools (same names as claude.ai built-in tools) --
+# -- MCP Tools --
 
 @mcp.tool()
-def conversation_search(query: str, max_results: int = 5) -> str:
-    """Search past claude.ai conversations by keyword.
+def conversation_search(query: str, max_results: int = 5, source: str = None) -> str:
+    """Search past Claude conversations by keyword.
+    Searches both claude.ai and Claude Code local history.
     Args:
         query: search keywords (Japanese/English)
         max_results: max results (1-20)
+        source: filter by source — "claude-ai" or "claude-code" (optional, default: both)
     """
     max_results = min(max(1, max_results), 20)
-    r = ix.search(query, max_results)
+    r = ix.search(query, max_results, source=source)
     if not r:
         return json.dumps({"message": "no results", "results": []}, ensure_ascii=False)
     return json.dumps({"results": r}, ensure_ascii=False, indent=2)
 
 
 @mcp.tool()
-def recent_chats(n: int = 5, before: str = None, after: str = None) -> str:
+def recent_chats(n: int = 5, before: str = None, after: str = None, source: str = None) -> str:
     """Get recent conversations chronologically.
     Args:
         n: number of chats (1-20)
         before: before this datetime (ISO 8601)
         after: after this datetime (ISO 8601)
+        source: filter by source — "claude-ai" or "claude-code" (optional)
     """
     n = min(max(1, n), 20)
-    r = ix.recent(n, before=before, after=after)
+    r = ix.recent(n, before=before, after=after, source=source)
     return json.dumps({"results": r}, ensure_ascii=False, indent=2)
 
 

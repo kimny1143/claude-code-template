@@ -69,7 +69,7 @@ Claude Code で：
 | `aspectRatio` | `1:1`, `3:4`, `4:3`, `9:16`, `16:9`, `21:9` 等 | `1:1` |
 | `imageSize` | `1K`, `2K`, `4K` | 標準 |
 | `inputImagePath` | 編集元画像の絶対パス | — |
-| `fileName` | 出力ファイル名 | 自動生成 |
+| `fileName` | 出力ファイル名（**拡張子なしで指定する。`.png` は自動付与されない — 既知の不具合**） | 自動生成 |
 | `purpose` | 用途（例: "blog header", "social media"） | — |
 
 ## 品質プリセット

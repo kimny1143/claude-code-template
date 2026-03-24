@@ -14,6 +14,41 @@ description: |
 
 Reactで動画を生成する Remotion を使い、動画コンテンツを制作する汎用スキル。
 
+## ★ 品質原則 (Anti-Template)
+
+> **「全部ちゃんとやる」がAI生成感の正体。「何を捨てるか」がデザイン。**
+
+Remotionファイルの実装時、以下の原則に従うこと。
+詳細チェックリスト: `references/anti-template-checklist.md`
+
+### 絶対に避ける6つのパターン
+
+| # | アンチパターン | 代替 |
+|---|--------------|------|
+| 1 | 全要素が同じspring configで入場 | 要素の重さ別にdamping/massを変える (重:20/1.2, 軽:8/0.3) |
+| 2 | translateY+opacity の1パターンのみ | マスクリビール、単語スタガー、ハードカット等を混ぜる |
+| 3 | `delay={i * 8}` の均等ディレイ | `[0, 5, 13, 21]` のような有機的間隔 |
+| 4 | 全シーンがセンター配置 | 最低1シーンは非対称レイアウト |
+| 5 | 同じトランジション3回以上 | Wipe, Scale, Hard cut, Crossfade を混ぜる |
+| 6 | 8秒以上構図が変わらないシーン | 途中でscale/position/ズームを変化させる |
+
+### フック・ペーシング
+
+- **最初の3秒**: パターンインタラプト（静寂→爆発、極端ズーム→引き等）
+- **BPM同期**: カット位置を拍に合わせつつ、**毎拍で切らない**（cut-cut-hold-cut-hold-hold-cut-CUT）
+- **SFX必須**: トランジション前にwhoosh、テキスト出現にimpact音、フック前に6-10f無音
+- **30秒プロモにはSocial Proofビート必須**（「Free」「★4.8」等）
+
+### 品質チェック実行
+
+```bash
+bash .claude/skills/remotion/scripts/check-quality.sh <target-dir>
+```
+
+このチェックはRemotionファイルの Write/Edit 時に自動実行される（hook設定済み）。
+
+---
+
 ## ブランド設定について
 
 > **カラーパレット、フォント、マスコットキャラクターの仕様は、各プロジェクトの `CLAUDE.md` で定義すること。**
@@ -144,7 +179,10 @@ my-video/
 ### アニメーション
 - `interpolate()` でスムーズな値の補間
 - `spring()` で自然な物理アニメーション
-- キャラクターの動きは `spring({ damping: 12 })` ベースで統一感を出す
+- **spring configは要素の「重さ」で変える**（★ Anti-Template原則 参照）
+  - 重い要素(mockup): `{ damping: 20, mass: 1.2 }`
+  - 軽い要素(ドット): `{ damping: 8, mass: 0.3 }`
+- テキスト演出は1動画内で最低2種類使う（translateY以外にclipPath, per-word stagger等）
 
 ### 音声
 - BGMは `/public/audio/` に配置
@@ -154,22 +192,33 @@ my-video/
 ```typescript
 export const theme = {
   colors: {
-    primary: '#XXXXXX',       // メインカラー
-    accent: '#XXXXXX',        // アクセントカラー
-    background: '#XXXXXX',    // 背景色
-    text: '#XXXXXX',          // テキスト色
-    subAccent: '#XXXXXX',     // サブアクセント
+    primary: '#XXXXXX',
+    accent: '#XXXXXX',
+    background: '#XXXXXX',
+    text: '#XXXXXX',
+    subAccent: '#XXXXXX',
   },
   fonts: {
     heading: 'Your Heading Font',
     body: 'Your Body Font',
     mono: 'JetBrains Mono',
   },
-  animation: {
-    characterSpring: { damping: 12, mass: 0.5 },
-    textReveal: { damping: 15, mass: 0.8 },
-    fadeIn: { durationInFrames: 15 },
+  // ★ 要素の重さ別にspring configを分ける
+  spring: {
+    heavy:  { damping: 22, mass: 1.2 },  // mockup, 全画面要素
+    medium: { damping: 14, mass: 0.7 },  // テキスト, カード
+    light:  { damping: 8,  mass: 0.3 },  // ドット, バッジ, 小アイコン
+    bounce: { damping: 6,  mass: 0.4, stiffness: 180 }, // CTA, 注目要素
   },
+  fadeIn: { durationInFrames: 15 },
+} as const;
+
+// BPM同期（BGMに合わせて調整）
+export const music = {
+  bpm: 120,
+  fps: 30,
+  framesPerBeat: (30 * 60) / 120,   // 15
+  framesPerBar: ((30 * 60) / 120) * 4, // 60
 } as const;
 
 export type Theme = typeof theme;
@@ -208,6 +257,36 @@ const entrance = (
   };
 };
 ```
+
+## 素材生成（mcp-image連携）
+
+`mcp-image` (Nano Banana Pro) MCPサーバーが利用可能な場合、動画用の素材画像を生成できる。
+
+### 用途
+- 背景画像・テクスチャ
+- モックアップ内のスクリーンショット風画像
+- キャラクターイラスト・アイコン
+- シーン別のビジュアル素材
+
+### 使い方
+```typescript
+// 生成した画像は public/images/ に配置し、staticFile() で参照
+<Img src={staticFile('images/generated-bg.png')} />
+```
+
+### 推奨設定
+| 用途 | quality | aspectRatio | 備考 |
+|------|---------|-------------|------|
+| ドラフト・検証 | `fast` | 動画に合わせる | 反復用、速度優先 |
+| 本番素材 | `balanced` | `9:16` or `16:9` | 最終成果物用 |
+| キービジュアル | `quality` | `9:16` or `16:9` | ポスター・サムネ用 |
+
+### ワークフロー
+1. `generate_image` で素材を生成（`purpose: "remotion video asset"` 推奨）
+2. 出力先から `public/images/` にコピー
+3. `staticFile('images/filename.png')` でRemotionから参照
+
+---
 
 ## レンダリング
 
@@ -282,3 +361,4 @@ Remotionは **3人以下の会社は無料**（商用利用OK）。
 - Remotion + AI ガイド: https://www.remotion.dev/docs/ai/
 - Remotion公式スキル: `npx add-skill remotion-dev/skills`
 - アニメーションパターン集: `references/animation-patterns.md`
+- **Anti-Templateチェックリスト**: `references/anti-template-checklist.md`
