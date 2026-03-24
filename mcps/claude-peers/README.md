@@ -38,13 +38,17 @@ bun install
 claude mcp add --scope user --transport stdio claude-peers -- bun ~/claude-peers-mcp/server.ts
 ```
 
-### 4. チャネル対応で起動
+### 4. チャネル対応で起動（必須）
+
+**通常の `claude` 起動ではメッセージの即時配信が動作しない。** 必ずチャネルフラグ付きで起動すること：
 
 ```bash
 claude --dangerously-load-development-channels server:claude-peers
 ```
 
-エイリアスを作ると便利：
+> **検証結果（2026-03-24）:** 通常起動 + `check_messages` 手動ポーリングではメッセージが届かなかった。チャネルフラグ付きで起動した場合のみ即時プッシュ配信が正常に動作。
+
+エイリアスを作ると便利（実質必須のため推奨）：
 
 ```bash
 # .zshrc に追加
