@@ -89,6 +89,7 @@ Affaan Mustafa の「[Everything Claude Code](https://github.com/affaan-m/everyt
 |-----|------|
 | `claude-history` | claude.ai 会話履歴の検索 |
 | `nano-banana-pro` | Gemini 画像生成・編集 |
+| `claude-peers` | 複数 Claude Code インスタンス間のリアルタイム連携（グローバル） |
 
 ## 使い方
 
@@ -246,8 +247,10 @@ mcps/                   # MCP サーバー
 │   ├── pyproject.toml
 │   ├── data/           # conversations.json 配置先
 │   └── README.md
-└── nano-banana-pro/
-    └── README.md       # セットアップ手順（npx で実行）
+├── nano-banana-pro/
+│   └── README.md       # セットアップ手順（npx で実行）
+└── claude-peers/
+    └── README.md       # グローバルセットアップ手順
 
 CLAUDE.md.template      # プロジェクト説明テンプレート
 ```
