@@ -128,6 +128,34 @@ if [ -d "$TEMPLATE/agents" ] && [ "$(ls -A "$TEMPLATE/agents" 2>/dev/null)" ]; t
   done
 fi
 
+# 共有フックをリンク
+echo ""
+echo "📁 Linking hooks..."
+SHARED_HOOKS=(block-main-push.sh)
+for hook in "${SHARED_HOOKS[@]}"; do
+  src="$TEMPLATE/hooks/$hook"
+  dst="$TARGET/hooks/$hook"
+  if [ -f "$src" ]; then
+    rm -f "$dst"
+    ln -s "$src" "$dst"
+    echo "   ✓ $hook"
+  else
+    echo "   ⚠ $hook (not in template)"
+  fi
+done
+
+# settings.json の PreToolUse フック登録確認
+SETTINGS_FILE="$TARGET/settings.json"
+if [ -f "$SETTINGS_FILE" ]; then
+  # block-main-push.sh が未登録なら案内
+  if ! grep -q "block-main-push.sh" "$SETTINGS_FILE" 2>/dev/null; then
+    echo ""
+    echo "   ⚠ block-main-push.sh is not registered in settings.json"
+    echo "   Add the following to PreToolUse hooks in $SETTINGS_FILE:"
+    echo '   {"matcher":"Bash","hooks":[{"type":"command","command":"<path>/hooks/block-main-push.sh"}]}'
+  fi
+fi
+
 # MCPs の案内
 TEMPLATE_ROOT="${TEMPLATE%/.claude}"
 echo ""
