@@ -32,7 +32,29 @@
       "mcp__claude-peers__send_message",
       "mcp__claude-peers__set_summary",
       "mcp__claude-peers__list_peers",
-      "mcp__claude-peers__check_messages"
+      "mcp__claude-peers__check_messages",
+      "Bash(npm run dev:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run start:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run test:unit:*)",
+      "Bash(npm run test:integration:*)",
+      "Bash(npm run test:components:*)",
+      "Bash(npm run test:e2e:*)",
+      "Bash(npm run db:*)",
+      "Bash(npm run stripe:setup:*)",
+      "Bash(npm run clerk:sync:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx vitest run:*)",
+      "Bash(npx playwright:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(npx drizzle-kit:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx tsx:*)",
+      "Bash(npx next:*)",
+      "Bash(npx eslint:*)"
     ],
     "deny": [],
     "ask": []
@@ -44,7 +66,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/path/to/your/project/.claude/hooks/block-main-push.sh"
+            "command": "/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/.claude/hooks/block-main-push.sh"
           }
         ]
       }

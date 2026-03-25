@@ -32,7 +32,26 @@
       "mcp__claude-peers__send_message",
       "mcp__claude-peers__set_summary",
       "mcp__claude-peers__list_peers",
-      "mcp__claude-peers__check_messages"
+      "mcp__claude-peers__check_messages",
+      "Bash(npx expo prebuild:*)",
+      "Bash(npx expo start:*)",
+      "Bash(npx expo run:ios:*)",
+      "Bash(npx expo run:android:*)",
+      "Bash(npx expo install:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm audit:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(pod install:*)",
+      "Bash(sips:*)",
+      "Bash(patch-package:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(rm -rf ios/:*)",
+      "Bash(rm -rf android/:*)",
+      "Bash(rm -rf .expo/:*)",
+      "Bash(rm -rf DerivedData:*)",
+      "Bash(xcrun simctl:*)"
     ],
     "deny": [],
     "ask": []
@@ -44,7 +63,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/path/to/your/project/.claude/hooks/block-main-push.sh"
+            "command": "/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/apps/.claude/hooks/block-main-push.sh"
           }
         ]
       }
