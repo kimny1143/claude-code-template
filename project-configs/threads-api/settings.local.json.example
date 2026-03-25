@@ -32,7 +32,13 @@
       "mcp__claude-peers__send_message",
       "mcp__claude-peers__set_summary",
       "mcp__claude-peers__list_peers",
-      "mcp__claude-peers__check_messages"
+      "mcp__claude-peers__check_messages",
+      "Bash(node:*)",
+      "Bash(npm install:*)",
+      "Bash(npx playwright install:*)",
+      "Bash(npx playwright:*)",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)"
     ],
     "deny": [],
     "ask": []
@@ -44,7 +50,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/path/to/your/project/.claude/hooks/block-main-push.sh"
+            "command": "/Users/kimny/Dropbox/_DevProjects/_cowork/20260222/threads-api/.claude/hooks/block-main-push.sh"
           }
         ]
       }

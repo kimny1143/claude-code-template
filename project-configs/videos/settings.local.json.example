@@ -32,7 +32,20 @@
       "mcp__claude-peers__send_message",
       "mcp__claude-peers__set_summary",
       "mcp__claude-peers__list_peers",
-      "mcp__claude-peers__check_messages"
+      "mcp__claude-peers__check_messages",
+      "Bash(npm run studio:*)",
+      "Bash(npm run render:all:*)",
+      "Bash(npm run render:promo-en:*)",
+      "Bash(npm run render:promo-ja:*)",
+      "Bash(npm run render:short-en:*)",
+      "Bash(npm run render:short-ja:*)",
+      "Bash(npm run render:single:*)",
+      "Bash(npm run copy-to-app:*)",
+      "Bash(npx remotion studio:*)",
+      "Bash(npx remotion render:*)",
+      "Bash(npx remotion preview:*)",
+      "Bash(node scripts/render-all.mjs:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []
@@ -44,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/path/to/your/project/.claude/hooks/block-main-push.sh"
+            "command": "/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/videos/.claude/hooks/block-main-push.sh"
           }
         ]
       }

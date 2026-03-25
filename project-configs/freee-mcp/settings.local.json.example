@@ -32,7 +32,10 @@
       "mcp__claude-peers__send_message",
       "mcp__claude-peers__set_summary",
       "mcp__claude-peers__list_peers",
-      "mcp__claude-peers__check_messages"
+      "mcp__claude-peers__check_messages",
+      "Bash(npx freee-mcp:*)",
+      "Bash(npx add-skill:*)",
+      "Bash(bash setup.sh:*)"
     ],
     "deny": [],
     "ask": []
@@ -44,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/path/to/your/project/.claude/hooks/block-main-push.sh"
+            "command": "/Users/kimny/Dropbox/_DevProjects/freee-MCP/.claude/hooks/block-main-push.sh"
           }
         ]
       }
