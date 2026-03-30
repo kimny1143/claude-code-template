@@ -57,7 +57,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/videos/.claude/hooks/block-main-push.sh"
+            "command": "/Users/kimny/Dropbox/_DevProjects/_videos/.claude/hooks/block-main-push.sh"
           }
         ]
       }
