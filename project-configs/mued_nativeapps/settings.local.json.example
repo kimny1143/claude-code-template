@@ -50,9 +50,13 @@
     ],
     "deny": [
       "Bash(git push * main)",
+      "Bash(git push * master)",
       "Bash(git push --force *)",
+      "Bash(git push -f *)",
       "Bash(git reset --hard *)",
-      "Bash(rm -rf /)"
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf ..)"
     ]
   },
   "hooks": {
@@ -63,6 +67,28 @@
           {
             "type": "command",
             "command": "/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/apps/.claude/hooks/block-main-push.sh"
+          },
+          {
+            "type": "command",
+            "command": "/Users/kimny/Dropbox/_DevProjects/claude-code-template/.claude/hooks/validate-dangerous-ops-v2.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/kimny/Dropbox/_DevProjects/claude-code-template/.claude/hooks/validate-dangerous-ops-v2.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/kimny/Dropbox/_DevProjects/claude-code-template/.claude/hooks/validate-dangerous-ops-v2.sh"
           }
         ]
       }
