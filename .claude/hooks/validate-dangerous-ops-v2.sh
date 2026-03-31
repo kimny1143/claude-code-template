@@ -93,9 +93,9 @@ if [ "$TOOL_NAME" = "Bash" ]; then
     exit 0
   fi
 
-  # --- git commit のメッセージ本文はスキップ ---
-  # コミットメッセージに "rm -rf" 等の文字列が含まれていても誤検知しない
-  if echo "$COMMAND" | grep -qE '^git\s+commit\s'; then
+  # --- テキスト引数を含むコマンドはスキップ ---
+  # コミットメッセージやPR本文に危険パターンの文字列が含まれていても誤検知しない
+  if echo "$COMMAND" | grep -qE '^(git\s+commit|git\s+tag|gh\s+pr\s+create|gh\s+issue\s+create)\s'; then
     exit 0
   fi
 
