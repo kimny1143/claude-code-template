@@ -11,6 +11,11 @@ if [[ "$COMMAND" != *"git push"* ]]; then
   exit 0
 fi
 
+# リモートブランチ削除（--delete）は許可
+if [[ "$COMMAND" == *"--delete"* ]]; then
+  exit 0
+fi
+
 # 現在のブランチを取得
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
 
