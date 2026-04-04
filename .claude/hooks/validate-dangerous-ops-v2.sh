@@ -60,6 +60,14 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
     exit 0
   fi
 
+  # CWD外へのWrite/Editをブロック
+  # 絶対パスに正規化してCWD配下かチェック
+  RESOLVED_PATH=$(cd "$(dirname "$FILE_PATH")" 2>/dev/null && echo "$(pwd)/$(basename "$FILE_PATH")" || echo "$FILE_PATH")
+  CWD="$PWD"
+  if [ "${RESOLVED_PATH#$CWD/}" = "$RESOLVED_PATH" ] && [ "$RESOLVED_PATH" != "$CWD" ]; then
+    block "CWD外のファイル編集はブロックされています" "CWD: $CWD / ファイル: $FILE_PATH"
+  fi
+
   BASENAME=$(basename "$FILE_PATH")
 
   # .env ファイルへの書き込みをブロック（.env.example, .env.sample は除外）
