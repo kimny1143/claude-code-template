@@ -274,6 +274,27 @@ touch .claude/commands/your-command.md
 
 `validate-dangerous-ops.sh` に独自の検証ルールを追加可能。
 
+## Pro版（有料テンプレート）
+
+無料版に加えて、**AIマルチエージェントチームの運用ノウハウ**を収録した有料テンプレートを提供しています。
+
+### Pro版に含まれるもの
+
+| カテゴリ | 内容 |
+|---------|------|
+| **Conductor CLAUDE.md テンプレート** | 指揮課の完全版設定（巡回スケジュール、PRレビューチェックリスト、権限モデル） |
+| **Tier制度 運用マニュアル** | 3段階PRレビューシステム（Tier 1: セルフマージ / Tier 2: ピアレビュー / Tier 3: 承認制） |
+| **巡回（Patrol）レポート** | テンプレート + 通常日・インシデント日のサンプル2種 |
+| **日報テンプレート** | フォーマット + 3日分のリアルなサンプル |
+| **組織図テンプレート** | 記入式テンプレート + 10課体制の記入済みサンプル + 設計判断メモ |
+| **コスト管理テンプレート** | 月次追跡シート + 損益分岐点計算 + 四半期監査レポート + 記入済みサンプル |
+
+全ドキュメント日英バイリンガル対応。
+
+**$29** — [Gumroadで購入](https://glasswerks.gumroad.com/l/claude-code-template-pro)
+
+---
+
 ## 参考資料
 
 - [Affaan Mustafa: Everything Claude Code](https://github.com/affaan-m/everything-claude-code)
