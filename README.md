@@ -4,6 +4,8 @@ Claude Code のベストプラクティスを適用したテンプレート。
 
 Affaan Mustafa の「[Everything Claude Code](https://github.com/affaan-m/everything-claude-code)」ガイドと [Anthropic 公式ベストプラクティス](https://www.anthropic.com/engineering/claude-code-best-practices)を基に構成。
 
+> **[Pro版 ($29)](https://glasswerks.gumroad.com/l/claude-code-template-pro)** — AIマルチエージェントチームの運用テンプレート（Conductor設定、Tier制PRレビュー、巡回レポート、コスト管理等）も提供中。[詳細 →](#pro版有料テンプレート)
+
 ## 含まれるもの
 
 ### Commands（スラッシュコマンド）
