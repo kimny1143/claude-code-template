@@ -1,8 +1,8 @@
 # Claude Code Template
 
-**34 skills. 8 commands. 6 agents. 3 MCPs. One setup script.**
+**37 skills. 8 commands. 6 agents. 3 MCPs. One setup script.**
 
-Claude Code のベストプラクティスを凝縮したテンプレート。`setup.sh` を実行するだけで、テスト駆動開発からマーケティング監査まで、34 のスキルがプロジェクトに即座に適用される。
+Claude Code のベストプラクティスを凝縮したテンプレート。`setup.sh` を実行するだけで、テスト駆動開発からマーケティング監査まで、37 のスキルがプロジェクトに即座に適用される。
 
 > **[Pro版 ($29)](https://glasswerks.gumroad.com/l/claude-code-template-pro)** — AIマルチエージェントチーム運用テンプレート。Conductor設定・Tier制PRレビュー・巡回レポート・コスト管理の実運用ノウハウを収録。[Free vs Pro 比較 →](#free-vs-pro)
 
@@ -76,7 +76,7 @@ chmod +x setup-claude.sh && ./setup-claude.sh
 | `/codex` | OpenAI Codex CLI 委譲 | Codex CLIにタスクを渡す時 |
 | `/ios` | iOS ビルド & 提出 | App Store提出ワークフロー |
 
-### Skills（34 スキル）
+### Skills（37 スキル）
 
 #### Development（11）
 
@@ -123,6 +123,14 @@ chmod +x setup-claude.sh && ./setup-claude.sh
 | `web-design-guidelines` | Web Interface Guidelines 準拠レビュー |
 | `app-onboarding` | アプリオンボーディング設計・改善 |
 | `paywall-upgrade-cro` | ペイウォール・アップグレード最適化 |
+
+#### Payments & Billing（3）
+
+| スキル | 用途 |
+|-------|------|
+| `stripe-best-practices` | Stripe 統合ガイド（API選択・Connect・課金・Treasury） |
+| `stripe-projects` | Stripe Projects CLI でのスタック構築 |
+| `upgrade-stripe` | Stripe API バージョン・SDK アップグレード |
 
 #### Content & Monetization（3）
 
@@ -262,7 +270,7 @@ EOF
 
 | | Free（このリポジトリ） | [Pro ($29)](https://glasswerks.gumroad.com/l/claude-code-template-pro) |
 |---|---|---|
-| **Skills** | 34 スキル | 34 スキル |
+| **Skills** | 37 スキル | 37 スキル |
 | **Commands** | 8 コマンド | 8 コマンド |
 | **Agents** | 6 エージェント | 6 エージェント |
 | **Hooks** | 6 フック | 6 フック |
