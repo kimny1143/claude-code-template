@@ -111,6 +111,10 @@ SHARED_SKILLS=(
   ai-interview-article
   note-serial-monetization
   freee-api-skill
+  # Payments & Billing
+  stripe-best-practices
+  stripe-projects
+  upgrade-stripe
 )
 for skill in "${SHARED_SKILLS[@]}"; do
   src="$TEMPLATE/skills/$skill"
