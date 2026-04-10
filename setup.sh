@@ -56,7 +56,7 @@ mkdir -p "$TARGET"/{commands,skills,agents,hooks}
 
 # 共有コマンドをリンク
 echo "📁 Linking commands..."
-SHARED_COMMANDS=(commit pr build-fix security ship learn)
+SHARED_COMMANDS=(commit pr build-fix security ship learn codex ios)
 for cmd in "${SHARED_COMMANDS[@]}"; do
   src="$TEMPLATE/commands/$cmd.md"
   dst="$TARGET/commands/$cmd.md"
@@ -73,17 +73,44 @@ done
 echo ""
 echo "📁 Linking skills..."
 SHARED_SKILLS=(
+  # Development
   tdd
   coding-rules
   backend-patterns
-  ui-ux-pro-max
-  mcp
-  hooks
   git-worktree
+  hooks
+  mcp
+  remotion
+  ios-app-store-submission
+  vercel-react-best-practices
+  vercel-react-native-skills
+  vercel-composition-patterns
+  # Marketing & CRO
   lp-optimizer
-  ux-psychology
+  copywriting
+  seo-audit
   marketing-audit
+  marketing-psychology
+  launch-strategy
   pricing-strategy
+  ab-test-setup
+  analytics-tracking
+  core-web-vitals
+  email-sequence
+  referral-program
+  signup-flow-cro
+  onboarding-cro
+  form-cro
+  # UX & Product
+  ui-ux-pro-max
+  ux-psychology
+  web-design-guidelines
+  app-onboarding
+  paywall-upgrade-cro
+  # Content & Monetization
+  ai-interview-article
+  note-serial-monetization
+  freee-api-skill
 )
 for skill in "${SHARED_SKILLS[@]}"; do
   src="$TEMPLATE/skills/$skill"
