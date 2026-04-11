@@ -111,7 +111,7 @@ SHARED_SKILLS=(
   ai-interview-article
   note-serial-monetization
   freee-api-skill
-  # Payments & Billing
+  note-publish-flow  # Payments & Billing
   stripe-best-practices
   stripe-projects
   upgrade-stripe
