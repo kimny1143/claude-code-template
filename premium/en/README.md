@@ -4,7 +4,7 @@ The premium edition of mued-claude-code-template. Includes operational know-how 
 
 ## What's Included in the Free Version (GitHub Public Repo)
 
-- 37 skills, 7 commands, 6 agents, 4 hooks
+- 38 skills, 8 commands, 6 agents, 6 hooks
 - 3 MCP configuration templates
 - setup.sh for automated distribution
 - CLAUDE.md template
@@ -50,6 +50,12 @@ Templates and samples for the conductor's daily patrol reports.
 - `cost-tracking-template.md` — Monthly tracking, break-even calculation, quarterly audit procedure
 - `cost-tracking-sample-filled.md` — **Filled sample**: Fixed/variable costs, composition analysis, break-even calculation, quarterly audit report
 - `freee-integration-flow.md` — freee accounting integration, account mapping, USD/FX handling
+
+### 7. MCP Agent Design Guide (`mcp-agent-design/en/`)
+
+Design, placement, and operational patterns for MCP servers in multi-agent teams.
+
+- `mcp-design-guide.md` — MCP placement levels (global/project/session), design patterns (infrastructure/domain/tool), API key management, permission design, hook integration, custom MCP checklist, exclusive locking, lifecycle management
 
 ---
 
