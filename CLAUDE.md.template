@@ -121,7 +121,7 @@ project/
 
 ## Multi-Agent Team Management
 
-複数の Claude Code インスタンスをチームとして運用する場合は、[Pro テンプレート](https://glasswerks.gumroad.com/l/claude-code-template-pro)に Conductor 設定、Tier 制 PR レビュー、巡回レポート等の運用テンプレートが含まれています。
+複数の Claude Code インスタンスをチームとして運用する場合は、[Pro テンプレート](https://glasswerks.gumroad.com/l/claude-code-template-pro?utm_source=github&utm_medium=template&utm_campaign=claude-code-template-setup)に Conductor 設定、Tier 制 PR レビュー、巡回レポート等の運用テンプレートが含まれています。
 
 ---
 
