@@ -90,6 +90,15 @@ claude-code-template/
 - **価格は$29固定。** 値下げ・PWYW提案はPolicy Gateを通すこと
 - 日英バイリンガル必須（全ファイルにen/ディレクトリ）
 
+### 価格・原価情報の一次ソース
+
+**料金・原価の一次ナレッジはfreee課が管理**（2026-04-13 kimny確立）。
+
+- 一次ソース: `freee-MCP/docs/knowledge/pricing-facts/gumroad-pricing.md`
+- template課CLAUDE.md/public README/setup.shの `$29` 表記は静的キャッシュとして維持（外部公開の表記安定性のため）
+- 価格変更・コスト見直し・損益分析等の判断材料は freee課ナレッジを参照
+- public資産（README.md, setup.sh）の $29 は変更前にfreee課ナレッジと整合確認
+
 ## 配布ルール
 
 - 全課配布スクリプト実行前に必ず `--dry-run` で確認
