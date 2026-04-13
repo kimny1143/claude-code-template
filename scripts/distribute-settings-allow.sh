@@ -20,10 +20,11 @@ if [[ "${1:-}" == "--dry-run" ]]; then
   echo ""
 fi
 
-# 全課のsettings.local.jsonパス
+# 全課のsettings.local.jsonパス（経営部4課+プロダクト部2課+マーケ部4課+分析研究部2課 = 12課構成、うち_cowork/mued_v2は複数ディレクトリ未統合のため個別追加）
 TARGETS=(
   "/Users/kimny/Dropbox/_DevProjects/_conductor/.claude/settings.local.json"
   "/Users/kimny/Dropbox/_DevProjects/_contents-writing/.claude/settings.local.json"
+  "/Users/kimny/Dropbox/_DevProjects/_cowork/.claude/settings.local.json"
   "/Users/kimny/Dropbox/_DevProjects/_data-analysis/.claude/settings.local.json"
   "/Users/kimny/Dropbox/_DevProjects/_LandingPage/glasswerks-lp/.claude/settings.local.json"
   "/Users/kimny/Dropbox/_DevProjects/_Reserch/.claude/settings.local.json"
