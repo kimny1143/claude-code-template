@@ -30,7 +30,26 @@ if [ -z "$TOOL_NAME" ] || [ -z "$TOOL_INPUT" ]; then
 fi
 
 # --- ヘルパー関数 ---
+# ブロックイベントを tool-audit.jsonl に記録（Phase 2効果測定用）
+# 既存エントリと同等のスキーマ + blocked/block_reason/block_detail を追加
+log_block() {
+  local reason="$1"
+  local detail="${2:-}"
+  local log_file="$HOME/.claude/tool-audit.jsonl"
+  [ -d "$(dirname "$log_file")" ] || return 0
+  jq -cn \
+    --arg session "${CLAUDE_SESSION_ID:-}" \
+    --arg cwd "$PWD" \
+    --arg tool "${TOOL_NAME:-unknown}" \
+    --arg reason "$reason" \
+    --arg detail "$detail" \
+    --argjson input "${TOOL_INPUT:-null}" \
+    '{ts: now, session: (if $session == "" then null else $session end), cwd: $cwd, tool: $tool, input: $input, blocked: true, block_reason: $reason, block_detail: $detail}' \
+    >> "$log_file" 2>/dev/null || true
+}
+
 block() {
+  log_block "$1" "${2:-}"
   echo "" >&2
   echo "BLOCKED: $1" >&2
   if [ -n "${2:-}" ]; then
