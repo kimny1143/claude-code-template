@@ -60,12 +60,25 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
     exit 0
   fi
 
-  # CWD外へのWrite/Editをブロック
+  # CWDチェックのallowlist判定（.env/credentials等のセキュリティチェックはこの後も実行される）
+  # - auto-memory: セッション跨ぎの文脈継承に必要（~/.claude/projects/<id>/memory/）
+  # - conductor drafts: 課間承認依頼の正規投函先（feedback_document_submission）
+  IS_ALLOWLIST=0
+  if echo "$FILE_PATH" | grep -qE "^$HOME/\.claude/projects/[^/]+/memory/"; then
+    IS_ALLOWLIST=1
+  fi
+  if echo "$FILE_PATH" | grep -qE "^$HOME/Dropbox/_DevProjects/_conductor/docs/drafts/"; then
+    IS_ALLOWLIST=1
+  fi
+
+  # CWD外へのWrite/Editをブロック（allowlist該当時はスキップ）
   # 絶対パスに正規化してCWD配下かチェック
-  RESOLVED_PATH=$(cd "$(dirname "$FILE_PATH")" 2>/dev/null && echo "$(pwd)/$(basename "$FILE_PATH")" || echo "$FILE_PATH")
-  CWD="$PWD"
-  if [ "${RESOLVED_PATH#$CWD/}" = "$RESOLVED_PATH" ] && [ "$RESOLVED_PATH" != "$CWD" ]; then
-    block "CWD外のファイル編集はブロックされています" "CWD: $CWD / ファイル: $FILE_PATH"
+  if [ "$IS_ALLOWLIST" = "0" ]; then
+    RESOLVED_PATH=$(cd "$(dirname "$FILE_PATH")" 2>/dev/null && echo "$(pwd)/$(basename "$FILE_PATH")" || echo "$FILE_PATH")
+    CWD="$PWD"
+    if [ "${RESOLVED_PATH#$CWD/}" = "$RESOLVED_PATH" ] && [ "$RESOLVED_PATH" != "$CWD" ]; then
+      block "CWD外のファイル編集はブロックされています" "CWD: $CWD / ファイル: $FILE_PATH"
+    fi
   fi
 
   BASENAME=$(basename "$FILE_PATH")
