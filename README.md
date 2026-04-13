@@ -4,7 +4,7 @@
 
 Claude Code のベストプラクティスを凝縮したテンプレート。`setup.sh` を実行するだけで、テスト駆動開発からマーケティング監査まで、38 のスキルがプロジェクトに即座に適用される。
 
-> **[Pro版 ($29)](https://glasswerks.gumroad.com/l/claude-code-template-pro)** — AIマルチエージェントチーム運用テンプレート。Conductor設定・Tier制PRレビュー・巡回レポート・コスト管理の実運用ノウハウを収録。[Free vs Pro 比較 →](#free-vs-pro)
+> **[Pro版 ($29)](https://glasswerks.gumroad.com/l/claude-code-template-pro?utm_source=github&utm_medium=readme&utm_campaign=claude-code-template)** — AIマルチエージェントチーム運用テンプレート。Conductor設定・Tier制PRレビュー・巡回レポート・コスト管理の実運用ノウハウを収録。[Free vs Pro 比較 →](#free-vs-pro)
 
 ---
 
@@ -268,7 +268,7 @@ EOF
 
 ## Free vs Pro
 
-| | Free（このリポジトリ） | [Pro ($29)](https://glasswerks.gumroad.com/l/claude-code-template-pro) |
+| | Free（このリポジトリ） | [Pro ($29)](https://glasswerks.gumroad.com/l/claude-code-template-pro?utm_source=github&utm_medium=readme&utm_campaign=claude-code-template) |
 |---|---|---|
 | **Skills** | 38 スキル | 38 スキル |
 | **Commands** | 8 コマンド | 8 コマンド |
@@ -287,7 +287,7 @@ EOF
 
 Claude Code を 1 人で使うなら Free で十分。複数エージェントをチームとして運用するなら、Pro の運用テンプレートで立ち上げ時間を大幅に短縮できる。
 
-**[$29 — Gumroad で購入](https://glasswerks.gumroad.com/l/claude-code-template-pro)**
+**[$29 — Gumroad で購入](https://glasswerks.gumroad.com/l/claude-code-template-pro?utm_source=github&utm_medium=readme&utm_campaign=claude-code-template)**
 
 ---
 
