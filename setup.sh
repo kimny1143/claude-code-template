@@ -222,4 +222,4 @@ echo "────────────────────────�
 echo "💡 Running a multi-agent team with Claude Code?"
 echo "   The Pro template (\$29) includes conductor setup,"
 echo "   tiered PR review system, patrol reports, and more."
-echo "   → https://glasswerks.gumroad.com/l/claude-code-template-pro"
+echo "   → https://glasswerks.gumroad.com/l/claude-code-template-pro?utm_source=github&utm_medium=setup&utm_campaign=claude-code-template-setup"
