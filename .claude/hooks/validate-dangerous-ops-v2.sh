@@ -82,11 +82,15 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
   # CWDチェックのallowlist判定（.env/credentials等のセキュリティチェックはこの後も実行される）
   # - auto-memory: セッション跨ぎの文脈継承に必要（~/.claude/projects/<id>/memory/）
   # - conductor drafts: 課間承認依頼の正規投函先（feedback_document_submission）
+  # - conductor inbox: 各課の成果物・回答提出先（conductor指示に基づく正当なデリバリー）
   IS_ALLOWLIST=0
   if echo "$FILE_PATH" | grep -qE "^$HOME/\.claude/projects/[^/]+/memory/"; then
     IS_ALLOWLIST=1
   fi
   if echo "$FILE_PATH" | grep -qE "^$HOME/Dropbox/_DevProjects/_conductor/docs/drafts/"; then
+    IS_ALLOWLIST=1
+  fi
+  if echo "$FILE_PATH" | grep -qE "^$HOME/Dropbox/_DevProjects/_conductor/docs/inbox/"; then
     IS_ALLOWLIST=1
   fi
 
