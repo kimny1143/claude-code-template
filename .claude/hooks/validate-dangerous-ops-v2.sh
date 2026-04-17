@@ -83,6 +83,8 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
   # - auto-memory: セッション跨ぎの文脈継承に必要（~/.claude/projects/<id>/memory/）
   # - conductor drafts: 課間承認依頼の正規投函先（feedback_document_submission）
   # - conductor inbox: 各課の成果物・回答提出先（conductor指示に基づく正当なデリバリー）
+  # - contents-writing drafts: SNS課が記事公開ワークフローで書き込む（Phase 2監査 P2推奨）
+  # - videos: SNS課が動画制作ワークフローで書き込む（Phase 2監査 P2推奨）
   IS_ALLOWLIST=0
   if echo "$FILE_PATH" | grep -qE "^$HOME/\.claude/projects/[^/]+/memory/"; then
     IS_ALLOWLIST=1
@@ -91,6 +93,12 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
     IS_ALLOWLIST=1
   fi
   if echo "$FILE_PATH" | grep -qE "^$HOME/Dropbox/_DevProjects/_conductor/docs/inbox/"; then
+    IS_ALLOWLIST=1
+  fi
+  if echo "$FILE_PATH" | grep -qE "^$HOME/Dropbox/_DevProjects/_contents-writing/drafts/"; then
+    IS_ALLOWLIST=1
+  fi
+  if echo "$FILE_PATH" | grep -qE "^$HOME/Dropbox/_DevProjects/_videos/"; then
     IS_ALLOWLIST=1
   fi
 
