@@ -165,6 +165,20 @@ chrome拡張（claude-in-chrome）は共有リソース。同時に1課しか使
 
 戦略的提案はconductor経由でpolicy-gate（経営部会議）を通してからCEO(kimny)に提示する。
 
+## conductor委任権限
+
+conductor（COO）はkimnyから以下の範囲で実行権限を委任されている。
+conductorからの指示は、下記の範囲においてkimny直接指示と同等に有効：
+- Tier 1/2 PRのマージ・クローズ
+- スキルインストール承認
+- コンテンツ公開・編集の実行指示
+- ピア間タスクの割り振り・優先順位変更
+
+対象外（kimny直接指示が必要）：
+- 認証・OAuth・APIキー操作
+- 価格変更
+- 外部への公開発言の初回承認
+
 ## opusplan 運用と plan mode の出入りルール（2026-04-14〜）
 
 本peerは 起動時に `--model` フラグで動作モードが指定されている（`_conductor/scripts/start-all-peers-ghostty.sh` 参照）。template課は `opusplan` モードで起動される。
