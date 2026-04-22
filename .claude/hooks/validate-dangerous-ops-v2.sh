@@ -105,8 +105,8 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
   # CWD外へのWrite/Editをブロック（allowlist該当時はスキップ）
   # 絶対パスに正規化してCWD配下かチェック
   if [ "$IS_ALLOWLIST" = "0" ]; then
-    RESOLVED_PATH=$(cd "$(dirname "$FILE_PATH")" 2>/dev/null && echo "$(pwd)/$(basename "$FILE_PATH")" || echo "$FILE_PATH")
-    CWD="$PWD"
+    RESOLVED_PATH=$(realpath "$FILE_PATH" 2>/dev/null || python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$FILE_PATH" 2>/dev/null || (cd "$(dirname "$FILE_PATH")" 2>/dev/null && echo "$(pwd)/$(basename "$FILE_PATH")") || echo "$FILE_PATH")
+    CWD=$(realpath "$PWD" 2>/dev/null || python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$PWD" 2>/dev/null || echo "$PWD")
     if [ "${RESOLVED_PATH#$CWD/}" = "$RESOLVED_PATH" ] && [ "$RESOLVED_PATH" != "$CWD" ]; then
       block "CWD外のファイル編集はブロックされています" "CWD: $CWD / ファイル: $FILE_PATH"
     fi
