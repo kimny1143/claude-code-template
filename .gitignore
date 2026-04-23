@@ -2,6 +2,7 @@
 *.zip
 __pycache__/
 mcps/*/data/*.json
+mcps/*/data/**/*.jsonl
 
 # Broken symlinks to .agents/skills/ (created by npx skills add)
 skills/

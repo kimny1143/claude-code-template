@@ -28,6 +28,7 @@ class ConversationIndex:
         if self._loaded:
             return
         self._load_claude_ai()
+        self._load_claude_desktop()
         self._load_claude_code()
         self._build()
         self._loaded = True
@@ -47,6 +48,33 @@ class ConversationIndex:
             n = self._norm_web(c, i)
             if n:
                 self.conversations.append(n)
+
+    # ── ClaudeDesktop JSONL (claude-desktop/current.jsonl) ────
+
+    def _load_claude_desktop(self):
+        desktop_dir = DATA_DIR / "claude-desktop"
+        if not desktop_dir.exists():
+            return
+        for jsonl_file in sorted(desktop_dir.glob("*.jsonl")):
+            try:
+                with open(jsonl_file, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            c = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        msgs = c.get("messages", [])
+                        if not msgs:
+                            continue
+                        c["full_text"] = (c.get("title") or "") + " " + " ".join(
+                            m.get("text", "") for m in msgs
+                        )
+                        self.conversations.append(c)
+            except Exception:
+                continue
 
     # ── Claude Code local transcripts (JSONL) ────────
 
@@ -327,10 +355,12 @@ class ConversationIndex:
         self.load()
         web_count = sum(1 for c in self.conversations if c.get("source") == "claude-ai")
         code_count = sum(1 for c in self.conversations if c.get("source") == "claude-code")
+        desktop_count = sum(1 for c in self.conversations if c.get("source") == "claude-desktop")
         return {
             "total_conversations": len(self.conversations),
             "claude_ai_conversations": web_count,
             "claude_code_conversations": code_count,
+            "claude_desktop_conversations": desktop_count,
             "total_messages": sum(c["message_count"] for c in self.conversations),
             "index_terms": len(self.inv),
             "data_dir": str(DATA_DIR.resolve()),
@@ -351,7 +381,7 @@ def conversation_search(query: str, max_results: int = 5, source: str = None) ->
     Args:
         query: search keywords (Japanese/English)
         max_results: max results (1-20)
-        source: filter by source — "claude-ai" or "claude-code" (optional, default: both)
+        source: filter by source — "claude-ai", "claude-code", or "claude-desktop" (optional, default: all)
     """
     max_results = min(max(1, max_results), 20)
     r = ix.search(query, max_results, source=source)
@@ -367,7 +397,7 @@ def recent_chats(n: int = 5, before: str = None, after: str = None, source: str 
         n: number of chats (1-20)
         before: before this datetime (ISO 8601)
         after: after this datetime (ISO 8601)
-        source: filter by source — "claude-ai" or "claude-code" (optional)
+        source: filter by source — "claude-ai", "claude-code", or "claude-desktop" (optional)
     """
     n = min(max(1, n), 20)
     r = ix.recent(n, before=before, after=after, source=source)
