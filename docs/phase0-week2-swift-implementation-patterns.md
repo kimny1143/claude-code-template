@@ -652,6 +652,224 @@ extension MUEDDialService {
 - Sandbox 制約と Mac App Store 配布判断（AU v3 host は Mac App Store 不適合の事例多）
 - Developer ID notarization 経路確定（Gumroad / 自社サイト直接配布）
 
+### 3.5 Phase 1 MVP マルチトラック再生実装パターン解説（既存 MultiTrackPlayerService 実装ベース）
+
+> **本セクションの位置付け（CCO articulate）**:
+> 本セクションは `apps/muedaw-macos/Sources/MUEDaw/Services/MultiTrackPlayerService.swift`（234行）+ `Views/MultiTrackPlayerView.swift`（241行）に既に実装されているマルチトラック再生パターンの **設計判断を言語化 + CCO レビューコメント形式**。Phase 1 MVP「Suno+Ableton 2軸融合」のうち **Ableton 軸（マルチトラック・Mixer・Transport）** を担う中核サービス。
+>
+> P1 §1.5 と同じ方針（架空理想形ではなく既存実装の articulate）で起案、conductor 短答承認済（2026-04-26 PM）。
+
+#### 3.5.1 アーキテクチャ概観（既存実装反映）
+
+```
+[AudioTrack (struct)]                       [SwiftUI MultiTrackPlayerView]
+  - id / url / volume / pan                    │
+  - isMuted / isSoloed                         │  @Published / ObservableObject
+        ▲                                       ▼
+        └─── @Published ───── [MultiTrackPlayerService (@MainActor final class)]
+                                       │
+                                       │  manages
+                                       ▼
+[AVAudioEngine] ──── [masterMixer] ──── [mainMixerNode] ──→ Output
+        ▲                ▲
+        │                │  per-track signal
+        │                │
+[playerNode A] → [trackMixer A] ─┐
+[playerNode B] → [trackMixer B] ─┤  (volume / pan / mute / solo はここで適用)
+[playerNode C] → [trackMixer C] ─┘
+```
+
+**設計判断のポイント（CCO articulate）**:
+
+| 設計判断 | 採用パターン | 理由 |
+|---|---|---|
+| Service の concurrency model | **`@MainActor final class : ObservableObject`**（actor ではない） | SwiftUI の `@Published` 連携が直接できる、UI 更新が main thread に強制される、AVAudioEngine の API が main thread 想定で書かれている |
+| トラック単位の mixer 分離 | **per-track `AVAudioMixerNode`**（master mixer に直接 connect しない） | volume / pan の独立制御が可能、解除・追加時に他トラックを止めずに済む |
+| Mute / Solo logic | **`outputVolume = 0.0` で実質ミュート**（playerNode は止めない） | playerNode を止めると再開時の sync が崩れる、再生継続したまま音だけ抑制 |
+| Solo の排他性 | **「solo 押下時に他トラックの isSoloed を全て false」** | DAW 慣行的なエクスクルーシブ solo（Ableton/Logic 等と同じ）。多重 solo は混乱を招く |
+| Time tracking | **`Timer.scheduledTimer(0.1)` + `playerTime(forNodeTime:)`** | macOS では CADisplayLink 不在、Timer で十分な精度。最初の playerNode の sampleTime を currentTime に反映 |
+| Buffer scheduling | **`scheduleFile(file, at: nil)`** | 全 player を順次 `play()` する直前に schedule、at: nil で player 起動時から即時再生 |
+| Engine 接続 | **`format: nil` で auto-resolution** | AVAudioFile.processingFormat を mixer/engine が自動 negotiate |
+| Track データ | **`AudioTrack` struct + UUID** | Identifiable で SwiftUI ForEach 直結、UUID で playerNode/mixer/AudioFile を辞書管理 |
+
+#### 3.5.2 既存実装の構造（実コード reference）
+
+実装ファイル: `apps/muedaw-macos/Sources/MUEDaw/Services/MultiTrackPlayerService.swift`（234行）
+
+主要構造:
+
+```swift
+@MainActor
+final class MultiTrackPlayerService: ObservableObject {
+    // ── Published state（SwiftUI 直結）──
+    @Published var tracks: [AudioTrack] = []
+    @Published var playerState: PlayerState = .idle  // idle/loading/playing/paused/stopped
+    @Published var currentTime: Double = 0.0
+    @Published var duration: Double = 0.0
+    @Published var errorMessage: String? = nil
+
+    // ── Private engine graph ──
+    private let engine = AVAudioEngine()
+    private let masterMixer = AVAudioMixerNode()
+    private var playerNodes: [UUID: AVAudioPlayerNode] = [:]
+    private var mixerNodes: [UUID: AVAudioMixerNode] = [:]
+    private var audioFiles: [UUID: AVAudioFile] = [:]
+    private var displayLink: Timer? = nil
+
+    init() {
+        engine.attach(masterMixer)
+        engine.connect(masterMixer, to: engine.mainMixerNode, format: nil)
+    }
+
+    // ── Track lifecycle ──
+    func addTrack(url:name:)       { /* AudioTrack 追加 + setupNodes */ }
+    func removeTrack(id:)          { /* teardownNodes + tracks.removeAll */ }
+    func clearTracks()             { /* 全 teardownNodes + stop */ }
+
+    // ── Playback ──
+    func play()  { /* prepareAudioFiles + engine.start + scheduleAllBuffers + startAllNodes + DisplayLink */ }
+    func pause() { /* pauseAllNodes + stopDisplayLink */ }
+    func stop()  { /* stopAllNodes + engine.stop + currentTime=0 */ }
+
+    // ── Per-track controls ──
+    func setVolume(_:for:)  { /* track.volume 更新 + updateMixerNode */ }
+    func setPan(_:for:)     { /* track.pan 更新 + updateMixerNode */ }
+    func toggleMute(for:)   { /* track.isMuted toggle + updateMixerNode */ }
+    func toggleSolo(for:)   { /* 排他 solo + 全 track の updateMixerNode */ }
+
+    // ── Private node setup ──
+    private func setupNodes(for track: AudioTrack) {
+        let player = AVAudioPlayerNode()
+        let mixer = AVAudioMixerNode()
+        engine.attach(player); engine.attach(mixer)
+        engine.connect(player, to: mixer, format: nil)
+        engine.connect(mixer, to: masterMixer, format: nil)
+        playerNodes[track.id] = player
+        mixerNodes[track.id] = mixer
+    }
+
+    private func updateMixerNode(for track: AudioTrack) {
+        guard let mixer = mixerNodes[track.id] else { return }
+        let hasSolo = tracks.contains { $0.isSoloed }
+        let effectivelyMuted = track.isMuted || (hasSolo && !track.isSoloed)
+        mixer.outputVolume = effectivelyMuted ? 0.0 : track.volume
+        mixer.pan = track.pan
+    }
+}
+```
+
+#### 3.5.3 SwiftUI 連携（既存 MultiTrackPlayerView の構造）
+
+実装ファイル: `apps/muedaw-macos/Sources/MUEDaw/Views/MultiTrackPlayerView.swift`（241行）
+
+3階層構成:
+- **`MultiTrackPlayerView`**: ルート。Transport bar + Track list（ScrollView）or EmptyTracksView 切替
+- **`TransportBarView`** (private): Play/Pause（spaceキー shortcut） + Stop + 時刻表示 + ProgressBar + ErrorLabel
+- **`TrackRowView`** (private): TrackHeader（M/Sボタン、track名）+ Volume Slider + Pan Slider + Remove
+
+**設計判断のポイント**:
+- `@ObservedObject var player`（init で `appState.player` を受け取る）→ SwiftUI ライフサイクルで service が consumed されない
+- Transport の Play は **既存 playerState で分岐**（`.playing` なら `pause()`、それ以外は `play()`）→ 1つのボタンで 2状態を持つ Ableton 慣行
+- ProgressBar は ZStack でカスタム描画（標準 ProgressView より見栄え制御）
+- Slider の `Binding(get:set:)` で player の setter にダイレクト連携
+- Pan ラベル: `C` (center) / `L42` / `R30` のような DAW 慣行表記（panLabel 関数）
+
+#### 3.5.4 CCO レビュー（既存実装の良い点）
+
+1. **per-track mixer 分離**: 1トラック単位で volume/pan/mute/solo が独立、後続の effect chain（reverb / EQ 等）追加も同じ mixer に追加 effect node を attach するだけで拡張可能
+2. **mute/solo を `outputVolume = 0.0` で実現**: playerNode は止めず継続再生 → mute on/off の瞬間ジャンプなし、tempo / position が崩れない
+3. **`updateMixerNode` のループ**: solo 切替時に全 track の effectivelyMuted を再計算 → solo 解除した瞬間の他トラック復活が一気に行われる
+4. **Time tracking の最小実装**: `Timer.scheduledTimer(0.1)` で 100ms 精度、UI 表示には十分。`firstPlayer.playerTime(forNodeTime:)` で sample-accurate な currentTime
+5. **stop 時の自動 idle 遷移**: `playerState = tracks.isEmpty ? .idle : .stopped` で 2状態を明確化
+6. **Empty state UX**: `EmptyTracksView` で「AI生成タブで音楽を生成すると...」のガイダンス → トラック追加経路を UI で誘導
+
+#### 3.5.5 CCO レビュー（強化候補 / Phase 1 期間内の検討事項）
+
+| 強化候補 | 現状 | 提案 |
+|---|---|---|
+| **マルチトラック同期再生** | `for track in tracks { playerNodes[track.id]?.play() }` の順次起動 | `AVAudioTime` ベースの `play(at:)` で全 player を同一 host time に揃える。3-5ms の jitter 解消（人間の耳には微小だが、tempo critical な使用ケースで効く） |
+| **Engine reset on route change** | airpods 抜き差し / sample rate 変更時の再構成経路なし | `AVAudioEngineConfigurationChange` 通知 observe + `engine.reset()` + node 再 attach |
+| **Mute/Volume 遷移の click noise 防止** | `outputVolume = 0.0` 即座反映 | linear ramp（10-30ms）で滑らかに。`AVAudioMixerNode.outputVolume` には ramp プロパティなし → output bus の `audioUnit.parameterTree` 経由 |
+| **`Timer.scheduledTimer` の jitter** | 0.1秒の RunLoop タイマー | `DispatchSourceTimer` で deadline 指定。UI 表示用なら現状で十分、scrubber 同期で精度欲しいなら切替 |
+| **Format mismatch on different sample rates** | `format: nil` で auto-resolution | sample rate が異なる audio file（44.1k / 48k 混在）で mixer level の conversion が必要。明示的に標準 format（48k stereo Float32）に統一推奨 |
+| **Seek (scrubber drag)** | 未実装（progressBar は表示のみ） | `playerNode.stop()` → `scheduleFile(file, at: targetTime)` で seek 実装。Phase 1 MVP では view-only でも可、Phase 1.5 で interactive seek |
+| **Pause→Resume 時の position 維持確認** | `player.pause()` / `play()` のみ | playerNode の pause/resume は内部で position 維持されるが、複数 player 間で resume タイミングがずれる可能性 → `play(at:)` 同期が望ましい |
+| **再生中のトラック追加** | engine running 中に `engine.attach()` は許容されるが、新 track を sync 起動するロジックなし | 再生中追加は disabled に倒すか、新 track を `play(at: currentHostTime + offset)` で合流させる |
+| **AVAudioSession（macOS不要 / iOS port 想定）** | 設定なし | macOS では不要だが、将来 iPad app 展開なら `.playback` カテゴリ等の設定が必要 |
+| **dispose / deinit** | 明示的 deinit なし（ARC で player/mixer/file は解放されるが、engine.stop は明示推奨） | `deinit { stopAllNodes(); if engine.isRunning { engine.stop() } }` 追加推奨 |
+
+#### 3.5.6 マルチトラック同期再生のリファクタ提案（最優先）
+
+現状の `startAllNodes()` は順次 `playerNodes[track.id]?.play()` を呼ぶが、これを `play(at:)` で host time 同期に変更する案:
+
+```swift
+private func startAllNodesSynced() {
+    // 全 player の lastRenderTime を取得し、同一 host time に future schedule
+    guard let firstPlayer = playerNodes.values.first,
+          let lastRenderTime = firstPlayer.lastRenderTime else {
+        // engine がまだ render 開始していない場合は通常 play()
+        startAllNodes()
+        return
+    }
+    // 0.1秒先の future host time に全 player を sync 起動
+    let syncTime = AVAudioTime(
+        hostTime: lastRenderTime.hostTime + AVAudioTime.hostTime(forSeconds: 0.1)
+    )
+    for track in tracks {
+        playerNodes[track.id]?.play(at: syncTime)
+    }
+}
+```
+
+**注意**:
+- `engine.start()` 直後は `lastRenderTime` が `nil` → 1フレーム遅延後に取得 or fallback to `startAllNodes()`
+- 0.1秒の先送りは safety margin、実用上 50ms 程度でも OK
+- Phase 1 MVP では `at: nil` のままでも実運用上問題なし（kimny テストで体感差を確認後に切替判断）
+
+#### 3.5.7 Phase 1 実装時のハマりポイント（CCO事前共有 / 既存実装で踏み済 / 未踏分も articulate）
+
+| # | ポイント | 既存実装での対応 |
+|---|---|---|
+| 1 | **`engine.attach()` は engine.start() 前後どちらでも可** | ✅ setupNodes 内で attach + connect、start 後の add も動作 |
+| 2 | **`scheduleFile(at: nil)` は player.play() 起動直後から再生** | ✅ play() 直前に schedule、即時再生で OK |
+| 3 | **mute/solo の `outputVolume = 0` だけで playerNode は止めない** | ✅ playerNode 継続再生で position 維持 |
+| 4 | **Multi-track sync は `play(at:)` で host time 同期推奨** | ⚠ 現状順次 play()、jitter 数ms。§3.5.6 リファクタ提案 |
+| 5 | **`format: nil` の auto-resolution は sample rate mismatch で挙動変わる** | ⚠ 標準 format 統一推奨（§3.5.5） |
+| 6 | **再生中の routing 変更（airpods 抜き差し）で engine が落ちる** | ⚠ ConfigurationChange observer 未実装（§3.5.5） |
+| 7 | **`scheduleFile(at:)` のタイムスタンプは sampleTime 単位（hostTime ではない）** | ✅ Phase 1 MVP では「即時再生」だけなので問題ない、seek 実装時に注意 |
+| 8 | **`AVAudioPlayerNode.lastRenderTime` は engine が render 開始するまで nil** | ⚠ §3.5.6 同期再生実装時に nil チェック必須 |
+| 9 | **Volume/Pan の即座反映は click noise の原因になる** | ⚠ 急激な変化時 Ramp 推奨（§3.5.5） |
+| 10 | **`engine.stop()` は再生中の player を即座に停止しない場合あり** | ✅ stopAllNodes() を先に呼ぶ実装で safe |
+
+**最優先で対応推奨（Phase 1 MVP 期間内）**:
+- #6 ConfigurationChange observer 追加（airpods 切替で engine が落ちる経験は kimny が遅かれ早かれ踏む）
+- #4 マルチトラック同期再生の `play(at:)` 化（kimny テストで体感差確認後）
+- #10 deinit での明示的 engine.stop（メモリリーク防止）
+
+#### 3.5.8 LUFS 監視・波形表示との連携（Phase 1 MVP 後半 / Phase 1.5 接続点）
+
+既存 `LUFSControlView.swift` と本サービスの連携:
+- 現状: 別 view、別データソース
+- Phase 1 MVP 後半: masterMixer に `installTap(onBus:bufferSize:format:block:)` で audio buffer を監視 → LUFS 計算 or RoEx API 投げる
+- Phase 1.5: 波形描画用の peak data を tap から取得 → SwiftUI Canvas で各 track 行に inline waveform 表示（Ableton Arrangement view 風）
+
+**簡易 tap install 例**:
+
+```swift
+// MultiTrackPlayerService 拡張
+func installLUFSTap(callback: @escaping @Sendable (AVAudioPCMBuffer) -> Void) {
+    let format = masterMixer.outputFormat(forBus: 0)
+    masterMixer.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
+        callback(buffer)
+    }
+}
+func removeLUFSTap() {
+    masterMixer.removeTap(onBus: 0)
+}
+```
+
+注意: `installTap` は engine.start() 前後どちらでも可だが、bufferSize を大きくしすぎると latency が増える（1024 = ~21ms @ 48k）。
+
 ---
 
 ## 4. Phase 0 Week 2 想定スケジュールへの CCO サポート方針
@@ -695,10 +913,14 @@ extension MUEDDialService {
 ### 既存資産
 - `apps/muednote-hub-macos/Sources/MUEDnoteHub/Services/HooMCPClient.swift` — Hoo MCP 接続実装
 - `apps/muednote-hub-macos/Sources/MUEDnoteHub/Services/MUEDDialService.swift` — MUEDial 5 tools ラッパー
-- `apps/muednote-hub-macos/Sources/MUEDnoteHub/Services/EchovnaService.swift` — Echovna 3 tools ラッパー（PR#49 wiring 完納）
+- `apps/muedaw-macos/Sources/MUEDaw/Services/EchovnaService.swift` — Echovna 3 tools ラッパー（PR#49 wiring 完納）
+- `apps/muedaw-macos/Sources/MUEDaw/Services/EchovnaLocalInferenceService.swift` — Phase 1 MVP Python subprocess + MLX backend 実装（§1.5 reference、PR#58 + 01c243c で PYTHONUNBUFFERED / Cancellation 反映済）
+- `apps/muedaw-macos/Sources/MUEDaw/Services/MultiTrackPlayerService.swift` — Phase 1 MVP マルチトラック再生実装（§3.5 reference、AVAudioEngine + per-track AVAudioPlayerNode/Mixer）
+- `apps/muedaw-macos/Sources/MUEDaw/Views/MultiTrackPlayerView.swift` — マルチトラック UI（Transport / TrackRow / Slider）
+- `apps/muedaw-macos/Sources/MUEDaw/Views/LUFSControlView.swift` — LUFS制御 UI（Phase 1 MVP 後半に MultiTrackPlayerService の installTap と接続）
 - `apps/muedaw-macos/` — DAW 本体（Phase 0 PR#55-#57 で新設、Phase 1 MVP の主舞台）
 - `mued_v2/workers/hoo-mcp/src/tools-echovna.ts` — Echovna 3 tools (PR#287)
-- Phase 1 で追加予定: `apps/muedaw-macos/Sources/MUEDaw/Services/EchovnaLocalInferenceService.swift`（§1.5 骨子参照）+ acestep wrapper Python script（§1.5.6 protocol）
+- Phase 1 で追加予定: `apps/muedaw-macos/scripts/generate_audio.py` (§1.5.6 protocol)
 
 ---
 
@@ -726,4 +948,17 @@ extension MUEDDialService {
 
 **作成者**: template課（CCO） / **初版**: 2026-04-26 AM JST / **改訂1**: 2026-04-26 PM JST（Phase 1 go 判定 → 既存実装ベースに §1.5 全面書き直し）
 **期限**: 2026-05-01 EOD（前倒し納品 / 改訂も期限内）
-**次のアクション**: PR (Tier 1 self-merge) → native課（k9a3prsw）に push（CCO docs § 1.5 既存実装の解説 + 強化候補3点：PYTHONUNBUFFERED 追加 / Cancellation API / Notarized DMG 待ち を共有）→ P2 AVAudioEngine マルチトラック起案へ
+
+### 改訂版2（2026-04-26 PM、P2 §3.5 マルチトラック再生 追加）
+
+- [x] **既存実装との整合 verify**: `MultiTrackPlayerService.swift`（234行）+ `MultiTrackPlayerView.swift`（241行）の actual implementation を §3.5 で reference 引用、架空コードなし
+- [x] **§1.5 起案フロー（既存実装ベース articulate）の継続適用**: P1 で確立したフローを P2 でも踏襲、find確認 → 実コード読み → CCOレビュー観点で articulate
+- [x] **CCO レビュー価値の articulate**: §3.5.4（良い点6項目）/ §3.5.5（強化候補10項目）/ §3.5.6（マルチトラック同期再生リファクタ提案）/ §3.5.7（ハマりポイント10件 既存対応 vs 未踏分）/ §3.5.8（LUFS / 波形連携）
+- [x] **強化推奨3点（最優先）の明示**: ConfigurationChange observer / play(at:) 同期 / deinit engine.stop（§3.5.7）
+- [x] **既存資産パス追記**: §5 に MultiTrackPlayerService / MultiTrackPlayerView / LUFSControlView 追加、EchovnaService の所在を muedaw-macos に修正（muednote-hub-macos ではない）
+- [x] **pending phrase scan**: §3.5 内に断定的 TODO/FIXME なし。Phase 1.5 検討事項は意図明示
+- [x] **Source Path 存在確認（最終）**: §5 全パス + MultiTrackPlayerService.swift / MultiTrackPlayerView.swift 4/26 PM 時点で存在確認
+- [x] **native課 既存実装の最新状況反映**: PR#58 (1496行) + commit 01c243c（PYTHONUNBUFFERED / Cancellation 反映済）の状況を §5 に注記
+
+**改訂2**: 2026-04-26 PM JST（P2 §3.5 マルチトラック再生 追加）
+**次のアクション**: PR (Tier 1 self-merge) → native課（k9a3prsw）に push → P3 Notarized DMG signing 起案 → P4 SwiftUI Suno+Ableton 2軸融合UI設計パターン
