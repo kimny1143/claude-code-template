@@ -20,6 +20,27 @@
       "source": "docs.stripe.com",
       "sourceType": "well-known",
       "computedHash": "06c5c3fd85657ff9aaadff65bd2d63f606da8e44802dc1f9aaf42c73263a11b7"
+    },
+    "peer-id-lookup": {
+      "source": "claude-code-template",
+      "sourceType": "internal-common",
+      "computedHash": "c2454ea73c00ca92c345eb9f9810b1da95f8f5fe13311b63e6481905a35384e9",
+      "distributedAt": "2026-04-26",
+      "distributedBy": "scripts/distribute-skills.sh"
+    },
+    "tier-judge": {
+      "source": "claude-code-template",
+      "sourceType": "internal-common",
+      "computedHash": "2714666a558e6478861ff49cd2bb8aacfca0fe4b213429137111b27cd464d797",
+      "distributedAt": "2026-04-26",
+      "distributedBy": "scripts/distribute-skills.sh"
+    },
+    "plan-mode-policy": {
+      "source": "claude-code-template",
+      "sourceType": "internal-common",
+      "computedHash": "2b3186fdaef99582378d74b629c8b7d8f4ae7b09c0871a2e3da6098eadd7642c",
+      "distributedAt": "2026-04-26",
+      "distributedBy": "scripts/distribute-skills.sh"
     }
   }
 }
