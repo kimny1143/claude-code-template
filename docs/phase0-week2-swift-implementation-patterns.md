@@ -870,6 +870,244 @@ func removeLUFSTap() {
 
 注意: `installTap` は engine.start() 前後どちらでも可だが、bufferSize を大きくしすぎると latency が増える（1024 = ~21ms @ 48k）。
 
+### 3.6 Phase 1 MVP Notarized DMG 配布パイプライン解説（既存 sign.sh / notarize.sh / create-dmg.sh + entitlements ベース）
+
+> **本セクションの位置付け（CCO articulate）**:
+> 本セクションは `apps/muedaw-macos/MUEDaw.entitlements`（12行）+ `scripts/sign.sh`（112行）+ `scripts/notarize.sh`（91行）+ `scripts/create-dmg.sh`（102行）+ `Sources/MUEDaw/Resources/Info.plist`（32行）に既に揃っている **完全な配布パイプライン資産**を reference に、設計判断 articulate + 配布前チェックリスト + ハマりポイント事前共有を提供する。
+>
+> Phase 1 MVP の **MVP4要素 (C) Notarize** ブロッカー解消を優先し、当初 4/27-28 着手予定から **4/26 中の前倒し finalize** に切替。P1 §1.5 / P2 §3.5 と同じ既存実装ベース articulate 形式を継続。
+
+#### 3.6.1 配布パイプライン全体図（既存実装反映）
+
+```
+[Source code]
+     │
+     │  scripts/sign.sh
+     │   1. find_signing_identity (Developer ID Application 検出)
+     │   2. swift build -c release --arch arm64
+     │   3. create_app_bundle (.app/Contents/{MacOS,Resources,Info.plist})
+     │   4. codesign --options runtime --timestamp --entitlements ./MUEDaw.entitlements
+     │   5. verify (codesign --verify --deep --strict + spctl --assess)
+     ▼
+[MUEDaw.app (signed, Hardened Runtime 適用済)]
+     │
+     │  scripts/notarize.sh
+     │   1. ditto -c -k --keepParent → MUEDaw.zip
+     │   2. xcrun notarytool submit --keychain-profile MUEDaw-Notarization --wait（1-5分）
+     │   3. xcrun stapler staple MUEDaw.app
+     │   4. xcrun stapler validate + spctl --assess
+     ▼
+[MUEDaw.app (notarized, stapled, Gatekeeper-pass)]
+     │
+     │  scripts/create-dmg.sh
+     │   1. prepare_staging (.app + /Applications symlink)
+     │   2. hdiutil create -format UDZO -volname MUEDaw → MUEDaw-${VERSION}.dmg
+     │   3. codesign DMG (sign_dmg)
+     │   4. xcrun notarytool submit DMG → staple DMG
+     ▼
+[MUEDaw-0.1.0.dmg (signed + notarized + stapled)]
+     │
+     ▼
+mued.jp 直配布 / GitHub Releases
+```
+
+**設計判断のポイント（CCO articulate）**:
+
+| 設計判断 | 採用パターン | 理由 |
+|---|---|---|
+| 配布形態 | **Notarized DMG 直配布**（mued.jp） | Mac App Store 不要 → AU v3 host や Process spawn が制約なく動かせる + 30%手数料回避（kimny戦略整合） |
+| 署名方式 | **Developer ID Application**（App Store 配布用 Apple Distribution と区別） | 直配布用 + Notarization 必須 + Hardened Runtime 必須の組み合わせ |
+| Hardened Runtime | **`--options runtime`** + `MUEDaw.entitlements` で例外明示 | macOS 10.14+ で Notarization の前提条件、Python subprocess（§1.5）には `cs.disable-library-validation` 例外が必要 |
+| Notarization tool | **`xcrun notarytool`**（旧 altool は 2023年 deprecated） | submit / submit --wait / staple / history の現行推奨 API |
+| Credential 管理 | **Keychain profile（`MUEDaw-Notarization`）+ app-specific password** | 開発機の Keychain に保存、shell history に password が残らない |
+| パイプライン分割 | **sign.sh / notarize.sh / create-dmg.sh の3段階** | 各段階を独立に再実行可（codesign のみ再実行 / notarize のみ / DMG のみ）→ デバッグ容易 |
+| Build target | **arm64 only**（Apple Silicon 専用） | Phase 1 MVP は kimnyマシン M1 Max 64GB前提 + ACE-Step + MLX backend は arm64 必須 |
+| Bundle ID | **`com.glasswerks.muedaw`** | Glasswerks ドメイン逆引き、muednote-hub-macos と区別 |
+
+#### 3.6.2 MUEDaw.entitlements の解説（既存 12行 reference）
+
+```xml
+<plist version="1.0">
+<dict>
+    <!-- Network: HTTP to Hoo MCP server -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <!-- Hardened Runtime: allow spawning unsigned Python subprocess (ACE-Step) -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+</dict>
+</plist>
+```
+
+**Entitlements の意味と必然性（CCO articulate）**:
+
+| Entitlement | 必然性 |
+|---|---|
+| `com.apple.security.network.client` | Hoo MCP（Cloudflare Workers）への HTTPS 接続が必要。`HooMCPClient.swift` の URLSession 通信のため必須 |
+| `com.apple.security.cs.disable-library-validation` | §1.5 の Python subprocess 起動時に、Python 本体（`/opt/homebrew/bin/python3` または ACE-Step venv の `.venv/bin/python3`）が **Apple 署名されていない** ため、Hardened Runtime のデフォルト挙動だと load が拒否される。`disable-library-validation` で例外許可 |
+
+**現状ない / 追加検討の Entitlement**:
+
+| 検討候補 | 必要性 |
+|---|---|
+| `com.apple.security.cs.allow-jit` | MLX backend が Metal Shader を JIT compile する場合に必要。**現状の native PR#58 + commit 01c243c でテスト中の挙動次第**で追加判断（実機で MLX が落ちなければ不要） |
+| `com.apple.security.cs.allow-unsigned-executable-memory` | JIT 関連、`allow-jit` の上位互換だが Notarization 審査が厳しくなる。最後の手段 |
+| `com.apple.security.app-sandbox` | App Sandbox 適用。**現状未適用**（未適用のため Process / FileHandle に制限なし）。Mac App Store 配布時のみ必要、Notarized DMG では不要 |
+| `com.apple.security.files.user-selected.read-write` | NSOpenPanel 経由のユーザー選択ファイル read-write。Phase 1.5 で audio file import 機能追加時に必要 |
+| `com.apple.security.cs.allow-dyld-environment-variables` | `DYLD_*` 環境変数を subprocess に渡す必要があるなら追加。§1.5 では `PYTHONPATH` 等の `*` 環境変数で代替済 → **不要** |
+
+#### 3.6.3 既存スクリプトの設計判断 articulate
+
+##### sign.sh（112行）
+
+**良い点**:
+- `set -euo pipefail` で fail-fast（エラー時に途中で止まる）
+- `find_signing_identity` で証明書を自動検出（hardcode しない）→ 共同開発者・CI で同じスクリプトが動く
+- `swift build -c release --arch arm64` で release ビルド明示
+- `--options runtime --timestamp --entitlements` の3点セット → Notarization の必須要件
+- `verify_signature` で codesign --verify --deep --strict + spctl --assess を順次実行
+- `spctl --assess` 失敗時は warning に倒す（notarize 前は通らないのが正常）→ **次のステップを log_warn で誘導**
+
+**強化候補**:
+- `swift build` の Universal Binary（arm64 + x86_64）対応は **Phase 1.5以降**で検討（Intel Mac サポート必要なら `--arch arm64 --arch x86_64` + lipo）
+- `.app/Contents/PkgInfo` を作成していない（`APPL????` の4文字ファイル、optional だが慣行）→ 不要かもしれない、現状 OK
+
+##### notarize.sh（91行）
+
+**良い点**:
+- `check_prerequisites` で 1) app bundle 存在 2) codesign 済み 3) keychain-profile 存在 を順次検証 → 失敗時に **次に何をすべきか具体的にログで誘導**（"Run ./scripts/sign.sh first."）
+- `xcrun notarytool submit --wait` で同期実行（1-5分の待ち、CI でも使えるパターン）
+- staple → validate → spctl --assess の3段階検証
+- 1回限りの credentials セットアップ手順をスクリプト冒頭コメントに記載（Apple ID / Team ID / app-specific password 取得 URL）
+- ZIP は ditto で作る（macOS 標準、metadata 保持） / submit 後に削除
+
+**強化候補**:
+- submit 失敗時の `xcrun notarytool log` 自動取得が現状ない → 失敗時のみ呼ぶ追加処理推奨
+- `--wait` のタイムアウト指定なし → 5min超過時の挙動（現状は CLI のデフォルト）
+
+##### create-dmg.sh（102行）
+
+**良い点**:
+- VERSION を Info.plist から動的取得（`defaults read CFBundleShortVersionString`）→ DMG ファイル名にバージョン埋込み
+- `prepare_staging` で `.app` + `/Applications` symlink を staging ディレクトリに準備 → drag & drop インストール UX
+- DMG 自体も sign + notarize + staple（Apple 推奨 / Gatekeeper 完全 pass）
+- `--skip-notarize` フラグで CI 等で notarize スキップ可能
+- 最後に `gh release create v${VERSION} "$DMG_PATH"` の next-step ヒント
+
+**強化候補**:
+- DMG レイアウト（背景画像 / アイコン位置 / window size）の指定なし → 現状はシンプル列挙、`hdiutil` の `-window-bounds` / `-icon-size` で UX 向上の余地。Phase 1 MVP では現状で十分、Phase 1.5 でブランディング強化検討
+- create-dmg gem (homebrew formula) を使う代替もあるが、現状の `hdiutil create` だけで完結している方が依存少なくクリーン
+
+#### 3.6.4 一回きりセットアップ手順（CCO articulate / 既存 notarize.sh コメント拡張）
+
+新規開発機 / 共同開発者の onboarding:
+
+##### Step 1: Apple Developer 証明書の取得・インストール
+
+1. Apple Developer Program 登録（Glasswerks Team ID: `F529L4WT3V` 既存）
+2. Xcode → Settings → Accounts → "Manage Certificates" → `+` → **Developer ID Application**
+3. 自動的に Keychain に保存される
+4. 検証: `security find-identity -v -p codesigning | grep "Developer ID Application"`
+
+##### Step 2: App-specific password 生成
+
+1. https://appleid.apple.com/account/manage にアクセス
+2. "App-Specific Passwords" → "Generate Password..."
+3. ラベル: "MUEDaw-Notarization"（任意）→ 生成された16文字をコピー（**この場で必ず保存、再表示不可**）
+
+##### Step 3: notarytool keychain profile 登録
+
+```bash
+xcrun notarytool store-credentials "MUEDaw-Notarization" \
+    --apple-id "glasswerkskimny@gmail.com" \
+    --team-id "F529L4WT3V" \
+    --password "<step 2 で生成した app-specific password>"
+```
+
+検証:
+```bash
+xcrun notarytool history --keychain-profile "MUEDaw-Notarization"
+```
+
+##### Step 4: 初回ビルド・配布
+
+```bash
+cd apps/muedaw-macos
+./scripts/sign.sh        # signed app bundle
+./scripts/notarize.sh    # notarized + stapled .app
+./scripts/create-dmg.sh  # signed + notarized + stapled .dmg
+```
+
+3段階すべて成功すれば `dist/MUEDaw-0.1.0.dmg` が生成される。
+
+#### 3.6.5 配布前チェックリスト（CCO 提供）
+
+リリース直前に以下を **必ず** 確認:
+
+| # | チェック項目 | 確認方法 |
+|---|---|---|
+| 1 | Info.plist `CFBundleShortVersionString` が **新バージョン** | `defaults read dist/MUEDaw.app/Contents/Info.plist CFBundleShortVersionString` |
+| 2 | `MUEDaw.entitlements` に **不要な権限が増えていない** | git diff で確認、Notarization 厳格化で reject されることがある |
+| 3 | `AppIcon.icns` 存在（sign.sh が log_warn を出さない） | `ls Sources/MUEDaw/Resources/AppIcon.icns` |
+| 4 | swift build release 通過 | `swift build -c release --arch arm64 2>&1 | tail` |
+| 5 | sign.sh 実行 → `verify_signature` で **エラーなし** | exit code 0 |
+| 6 | notarize.sh 実行 → submit が "Accepted" 状態 | log の最後の `status: Accepted` |
+| 7 | stapler validate が "The validate action worked!" | 自動 |
+| 8 | `spctl --assess --type execute --verbose dist/MUEDaw.app` が "accepted" | 手動でも実行 |
+| 9 | DMG が **新バージョンファイル名**で生成 | `ls -la dist/MUEDaw-*.dmg` |
+| 10 | DMG マウント → `.app` をダブルクリック → **Gatekeeper 警告なし** で起動 | 手動テスト |
+| 11 | アプリ起動後 **Hoo MCP 接続成功** | UI で接続確認 / Console.app で network ログ確認 |
+| 12 | アプリ起動後 **Python subprocess 起動成功**（音楽生成テスト） | UI で生成テスト / 失敗時 Console.app で `disable-library-validation` 関連エラー |
+
+#### 3.6.6 ハマりポイント（CCO事前共有 / 既存実装で踏み済 ✅ / 未踏分 ⚠）
+
+| # | ポイント | 既存実装での対応 |
+|---|---|---|
+| 1 | **Notarization 失敗時、log を自動取得していない** | ⚠ submit 失敗時のみ `xcrun notarytool log <submission-id>` を自動実行する処理を追加推奨 |
+| 2 | **`--options runtime` 忘れ → Notarization 拒否** | ✅ sign.sh で必須適用 |
+| 3 | **`--timestamp` 忘れ → 将来証明書失効後に invalid に** | ✅ sign.sh で必須適用（Apple のタイムスタンプサーバーから timestamp 取得） |
+| 4 | **Entitlements に不要な権限追加 → Notarization 厳格 reject** | ✅ 現状 2項目のみ、最小権限 |
+| 5 | **Python binary が `disable-library-validation` でも動かないケース**（macOS 14+で稀に） | ⚠ Phase 1 MVP 実機テストで遭遇したら、`com.apple.security.cs.allow-unsupported-system-libraries` 追加検討 |
+| 6 | **app-specific password を直接 shell history に書く（漏洩リスク）** | ✅ Keychain profile で管理、history に password 残らない |
+| 7 | **CI で notarytool が動かない**（headless で Keychain アクセス不可） | ⚠ GitHub Actions 等で配布自動化する場合、`--apple-id` / `--team-id` / `--password` を直接 CLI 引数に渡す（GitHub Secrets 経由） |
+| 8 | **DMG sign 忘れ → DMG 自体に Gatekeeper 警告** | ✅ create-dmg.sh で sign 適用 |
+| 9 | **DMG notarize 忘れ → DMG ダウンロード後の初回起動で警告** | ✅ create-dmg.sh で notarize + staple |
+| 10 | **stapler staple 後の `.app` を変更すると署名 invalid** | ⚠ staple 後の `.app` への ファイル追加・変更禁止。実装ロジックとして protect する Hook 追加検討 |
+| 11 | **Bundle ID 変更時に既存ユーザーの設定が引き継がれない** | ✅ `com.glasswerks.muedaw` で固定、変更しない方針 |
+| 12 | **NSMicrophoneUsageDescription が日本語** | ✅ Info.plist で `MUEDawは音声入力を使用しません。` を明示。Phase 1.5 で多言語化検討 |
+
+**最優先で対応推奨（Phase 1 MVP 期間内 / 配布前）**:
+- #1 Notarization 失敗時の log 自動取得（10行追加で済む、デバッグ時間激減）
+- #5 実機テストで Python subprocess が落ちる場合の追加 Entitlement 判断（kimny ライブテスト時に判定）
+- #10 staple 後の `.app` 変更禁止 ガード Hook 追加（ヒューマンエラー防止）
+
+#### 3.6.7 §1.5 Python subprocess + Notarization 連動チェック
+
+**§1.5 Python subprocess パターンを Notarized DMG 配布で動かすための条件**:
+
+1. **`MUEDaw.entitlements` に `cs.disable-library-validation` が含まれること** ✅（既存）
+2. **Python binary が `--keychain-profile` 経由でアクセス可能なパスにあること** ✅（既存実装の `pythonBinary` 探索ロジック: venv → Homebrew）
+3. **Python subprocess の environment が `aceStepEnvironment()` 適用済み** ✅（既存 buildEnvironment）
+4. **`PYTHONUNBUFFERED=1` が伝播** ✅（commit 01c243c で反映済）
+5. **`PYTHONPATH` で venv site-packages が正しく解決** ✅（既存 PYTHONPATH 自動構築）
+6. **Notarized 後の MUEDaw.app から Python が見つかる**（パス解決が dev環境と本番で同じ） ⚠ **要実機テスト**
+
+→ #6 は実機テスト後にのみ判定可能。落ちる場合は Python を **app bundle 内に同梱**する戦略（`MUEDaw.app/Contents/Resources/python3-runtime/`）を Phase 1.5 で検討。
+
+#### 3.6.8 mued.jp 直配布フロー（Phase 1 MVP 配布想定）
+
+**現状（Phase 1 MVP）**:
+1. `./scripts/sign.sh && ./scripts/notarize.sh && ./scripts/create-dmg.sh`
+2. `gh release create v0.1.0 dist/MUEDaw-0.1.0.dmg --notes "MUEDaw v0.1.0 Phase 1 MVP"`（create-dmg.sh の next-step ヒント通り）
+3. mued.jp 上にダウンロードリンク貼る（GitHub Releases の direct URL or LP に CTA ボタン）
+
+**Phase 1.5 拡張案（CCO 起案）**:
+- Stripe Checkout + Lifetime $99 購入 → 購入確認後に GitHub Releases の private URL 発行
+- 自動化: GitHub Actions の `release.yml` で sign.sh / notarize.sh / create-dmg.sh を実行（Secrets で証明書 / app-specific password 提供）
+- CDN: mued.jp 自体は Vercel デプロイ → 大容量 DMG は Cloudflare R2 経由（Phase 1.5 R2 導入と整合）
+
+→ Phase 1 MVP は **手動 release** で十分。自動化は Phase 1.5 で kimny の負荷軽減タスクとして起案。
+
 ---
 
 ## 4. Phase 0 Week 2 想定スケジュールへの CCO サポート方針
@@ -904,6 +1142,11 @@ func removeLUFSTap() {
 - [MCP Swift SDK v0.12.0](https://github.com/modelcontextprotocol/swift-sdk)
 - [AVAudioUnit (Apple Developer)](https://developer.apple.com/documentation/avfaudio/avaudiounit)
 - [Audio Unit v3 Documentation](https://developer.apple.com/documentation/audiotoolbox/audio_unit_v3_plug-ins/incorporating_audio_effects_and_instruments)
+- [Notarizing macOS Software Before Distribution (Apple Developer)](https://developer.apple.com/documentation/security/notarizing_macos_software_before_distribution)
+- [Hardened Runtime (Apple Developer)](https://developer.apple.com/documentation/security/hardened_runtime)
+- [Customizing the Notarization Workflow (notarytool)](https://developer.apple.com/documentation/security/customizing_the_notarization_workflow)
+- [Apple Developer Account](https://developer.apple.com/account/)
+- [App-Specific Passwords](https://appleid.apple.com/account/manage)
 
 ### ACE-Step v1.5 関連
 - [ACE-Step v1.5 Repo](https://github.com/ace-step/ACE-Step-1.5)
@@ -918,6 +1161,12 @@ func removeLUFSTap() {
 - `apps/muedaw-macos/Sources/MUEDaw/Services/MultiTrackPlayerService.swift` — Phase 1 MVP マルチトラック再生実装（§3.5 reference、AVAudioEngine + per-track AVAudioPlayerNode/Mixer）
 - `apps/muedaw-macos/Sources/MUEDaw/Views/MultiTrackPlayerView.swift` — マルチトラック UI（Transport / TrackRow / Slider）
 - `apps/muedaw-macos/Sources/MUEDaw/Views/LUFSControlView.swift` — LUFS制御 UI（Phase 1 MVP 後半に MultiTrackPlayerService の installTap と接続）
+- `apps/muedaw-macos/MUEDaw.entitlements` — Hardened Runtime 例外定義（§3.6 reference、12行）
+- `apps/muedaw-macos/Sources/MUEDaw/Resources/Info.plist` — Bundle ID `com.glasswerks.muedaw`、LSMinimumSystemVersion 14.0（§3.6 reference）
+- `apps/muedaw-macos/scripts/sign.sh` — Developer ID Application codesign + Hardened Runtime（§3.6 reference、112行）
+- `apps/muedaw-macos/scripts/notarize.sh` — xcrun notarytool submit + staple + verify（§3.6 reference、91行）
+- `apps/muedaw-macos/scripts/create-dmg.sh` — hdiutil + DMG sign + DMG notarize + staple（§3.6 reference、102行）
+- `apps/muedaw-macos/scripts/generate-icon.sh` — App Icon 生成スクリプト（95行）
 - `apps/muedaw-macos/` — DAW 本体（Phase 0 PR#55-#57 で新設、Phase 1 MVP の主舞台）
 - `mued_v2/workers/hoo-mcp/src/tools-echovna.ts` — Echovna 3 tools (PR#287)
 - Phase 1 で追加予定: `apps/muedaw-macos/scripts/generate_audio.py` (§1.5.6 protocol)
@@ -961,4 +1210,20 @@ func removeLUFSTap() {
 - [x] **native課 既存実装の最新状況反映**: PR#58 (1496行) + commit 01c243c（PYTHONUNBUFFERED / Cancellation 反映済）の状況を §5 に注記
 
 **改訂2**: 2026-04-26 PM JST（P2 §3.5 マルチトラック再生 追加）
-**次のアクション**: PR (Tier 1 self-merge) → native課（k9a3prsw）に push → P3 Notarized DMG signing 起案 → P4 SwiftUI Suno+Ableton 2軸融合UI設計パターン
+
+### 改訂版3（2026-04-26 PM、P3 §3.6 Notarized DMG 配布パイプライン 追加・前倒し完納）
+
+**起草経緯**: native課 summary で「(C) Notarize CCO P4待ち」を確認し、Phase 1 MVP のブロッカー解消優先のため当初 4/27-28 着手予定から **4/26 中の前倒し finalize** に切替。find確認原則継続適用で既存 sign.sh/notarize.sh/create-dmg.sh + Entitlements + Info.plist の **完全な配布パイプライン資産**（合計 444行）を発見、reference 引用形式で起案。
+
+- [x] **既存実装との整合 verify**: MUEDaw.entitlements（12行）+ sign.sh（112行）+ notarize.sh（91行）+ create-dmg.sh（102行）+ Info.plist（32行）+ generate-icon.sh（95行）= 合計444行を §3.6 で reference 引用、架空コードなし
+- [x] **find 確認原則継続適用**: P1 P2 で確立したフローを P3 でも踏襲、native課からの確認返信より前に独自に既存資産検出済
+- [x] **CCO レビュー価値の articulate**: §3.6.1（パイプライン全体図 + 設計判断ポイント8項目）/ §3.6.2（Entitlements 解説 + 追加検討候補5項目）/ §3.6.3（既存スクリプト3本の良い点・強化候補）/ §3.6.4（一回きりセットアップ手順4ステップ）/ §3.6.5（**配布前チェックリスト12項目**）/ §3.6.6（**ハマりポイント12件**、既存対応 vs 未踏分）/ §3.6.7（§1.5 Python subprocess + Notarization 連動チェック6項目）/ §3.6.8（mued.jp 直配布フロー + Phase 1.5 自動化提案）
+- [x] **§1.5 との連動検証**: §3.6.7 で Python subprocess パターンが Notarized DMG で動くための6条件を明示。`disable-library-validation` 必然性を articulate
+- [x] **最優先強化推奨3点の明示**: Notarization log 自動取得 / 実機テスト時の Entitlement 判断 / staple 後の .app 変更禁止 ガード（§3.6.6）
+- [x] **既存資産パス追記（最終）**: §5 に MUEDaw.entitlements / Info.plist / sign.sh / notarize.sh / create-dmg.sh / generate-icon.sh 追加
+- [x] **公式ドキュメントリンク追記**: Notarizing macOS / Hardened Runtime / notarytool / App-Specific Passwords / Apple Developer Account
+- [x] **pending phrase scan**: §3.6 内に断定的 TODO/FIXME なし、Phase 1.5 自動化案は意図明示
+- [x] **Source Path 存在確認（最終）**: §3.6 で言及した全6ファイル + Team ID `F529L4WT3V` + Bundle ID `com.glasswerks.muedaw` 存在確認
+
+**改訂3**: 2026-04-26 PM JST（P3 §3.6 Notarized DMG 配布パイプライン 追加・1日前倒し完納）
+**次のアクション**: PR (Tier 1 self-merge) → native課（k9a3prsw）に push → P4 SwiftUI Suno+Ableton 2軸融合UI設計パターン（4/27 or 即時着手）
