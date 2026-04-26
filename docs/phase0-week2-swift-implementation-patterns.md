@@ -45,7 +45,11 @@ MLX-Swift は Apple 公式の MLX Swift binding。Apple Silicon の unified memo
 | メモリ要件目安 | 16GB 最小（Q4量子化）/ 36GB+ 推奨（Q5/Q6） / ACE-Step XL ~18.8GB BF16 |
 | 推奨実行環境 | M1 Max 64GB 以上（Echovna 既存検証環境と一致） |
 
-### 1.2 muednote-hub-macos との統合パターン
+### 1.2 muednote-hub-macos / muedaw-macos との統合パターン（MLX-Swift native binding 経路、Phase 2 想定）
+
+> **Phase 1 確定（2026-04-26 kimny判定）**: 本セクションの MLX-Swift native binding 経路は **Phase 2 deferred**。Phase 1 MVP 本実装は **Python subprocess + MLX backend** 経由で確定。詳細は **§1.5 Phase 1 本実装: EchovnaLocalInferenceService Python subprocess 経由パターン** を参照。
+>
+> 本セクション（§1.2）は Phase 2 で MLX-Swift native binding に移行する際の骨子として保持する。
 
 既存 `Package.swift` に MLX-Swift を追加:
 
@@ -182,6 +186,268 @@ func generateBatch(prompts: [String]) async throws -> [String] {
 | 量子化選択 | Q4（16GB機）/ Q5-Q6（36GB+機） / BF16（64GB+機） |
 | バックグラウンド時 | `Application willResignActive` で `releaseModel()` 呼び出しを検討（ただし再ロード時間とのトレードオフ） |
 | KV cache | MLX の block-based 管理に任せる（hot in RAM / cold in SSD） |
+
+---
+
+### 1.5 Phase 1 本実装パターン解説: EchovnaLocalInferenceService（既存 muedaw-macos 実装ベース）
+
+> **本セクションの位置付け（CCO articulate）**:
+> 本セクションは **架空の理想形を提示する設計書ではなく、`apps/muedaw-macos/Sources/MUEDaw/Services/EchovnaLocalInferenceService.swift` に既に実装されているパターンの設計判断を言語化** したもの。CCO 起案時（2026-04-26 PM）に native課が既に production-grade な実装を進めていることを発見し、CCO の付加価値を「既存実装の設計判断 articulate + ハマりポイント事前共有 + Phase 1.5 移行時の検討事項」に絞ることに方針転換した（既存 structure inertia 回避 + コード疎通≠MVP の原則適用）。
+
+**Phase 1 MVPスコープ確定の経緯**（kimny判定 2026-04-26 16:55-17:08）:
+- 旧案: fal.ai primary（クラウドGPU）+ MLX-Swift native binding 並行検討
+- 新案 ✅: **Python subprocess + MLX backend（Phase 0 PoC環境の本実装化）** 単独
+- ACE-Step v1.5 + MLX backend を kimnyマシン M1 Max 64GB 上で起動し、Swift native UI から `Process` 経由で呼ぶ
+- fal.ai / Modal / R2 は Phase 1.5 以降のクラウドオプション
+
+#### 1.5.1 アーキテクチャ概観（既存実装反映）
+
+```
+[Swift native UI (muedaw-macos)]
+        │
+        │  Process spawn
+        │   - executableURL: ACE-Step venv の python3（fallback: Homebrew /opt/homebrew/bin/python3）
+        │   - arguments:    自前 wrapper script (scripts/generate_audio.py) + CLI args
+        │   - environment:  Bug #1081 workaround + ACESTEP_LM_BACKEND=mlx + PYTHONPATH 自動構築
+        ▼
+[Python wrapper script: generate_audio.py]
+        │  acestep を import して inference を呼ぶ
+        │  進捗・結果・エラーを stdout JSON line で emit
+        ▼
+[ACE-Step v1.5 + MLX backend on Apple Silicon (M1 Max 64GB前提)]
+```
+
+**設計判断のポイント（CCO articulate）**:
+
+| 設計判断 | 採用パターン | 理由 |
+|---|---|---|
+| 引数渡し方式 | **CLI args（stdin ではない）** | 1回の生成で1回の subprocess 起動 → CLI args の方が shell 透過性が高く、デバッグが容易（`python3 generate_audio.py --tags ...` を直接実行可能） |
+| Python 実行系 | **ACE-Step venv 優先 + Homebrew fallback** | venv 内 site-packages を使うことで依存衝突回避。venv 不在時のみ fallback |
+| Path解決 | **3候補パス自動探索**（`~/Dropbox/.../Echovna/ACE-Step-1.5` / `~/ACE-Step-1.5` / `~/Documents/ACE-Step-1.5`） | kimnyマシン以外でも将来動かせる柔軟性、かつ candidate first-match で起動コストは最小 |
+| Wrapper script | **自前 `generate_audio.py`** | acestep CLI がない／挙動が変わるリスク回避。Swift 側との protocol を独自に固定可能 |
+| stdout 読み取り | **`readabilityHandler` + `withCheckedThrowingContinuation`** | actor 内 `for try await` よりも Process の terminationHandler との連携が自然、buffer 分割もコールバック内で完結 |
+
+#### 1.5.2 既存実装の構造（実コード reference）
+
+実装ファイル: `apps/muedaw-macos/Sources/MUEDaw/Services/EchovnaLocalInferenceService.swift`（2026-04-26 時点で 245行）
+
+主要構造（要点抜粋、最新は実ファイル参照）:
+
+```swift
+actor EchovnaLocalInferenceService {
+
+    // ── 1. Path resolution（static helpers）──
+    private static func aceStepRoot() -> URL? { /* 3候補から first-match */ }
+    private static func pythonBinary(aceStepRoot: URL) -> URL? { /* venv 優先 + brew fallback */ }
+    private static func scriptPath() -> URL? { /* Bundle resource → swift run 想定の relative paths */ }
+    static func defaultOutputDir() -> URL { /* ~/Documents/MUEDaw/generations */ }
+
+    // ── 2. Generate（実体）──
+    func generate(
+        tags: String,
+        bpm: Int? = nil,
+        duration: Double = 30.0,
+        lyrics: String = "[Instrumental]",
+        vocalLanguage: String = "unknown",
+        outputDir: URL? = nil,
+        progressHandler: @escaping @Sendable (InferenceProgress) -> Void
+    ) async throws -> URL {
+        // ・3 helper で path resolve → 失敗時 EchovnaLocalError を throw
+        // ・Process を build（CLI args、stdout/stderr pipe、env は buildEnvironment(...)）
+        // ・withCheckedThrowingContinuation で stdout を readabilityHandler 内で line-by-line 解析
+        //   - {"type":"progress","step":"loading","value":0.5} → progressHandler(InferenceProgress)
+        //   - {"type":"result","path":"..."} → state.resultURL
+        //   - {"type":"error","message":"..."} → state.errorMessage
+        // ・terminationHandler で resume（resultURL > errorMessage > stderr 末尾500文字 の優先順）
+    }
+
+    // ── 3. Environment build（Bug #1081 workaround + MLX backend 指定 + PYTHONPATH 自動構築）──
+    private static func buildEnvironment(aceStepRoot: URL) -> [String: String] {
+        var env = ProcessInfo.processInfo.environment
+        env["PYTORCH_MPS_HIGH_WATERMARK_RATIO"] = "0.7"
+        env["PYTORCH_ENABLE_MPS_FALLBACK"]      = "1"
+        env["ACESTEP_LM_BACKEND"]               = "mlx"
+        env["TOKENIZERS_PARALLELISM"]           = "false"
+        env["ACE_STEP_SUPPRESS_AUDIO_TOKENS"]   = "1"
+        // venv の site-packages を PYTHONPATH に自動追加（python3.X 配下を listdir）
+        return env
+    }
+}
+```
+
+**CCO レビューコメント（既存実装の良い点）**:
+
+1. **`actor` 化 + static path helpers**: 状態を持つ generate メソッドだけ actor に閉じ込め、純関数的な path resolve は static にすることで、ロックを減らしつつテスタビリティ確保
+2. **path resolution の柔軟性**: 3候補 + venv/Homebrew fallback により、kimnyマシン以外（共同開発者・CI 環境）への移植が容易
+3. **`withCheckedThrowingContinuation` + `readabilityHandler` の組み合わせ**: pipe buffer デッドロック（§1.5.3）を起こさず、かつ result / error / stderr のフォールバック優先順を terminationHandler で表現できる
+4. **stderr 末尾500文字の捕捉**: result / error JSON が emit されないまま Python が落ちた場合のデバッグ手掛かりを残す（diagnose 容易）
+5. **Bug #1081 環境変数の確実な伝播**: §1.3 と完全整合、加えて `ACESTEP_LM_BACKEND=mlx` で MLX backend を強制
+6. **PYTHONPATH 自動構築**: venv 内 `lib/python3.X/site-packages` を listdir して動的に追加 → Python マイナーバージョン変更（3.11 → 3.12）でも追従
+
+**CCO レビューコメント（強化候補 / Phase 1 期間中の検討事項）**:
+
+| 強化候補 | 現状 | 提案 |
+|---|---|---|
+| **Cancellation API** | `process.terminate()` を呼ぶパスが明示的にない（continuation のみ） | `func cancel() async` を追加し、`generate` 中の Task キャンセル時に process.terminate() を呼ぶ。SwiftUI `.onDisappear` での cleanup 経路 |
+| **stderr buffer サイズ** | 末尾500文字のみ | エラー時のみ全文 dump する debug flag を `init` に追加（`#if DEBUG` で有効化） |
+| **Timeout** | なし（Python 側で永遠に待つ可能性） | UI 側 5min etc 制限 or `Task.sleep` + cancel で強制終了。Phase 1 MVP では不要、Phase 1.5 で追加 |
+| **InferenceProgress.Step の case** | 6 case（locating / loading / initializing / model_loaded / generating / done） | acestep 側の追加ステップ（`loading_lora` 等）が出た場合の `case unknown(String)` 拡張も検討 |
+| **stdout buffer overflow** | `state.buffer.append(data)` が無制限 | 巨大な log 行が来た場合のメモリ爆発防止。1MB 制限など（実用上は問題ないが、防御的設計の余地） |
+
+#### 1.5.3 stdout / stderr drain（既存実装の `readabilityHandler` パターン解説）
+
+既存実装は `readabilityHandler` + `withCheckedThrowingContinuation` で stdout を drain し、`terminationHandler` で stderr を末尾500文字だけ readDataToEndOfFile() している。
+
+```swift
+stdoutHandle.readabilityHandler = { handle in
+    let data = handle.availableData
+    guard !data.isEmpty else { return }
+    state.buffer.append(data)
+    while let newlineRange = state.buffer.range(of: Data([UInt8(ascii: "\n")])) {
+        let lineData = state.buffer.subdata(...)
+        state.buffer.removeSubrange(...)
+        // JSON parse → progress / result / error 振り分け
+    }
+}
+
+process.terminationHandler = { proc in
+    stdoutHandle.readabilityHandler = nil
+    if let url = state.resultURL { continuation.resume(returning: url) }
+    else if let msg = state.errorMessage { continuation.resume(throwing: ...generationFailed(msg)) }
+    else {
+        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+        // exit 0 でも resultなし → "No output path returned"
+        // exit 非0 → processError(code, stderr.suffix(500))
+    }
+}
+```
+
+**この設計のキモ**:
+- `readabilityHandler` は GCD background queue 上で呼ばれる → `ProcessState` を `@unchecked Sendable` の参照型クラスで包んでスレッド境界を明示
+- buffer 分割は newline 単位で行い、不完全な末尾 line は次回 readabilityHandler 呼び出しまで持ち越し
+- terminationHandler 側で stderr を読み切る = pipe buffer overflow も同時に抑止（process が exit してから drain するので順序的に安全）
+
+**潜在的注意点（CCO 補足）**:
+
+⚠ `readDataToEndOfFile()` を terminationHandler 内で呼んでいるが、stderr が長尺（数MB級ログ）だと terminationHandler が長時間ブロックされ、UI 側の continuation resume が遅延する可能性。
+
+実用上、ACE-Step + MLX の stderr は通常数十KB に収まるため Phase 1 MVP では問題にならない見込み。Phase 1.5 で長時間ログ案件が出たら `readabilityHandler` で stderr も buffered drain に切り替える。
+
+#### 1.5.4 InferenceProgress 構造体（既存実装の意義）
+
+```swift
+struct InferenceProgress {
+    enum Step: String {
+        case locating, loading, initializing
+        case modelLoaded = "model_loaded"
+        case generating, done
+    }
+    let step: Step
+    let value: Double  // 0.0 - 1.0
+}
+```
+
+**CCO articulate**: 単純な `Double` 進捗ではなく `step` + `value` の構造体にしているのが秀逸。理由:
+- UI 側で「モデルロード中（30%）」「生成中（70%）」のような **2軸表示**ができる
+- 各 step ごとに UI 表現を切り替えられる（locating/loading は spinner、generating は %バー、done は完了アニメ等）
+- Python wrapper script との protocol も `{"type":"progress","step":"loading","value":0.5}` で対称的
+
+`Step` enum の `rawValue: String` で JSON との変換も自動。`model_loaded` だけ snake_case を保持しているのは Python 側の慣用に合わせた設計判断。
+
+#### 1.5.5 エラーハンドリング（`EchovnaLocalError` 5 case の設計判断）
+
+既存実装は `EchovnaError`（既存 §1.2）とは別に **`EchovnaLocalError` 専用型**を定義:
+
+| case | 発火条件 | UI 側で出すべきメッセージ |
+|---|---|---|
+| `aceStepNotFound(String)` | 3候補パス全 miss | 「ACE-Step が見つかりません。インストール先を確認してください」 |
+| `scriptNotFound(String)` | wrapper script not found | 「内部スクリプトが見つかりません（バンドル不完全）」 |
+| `pythonNotFound` | venv も Homebrew も miss | 「Python が見つかりません。ACE-Step の .venv をセットアップしてください」 |
+| `generationFailed(String)` | Python 側が `{"type":"error",...}` emit | 「生成エラー: {message}」 |
+| `processError(Int32, String)` | exit 非0 + result なし | 「プロセスエラー (exit X): {stderr}」 |
+
+**CCO articulate**: 5 case に分割しているのは、UI 側で **エラー種別ごとに復旧アクションを変える**ため:
+- `aceStepNotFound` / `pythonNotFound` → インストールガイドへの導線
+- `scriptNotFound` → アプリ再インストール案内
+- `generationFailed` → リトライボタン
+- `processError` → 開発者向け diagnostic 情報（exit code + stderr 末尾）
+
+Phase 1 MVP の UI でこの 5 ケースをきっちり分岐する設計を推奨。
+
+#### 1.5.6 Python wrapper script との protocol（既存実装ベース）
+
+実装ファイル: `apps/muedaw-macos/scripts/generate_audio.py`（Phase 0/1 期間に native課または mued課で整備）
+
+```python
+# 想定 protocol（実装は native課が確定）
+import json, sys, argparse, acestep
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--tags", required=True)
+parser.add_argument("--bpm", type=int)
+parser.add_argument("--duration", type=float, default=30.0)
+parser.add_argument("--output-dir", required=True)
+parser.add_argument("--lyrics", default="[Instrumental]")
+parser.add_argument("--vocal-language", default="unknown")
+args = parser.parse_args()
+
+def emit(obj):
+    print(json.dumps(obj), flush=True)
+
+emit({"type": "progress", "step": "locating", "value": 0.0})
+# ... model load
+emit({"type": "progress", "step": "loading", "value": 0.5})
+emit({"type": "progress", "step": "model_loaded", "value": 1.0})
+emit({"type": "progress", "step": "generating", "value": 0.0})
+# acestep generation loop
+for fraction in acestep.generate_with_progress(args):
+    emit({"type": "progress", "step": "generating", "value": fraction})
+emit({"type": "progress", "step": "done", "value": 1.0})
+emit({"type": "result", "path": str(output_path)})
+```
+
+| 入出力 | フォーマット | 例 |
+|---|---|---|
+| CLI args | `--tags` / `--bpm` / `--duration` / `--output-dir` / `--lyrics` / `--vocal-language` | 必須: tags, output-dir |
+| stdout（進捗） | JSON line | `{"type":"progress","step":"loading","value":0.5}` |
+| stdout（結果） | JSON line | `{"type":"result","path":"/Users/.../output.wav"}` |
+| stdout（エラー） | JSON line | `{"type":"error","message":"OOM during generation"}` |
+| stderr | 自由形式（log） | acestep / MLX 内部ログ |
+| exit code | 0=成功 / 非0=異常終了 | |
+
+⚠ Python 側の stdout は **必ず `flush=True`** または `python -u` 起動。デフォルトの block-buffered（pipe接続時）だと Swift 側に進捗が届かない。
+
+#### 1.5.7 Phase 1 実装時のハマりポイント（CCO事前共有・既存実装で踏み済 / 未踏分も articulate）
+
+| # | ポイント | 既存実装での対応 |
+|---|---|---|
+| 1 | **Pipe buffer デッドロック** | ✅ 対応済（readabilityHandler で stdout drain、stderr は terminationHandler で readDataToEndOfFile） |
+| 2 | **line-buffered 問題（Python pipe接続時 block-buffered）** | ⚠ 未対応。Python wrapper script 側で `flush=True` 必須。`PYTHONUNBUFFERED=1` を `buildEnvironment` に追加推奨 |
+| 3 | **Bug #1081 環境変数伝播** | ✅ `PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.7` / `PYTORCH_ENABLE_MPS_FALLBACK=1` 設定済 |
+| 4 | **Sandbox / Hardened Runtime 制約** | ⚠ 未対応（Notarized DMG signing 起案で別途詳述）。`com.apple.security.cs.allow-jit` 等の Entitlement 必要 |
+| 5 | **Python binary path 移植性** | ✅ venv 優先 + Homebrew fallback で対応済 |
+| 6 | **Cancellation** | ⚠ 現状 explicit cancel なし。Phase 1 MVP 期間に `func cancel() async` 追加推奨（§1.5.2 強化候補表参照） |
+| 7 | **stdout buffer 無制限蓄積** | ⚠ 防御的設計の余地（§1.5.2 強化候補表参照） |
+| 8 | **Python マイナーバージョン更新** | ✅ PYTHONPATH 自動構築で `python3.X/site-packages` を listdir → 追従可 |
+| 9 | **stderr 長尺ログ → terminationHandler ブロック** | ⚠ 末尾500文字のみ。Phase 1.5 で `readabilityHandler` 化検討（§1.5.3）|
+
+**最優先で対応推奨（Phase 1 MVP 期間内）**:
+- #2 `PYTHONUNBUFFERED=1` を `buildEnvironment` に追加（1行追加で済む）
+- #6 Cancellation API 追加（SwiftUI `.onDisappear` 経路の cleanup 担保）
+- #4 Notarized DMG 起案 PR 待ち（CCO P3 で起案予定）
+
+#### 1.5.8 既存§1.2（MLX-Swift native）との位置付け
+
+| 比較軸 | §1.2（MLX-Swift native, Phase 2） | §1.5（Python subprocess, Phase 1 確定） |
+|---|---|---|
+| 実装コスト | 高（MLX-Swift port + ACE-Step Swift化） | 中（既存 Python ACE-Step を呼ぶだけ） |
+| パフォーマンス | 最高（zero-copy、Swift native） | 中（subprocess overhead + JSON parse） |
+| デバッグ容易性 | 中（Swift デバッガ統合） | 高（Python 側を独立にテスト可） |
+| Phase 0 PoC 流用 | 不可（再実装） | 可（既存 PoC をそのまま production 化） |
+| Notarization 影響 | 小（自前バイナリのみ） | 中（Python 同梱 or ユーザー環境前提） |
+| Sandbox 整合 | 容易 | Entitlement 調整必要 |
+
+→ **Phase 1 MVP は §1.5 確定**、Phase 2 で §1.2 経路への移行を再評価する（移行時に Phase 1 の Swift 側 actor インターフェースは流用可）。
 
 ---
 
@@ -429,19 +695,35 @@ extension MUEDDialService {
 ### 既存資産
 - `apps/muednote-hub-macos/Sources/MUEDnoteHub/Services/HooMCPClient.swift` — Hoo MCP 接続実装
 - `apps/muednote-hub-macos/Sources/MUEDnoteHub/Services/MUEDDialService.swift` — MUEDial 5 tools ラッパー
+- `apps/muednote-hub-macos/Sources/MUEDnoteHub/Services/EchovnaService.swift` — Echovna 3 tools ラッパー（PR#49 wiring 完納）
+- `apps/muedaw-macos/` — DAW 本体（Phase 0 PR#55-#57 で新設、Phase 1 MVP の主舞台）
 - `mued_v2/workers/hoo-mcp/src/tools-echovna.ts` — Echovna 3 tools (PR#287)
+- Phase 1 で追加予定: `apps/muedaw-macos/Sources/MUEDaw/Services/EchovnaLocalInferenceService.swift`（§1.5 骨子参照）+ acestep wrapper Python script（§1.5.6 protocol）
 
 ---
 
 ## 6. CCO セルフレビュー（release gate v2 適用）
 
-本ドキュメントの納品時に以下を実施:
+### 初版（2026-04-26 AM、Phase 0 Week 2 想定で起案）
 
 - [x] **Executive Summary↔本文整合**: Section 0 の前提と Section 1-3 の実装内容が整合
 - [x] **pending phrase scan**: 未確定事項は「Phase 1.5 以降」「Phase 2 想定」と明示。`"TODO: APIClient multipart upload integration"` 1件は §3.3 のコード例内に意図的に残置（実装者が `APIClient.swift` 既存パターンで埋める想定、断定的 pending ではない）
 - [x] **Source Path 存在確認**: 本資料引用パス全件 4/26 時点で存在確認済（HooMCPClient.swift / MUEDDialService.swift / tools-echovna.ts / Package.swift）
 - [x] **Edit直後 grep verify**: 主要 Section ヘッダー (## 0-6) 全件配置確認
 
-**作成者**: template課（CCO） / **作成日時**: 2026-04-26 JST
-**期限**: 2026-05-01 EOD（前倒し納品）
-**次のアクション**: conductor 通知 → Phase 0 Week 2 着手時に native/mued課が参照
+### 改訂版1（2026-04-26 PM、Phase 1 MVP go判定後に §1.5 新規追加 → 既存実装ベースに方針切替）
+
+**起草経緯**: 当初 §1.5 を架空理想形コードで起案したが、release gate v2 verify で `apps/muedaw-macos/Sources/MUEDaw/Services/EchovnaLocalInferenceService.swift`（245行）が既に native課で実装中であることを発見。CCO 起案を既存実装ベースの **設計判断 articulate + レビューコメント形式** に方針切替（既存 structure inertia 回避 + コード疎通≠MVP の原則準拠、conductor 短答承認 2026-04-26 PM）。
+
+- [x] **Phase 1 確定の反映整合**: §1.2 冒頭に Phase 2 deferred 注記追加、§1.5 で Python subprocess 経由を Phase 1 MVP 本実装として明示
+- [x] **既存実装との整合 verify**: §1.5.2-1.5.6 の記述は `EchovnaLocalInferenceService.swift` 245行の actual implementation を reference として引用。架空コードは全削除
+- [x] **§1.3 Bug #1081 workaround との整合**: `PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.7` / `PYTORCH_ENABLE_MPS_FALLBACK=1` は既存実装の `buildEnvironment(...)` でそのまま採用、二重定義なし
+- [x] **Python protocol 一貫性**: §1.5.6 wrapper script 例の stdout JSON key（`type`, `step`, `value`, `path`, `message`）が既存 Swift 側 readabilityHandler の case 分岐と完全一致
+- [x] **CCO 価値の articulate**: §1.5.2 強化候補表（Cancellation / Timeout / stdout buffer 上限 等）/ §1.5.7 ハマりポイント9件（既存実装で踏み済 / 未踏分の優先度付き）/ §1.5.5 エラーハンドリング設計判断 で、既存実装に対する CCO レビュー価値を明示
+- [x] **既存資産パス追記**: §5 に muedaw-macos / EchovnaService.swift / Phase 1 追加予定資産を反映
+- [x] **pending phrase scan（再）**: §1.5 内に断定的 TODO / FIXME なし。「Phase 1.5 で検討」「Phase 2 で再評価」等は意図的に明示
+- [x] **Source Path 存在確認（最終）**: HooMCPClient.swift / MUEDDialService.swift / EchovnaService.swift / EchovnaLocalInferenceService.swift / muedaw-macos/ / tools-echovna.ts の 6点 4/26 PM時点で全件存在確認
+
+**作成者**: template課（CCO） / **初版**: 2026-04-26 AM JST / **改訂1**: 2026-04-26 PM JST（Phase 1 go 判定 → 既存実装ベースに §1.5 全面書き直し）
+**期限**: 2026-05-01 EOD（前倒し納品 / 改訂も期限内）
+**次のアクション**: PR (Tier 1 self-merge) → native課（k9a3prsw）に push（CCO docs § 1.5 既存実装の解説 + 強化候補3点：PYTHONUNBUFFERED 追加 / Cancellation API / Notarized DMG 待ち を共有）→ P2 AVAudioEngine マルチトラック起案へ
