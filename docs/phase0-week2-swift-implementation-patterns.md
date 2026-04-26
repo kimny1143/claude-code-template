@@ -1108,6 +1108,350 @@ cd apps/muedaw-macos
 
 → Phase 1 MVP は **手動 release** で十分。自動化は Phase 1.5 で kimny の負荷軽減タスクとして起案。
 
+### 3.7 Phase 1 MVP SwiftUI Suno+Ableton 2軸融合UI設計パターン解説（既存 ContentView / AppState / 各View ベース）
+
+> **本セクションの位置付け（CCO articulate）**:
+> 本セクションは `apps/muedaw-macos/Sources/MUEDaw/` 配下の全 SwiftUI 構成（MUEDawApp.swift 30 + AppState.swift 153 + ContentView.swift 32 + Views/* 4本 604行 + Models/DeliveryTarget.swift 32 = 計851行）を reference に、**Suno+Ableton 2軸融合UI** の設計判断と Phase 1 MVP 完成チェックリスト + Phase 1.5 進化パスを articulate。
+>
+> P1 §1.5 / P2 §3.5 / P3 §3.6 と同じ既存実装ベース articulate 形式を継続（find 確認原則 P4 適用）。本セクション完納で Phase 1 MVP の (B) 融合UI設計 docs 軸を提供。
+
+#### 3.7.1 アプリ全体アーキテクチャ概観（既存実装反映）
+
+```
+[MUEDawApp.swift] (@main)
+        │
+        │  WindowGroup("MUEDaw") + Settings Scene (macOS 標準 CMD+, で開く)
+        │  defaultSize 640x560 / windowStyle .titleBar
+        │  @StateObject AppState を root で生成、environmentObject で全View共有
+        ▼
+[ContentView.swift] (TabView)
+        │
+        ├── Tab 1: GenerationEvaluationView   "AI生成"     waveform.and.sparkles  ← Suno軸
+        ├── Tab 2: MultiTrackPlayerView       "マルチトラック" slider.horizontal.3  ← Ableton軸
+        └── Tab 3: LUFSControlView            "LUFS"      speaker.wave.3        ← 監視・配信先選択
+
+        最低サイズ: 640x480、初回 .task { testHooConnection() }
+
+[Settings Scene] (CMD+,)
+        └── HooMCPSettingsView  Hoo MCP API キー / 接続テスト
+
+[AppState] (@MainActor ObservableObject)
+        │
+        ├── Services (集約):
+        │   ├── HooMCPClient (Cloudflare Workers MCP)
+        │   ├── EchovnaService (compose_from_concept / evaluate_generation / get_capability)
+        │   ├── EchovnaLocalInferenceService (Python subprocess + MLX backend)
+        │   └── MultiTrackPlayerService (AVAudioEngine マルチトラック)
+        │
+        └── State (Published 集約):
+            ├── Hoo MCP: hooConnectionStatus / isHooConnected / hasHooApiKey
+            ├── 生成: generationConcept / echovnaPromptResult / echovnaLastPrompt /
+            │         isAudioGenerating / audioGenerationProgress / audioGenerationStep /
+            │         audioGenerationError / generatedAudioURL
+            ├── 評価: generationEvaluation (moodMatch / genreAccuracy / bpmFeel / overallAccept)
+            ├── LUFS: measuredLUFS / measuredTruePeak / selectedDeliveryTarget
+            └── Player は Service 直参照（@Published で UI 反映）
+```
+
+**設計判断のポイント（CCO articulate）**:
+
+| 設計判断 | 採用パターン | 理由 |
+|---|---|---|
+| Tab分離型 vs HSplitView | **Tab分離型（Phase 1 MVP）** | 各機能が独立、SwiftUI 標準パターンで実装容易、Phase 1 MVP で「動く」優先。HSplitView は Phase 1.5 で検討（§3.7.5） |
+| State 集約 | **AppState 単一 ObservableObject** に全 state 集約 | Services × Views の M:N 結合を回避、orchestration メソッド（composeFromConcept / generateAudio）で flow を集約 |
+| Settings 分離 | **macOS 標準 `Settings` Scene** | CMD+, で開く慣行、Hoo MCP API キー管理 / 接続テストはアプリ起動と独立にできる |
+| DefaultSize 640x560 | **macOS 標準的な小型ユーティリティサイズ** | Phase 1 MVP は1人作業前提、リサイザブル（minWidth 640 / minHeight 480） |
+| 著作権警告 | **AI生成タブ最上部に固定表示** | Phase 1 MVP の必須要件、生成前ユーザーが必ず目にする位置 |
+| 自動連携フロー | **生成完了 → player.clearTracks() + player.addTrack(url, name) を AppState で自動実行** | Suno軸 → Ableton軸の橋渡し、ユーザーがタブ切替後に手動 load 不要 |
+| エラー表示 | **各タブ内で inline 表示**（モーダルアラートなし） | Sandbox 系操作以外でアラートを出さず、フォーム内 secondary text で誘導 |
+| Step ラベル日本語化 | **AppState.stepLabel(_:)** で `InferenceProgress.Step` enum → 日本語文字列 | Service 層は英語 enum、UI 層は日本語表示の責務分離 |
+
+#### 3.7.2 状態フロー（5段階パイプライン）
+
+```
+[1. Concept input]                               GenerationEvaluationView
+   $appState.generationConcept (TextField)
+        │  「① プロンプト生成」ボタン
+        ▼
+[2. Echovna prompt]
+   appState.composeFromConcept(concept:)
+   ├─ HooMCPClient → tools-echovna.ts compose_from_concept
+   └─ → echovnaLastPrompt: EchovnaPrompt (concept / tags / bpm / duration / rawMarkdown)
+        │  「② 生成実行 (ACE-Step)」ボタン
+        ▼
+[3. Audio generation]
+   appState.generateAudio()
+   ├─ EchovnaLocalInferenceService.generate(tags / bpm / duration)
+   │   ├─ Python subprocess (§1.5)
+   │   └─ progressHandler → audioGenerationProgress / audioGenerationStep
+   └─ → generatedAudioURL: URL (~/Documents/MUEDaw/generations/...)
+        │  自動 fall through
+        ▼
+[4. Multitrack auto-load]
+   player.clearTracks() + player.addTrack(url, name: prompt.concept)
+        │  ユーザーが「マルチトラック」タブに切替 (or AudioTransportView で再生)
+        ▼
+[5. LUFS measurement & delivery target check]
+   LUFSControlView
+   ├─ measuredLUFS / measuredTruePeak ← Phase 1 MVP 後半で AVAudioEngine tap 接続
+   ├─ DeliveryTarget picker (Spotify / Apple Music / YouTube / etc)
+   └─ judgment text (✅ 出せます / ⚠️ マスタリング推奨 / ⚠️ オーバー)
+```
+
+**この5段階フローの設計意義（CCO articulate）**:
+- 各段階が **AppState の Published プロパティで疎結合**、ステップ間で view が直接 service を呼ばない
+- ボタンの enabled/disabled は state の存在チェックで自動的（`echovnaLastPrompt == nil` → ②ボタン disable）
+- 失敗時のリカバリ: 各段階の error state（`audioGenerationError` 等）を inline 表示、再実行は同じボタン押下で再 trigger 可能
+- 最終段階の LUFS 判定は **配信先プリセット依存**（Spotify -14 / AppleMusic -16 / Broadcast -23 / Podcast -16 等、§3.7.4 既存実装の Insight 参照）
+
+#### 3.7.3 既存実装の構造（実コード reference）
+
+##### MUEDawApp.swift（30行）
+
+```swift
+@main
+struct MUEDawApp: App {
+    @StateObject private var appState = AppState()
+
+    init() {
+        DispatchQueue.main.async {
+            NSApp.setActivationPolicy(.regular)
+            NSApp.activate(ignoringOtherApps: true)
+        }
+    }
+
+    var body: some Scene {
+        WindowGroup("MUEDaw") {
+            ContentView().environmentObject(appState)
+        }
+        .windowStyle(.titleBar)
+        .defaultSize(width: 640, height: 560)
+
+        Settings {
+            HooMCPSettingsView().environmentObject(appState)
+        }
+    }
+}
+```
+
+**設計判断**:
+- `swift run` 実行時に NSApp が自動 activate しない問題を `setActivationPolicy(.regular) + activate(ignoringOtherApps:)` で workaround（コメント明示済 = 良い習慣）
+- `Settings` Scene を別宣言 → CMD+, で独立窓、main window と並走
+
+##### AppState.swift（153行）
+
+```swift
+@MainActor
+class AppState: ObservableObject {
+    // Services（init で wire-up、以降 immutable）
+    let hooClient: HooMCPClient
+    let echovnaService: EchovnaService
+    let echovnaLocal = EchovnaLocalInferenceService()
+    let player = MultiTrackPlayerService()
+
+    // 25個の @Published プロパティ（Hoo MCP / 生成 / 評価 / LUFS）
+
+    init() {
+        let hoo = HooMCPClient()
+        self.hooClient = hoo
+        self.echovnaService = EchovnaService(hooClient: hoo)
+        Task { @MainActor [weak self] in
+            self?.hasHooApiKey = await hoo.hasApiKey
+        }
+    }
+
+    // Orchestration methods:
+    //   testHooConnection() / saveApiKey(_:)
+    //   composeFromConcept(...) → echovnaLastPrompt 更新
+    //   generateAudio() → generatedAudioURL 更新 + player.addTrack 自動連携
+}
+```
+
+**設計判断のキモ**:
+- Services は **let で init 時に固定**、view から差し替え不可 → Service 注入の罠回避
+- 状態が25個と多いが、**カテゴリ別にコメントで区切られている**（Hoo MCP / Generation / Evaluation / LUFS / Local inference）→ 可読性確保
+- `generateAudio()` で **生成成功時に player.clearTracks() + player.addTrack(url)** を自動実行 = Suno→Ableton 軸の自動連携
+- `stepLabel(_:)` で `InferenceProgress.Step` enum を日本語化 = Service 層の英語 case を UI 層で localize する責務分離
+
+##### ContentView.swift（32行）+ 各 View
+
+ContentView は TabView 3タブのみ（軽量）。各 View はそれぞれ独立した責務:
+
+| View | 行数 | 役割 |
+|---|---|---|
+| GenerationEvaluationView | 204 | Suno軸（concept input → prompt → 生成 → 結果 + 内蔵 AudioTransportView + 評価 5項目） |
+| MultiTrackPlayerView | 241 | Ableton軸（Transport + 全 track 一覧 + per-track Slider/Mute/Solo） |
+| LUFSControlView | 91 | 配信先 picker + LUFS/TruePeak 計測表示 + 判定 + マスタリング誘導 |
+| HooMCPSettingsView | 68 | Settings 画面（API キー / 接続テスト / プロファイル） |
+
+#### 3.7.4 CCO レビュー（既存実装の良い点）
+
+1. **AppState による集約 orchestration**: 25個の state + 4 services + 4 view の M:N 結合を **AppState 単一の ObservableObject** に集約 → SwiftUI のベストプラクティス。各 View は `@EnvironmentObject` で自動 inject、テスト時は mock AppState 注入可能
+2. **生成完了 → マルチトラック自動 load**: ユーザーが「タブを切替えて手動で audio file を import」する手間を排除。Suno → Ableton 軸の橋渡しが UX で自然
+3. **エラー inline 表示**: 各 view 内で error state を `.foregroundColor(.red)` の secondary text として表示 → モーダル diversion なし、UI flow を妨げない
+4. **配信先プリセット 7種類**: Spotify -14 / Apple Music -16 / YouTube -14 / Tidal -14 / Amazon Music -14 / Broadcast -23 / Podcast -16 → **業界実態を反映**（DeliveryTarget enum）
+5. **著作権警告の固定表示**: AI生成タブ最上部に `Image(.exclamationmark.triangle.fill)` + secondary text で配置 → 必須要件 UX として優秀
+6. **2ボタンの段階フロー**: 「① プロンプト生成」「② 生成実行 (ACE-Step)」と番号付きラベル → ユーザーが手順を視覚的に把握、`buttonStyle(.borderedProminent)` で実行優先度も明示
+7. **評価 4項目（生成後）**: ムード一致度（5★）/ ジャンル精度（5★）/ BPM感（toggle）/ 採用する（toggle）→ Phase 1 MVP の評価ループに必要十分
+8. **HooMCPSettingsView の独立 Settings Scene**: macOS 標準 CMD+, で開く慣行に従う、main window をシンプルに保つ
+9. **MUEDawApp の swift run workaround**: `setActivationPolicy + activate` でデバッグ実行時の前面表示を確保、コメントで意図明示
+
+#### 3.7.5 CCO レビュー（強化候補 / Phase 1 MVP 期間内 + Phase 1.5 進化パス）
+
+##### Phase 1 MVP 期間内の強化候補
+
+| # | 強化候補 | 現状 | 提案 |
+|---|---|---|---|
+| 1 | **AudioTransportView の重複** | `GenerationEvaluationView` 内 (private) と `MultiTrackPlayerView/TransportBarView` (private) で似た Transport UI を**2箇所で実装** | 共通 `TransportControlView` を `Views/Common/` に切り出して両所から使用。Stop の disabled 条件・時刻フォーマッタ等の差異を統一 |
+| 2 | **LUFS 計測の Service 接続** | `measuredLUFS` / `measuredTruePeak` が常に nil（手動セット待ち） | §3.5.8 の `installTap` 経路で MultiTrackPlayerService から自動計測。BS.1770 計算 or RoEx API 呼出を AppState の orchestration に追加 |
+| 3 | **タブ切替時の進行中処理の handling** | `isAudioGenerating == true` の途中でタブ切替可能、再戻り時に進捗 UI 復帰 OK だが、**キャンセル経路がない** | AppState に `cancelAudioGeneration()` を追加し、`EchovnaLocalInferenceService.cancel()` を呼ぶ（§1.5.4 の cancel API 連携） |
+| 4 | **生成失敗時のリトライ** | error 表示後、再度 ② ボタンを押せば再実行可能 | error inline 表示の隣に「再試行」ボタン追加 → click数削減 |
+| 5 | **DeliveryTarget の永続化** | アプリ再起動で `selectedDeliveryTarget = .spotify` にリセット | `@AppStorage` で UserDefaults 保存（1行追加で済む） |
+| 6 | **`Form { Section }` の余白** | デフォルト .grouped style、scroll しないと2-3 セクション分しか見えない | `padding` 調整 or 重要 Section（生成ボタン等）を sticky に |
+| 7 | **LUFS マスタリングボタン disabled** | LUFSControlView.swift line 79 で `.disabled(true)` 固定、コメントで「Phase 1 MVP で有効化 — RoEx /mastering Streaming preset ($1.98/曲)」 | RoEx API 呼出を AppState に実装、`MUEDDialService.analyzeMix(audioFileURL:)`（§3.3）からの拡張 |
+
+##### Phase 1.5 進化パス（Suno+Ableton 真の融合）
+
+```
+Phase 1 MVP (現状: Tab分離型)              Phase 1.5 (HSplitView 融合型 提案)
+
+┌─────────────────────────┐          ┌─────────────────────────────────┐
+│ [AI生成 | マルチ | LUFS]  │          │  Suno軸           │  Ableton軸     │
+├─────────────────────────┤          │  (生成入力)        │  (マルチトラック) │
+│                         │          │  - Concept input   │  - Transport    │
+│  Active タブの content   │   →     │  - Prompt result   │  - Track rows   │
+│  だけ表示                │          │  - Generate button │  - Per-track UI │
+│                         │          ├──────────────────────────────────┤
+│                         │          │  LUFS / Inspector              │
+└─────────────────────────┘          └─────────────────────────────────┘
+                                          DefaultSize 1024x720, minSize 800x600
+```
+
+**移行のキモ**:
+- `HSplitView` で左右分割、左ペイン = Suno軸 / 右ペイン = Ableton軸（or Tab）
+- 下部に Inspector pane（LUFS監視 + 配信先 picker + 判定）= Ableton 慣行
+- 既存 GenerationEvaluationView / MultiTrackPlayerView は **そのまま流用可能**（外側 frame 構造のみ変更）
+- DefaultSize 拡大: 1024x720（DAW としての標準サイズ感）
+
+→ Phase 1.5 着手時の難易度は **低**（既存 view を再配置するだけ、AppState 変更不要）
+
+#### 3.7.6 共通 Transport の重複リファクタ提案（最優先）
+
+```swift
+// Views/Common/TransportControlView.swift（新規提案）
+struct TransportControlView: View {
+    @ObservedObject var player: MultiTrackPlayerService
+    var showProgress: Bool = true
+    var compact: Bool = false  // GenerationEvaluationView 用は compact = false、MultiTrackPlayerView 用は header style
+
+    var body: some View {
+        HStack(spacing: compact ? 8 : 16) {
+            playPauseButton
+            stopButton
+            if showProgress { timeAndProgress }
+            if let err = player.errorMessage {
+                Label(err, systemImage: "exclamationmark.circle.fill")
+                    .foregroundColor(.red).font(.caption).lineLimit(1)
+            }
+        }
+    }
+
+    private var playPauseButton: some View {
+        Button {
+            switch player.playerState {
+            case .playing: player.pause()
+            default:       player.play()
+            }
+        } label: {
+            Image(systemName: player.playerState == .playing ? "pause.fill" : "play.fill")
+                .frame(width: compact ? 16 : 20)
+        }
+        .buttonStyle(.bordered)
+        .keyboardShortcut(compact ? nil : .space, modifiers: [])
+    }
+
+    private var stopButton: some View {
+        Button { player.stop() } label: {
+            Image(systemName: "stop.fill").frame(width: compact ? 16 : 20)
+        }
+        .buttonStyle(.bordered)
+        .disabled(player.playerState == .idle || player.playerState == .stopped)
+    }
+
+    private var timeAndProgress: some View {
+        Group {
+            Text(formatTime(player.currentTime))
+                .font(.system(.caption, design: .monospaced).bold())
+            ProgressView(value: min(player.currentTime / max(player.duration, 0.01), 1.0))
+                .frame(maxWidth: .infinity)
+            Text(formatTime(player.duration))
+                .font(.system(.caption, design: .monospaced))
+                .foregroundColor(.secondary)
+        }
+    }
+
+    private func formatTime(_ seconds: Double) -> String {
+        let s = Int(max(0, seconds))
+        return String(format: "%d:%02d", s / 60, s % 60)
+    }
+}
+```
+
+**移行手順**:
+1. 上記 `TransportControlView` を `Views/Common/` に新規作成
+2. `GenerationEvaluationView` の private `AudioTransportView` を削除、`TransportControlView(player: appState.player, compact: true)` で差し替え
+3. `MultiTrackPlayerView` の private `TransportBarView` を削除（or 内容を `TransportControlView(player: player, compact: false)` に移行）
+4. キーボードショートカット（spaceキー）は MultiTrackPlayerView 側のみで有効化（compact: false）
+5. 既存 UI 表示の差分（Stop disabled 条件等）が一致することを確認
+
+→ コード行数 -50行、責務統一、UI挙動一貫化。Phase 1 MVP 期間内 1-2時間で実装可能。
+
+#### 3.7.7 ハマりポイント（CCO事前共有 / 既存実装で踏み済 ✅ / 未踏分 ⚠）
+
+| # | ポイント | 既存実装での対応 |
+|---|---|---|
+| 1 | **`@StateObject` vs `@ObservedObject`** | ✅ MUEDawApp で `@StateObject AppState` = root 生成、各 View は `@EnvironmentObject` で受信。再生成防止 |
+| 2 | **Service 注入のライフサイクル** | ✅ AppState init で services を let で固定、テスト用 mock 差し替えは AppState のサブクラス化で対応 |
+| 3 | **`@MainActor` と非同期 Task の連携** | ✅ AppState が `@MainActor` 全体、Services（HooMCPClient / EchovnaService / EchovnaLocalInferenceService）は actor、`Task { @MainActor in ... }` で UI 更新 |
+| 4 | **TabView の各タブの初期化タイミング** | ⚠ SwiftUI TabView は遅延ロードしないため全 view が起動時に init される。重い初期化は `.task { }` 内で（既存 ContentView は `.task { testHooConnection() }` のみで OK） |
+| 5 | **`ContentView` の `.frame(minWidth:minHeight:)`** | ✅ 640x480 = TabView の各 view が崩れない最低サイズ |
+| 6 | **swift run の NSApp activate 問題** | ✅ MUEDawApp init で setActivationPolicy + activate workaround、コメント明示 |
+| 7 | **`Settings { ... }` Scene の独立性** | ✅ HooMCPSettingsView を Settings Scene 内、CMD+, で開く |
+| 8 | **`@Published` 25個の更新コスト** | ⚠ 1state更新で全 EnvironmentObject ユーザーの再評価が走る。Phase 1.5 で `@Observable`（iOS 17+ macro）化検討、performance hotspot あれば |
+| 9 | **タブ切替時の進行中処理キャンセル** | ⚠ 未実装、§3.7.5 強化候補 #3 |
+| 10 | **`@AppStorage` 未使用** | ⚠ DeliveryTarget 等の永続化なし、§3.7.5 強化候補 #5 |
+| 11 | **生成中の重複起動防止** | ✅ ボタン `.disabled(appState.isAudioGenerating)` で UI 側 guard、Service 側でも cancel-on-reentry（§1.5）|
+| 12 | **エラー文言の i18n** | ⚠ 現状日本語固定。Phase 1.5 で多言語化検討 |
+
+**最優先で対応推奨（Phase 1 MVP 期間内）**:
+- #9 タブ切替時のキャンセル経路（§1.5.4 cancel API 連携で1時間程度の追加実装）
+- §3.7.6 共通 Transport リファクタ（コード簡潔化、1-2時間）
+- §3.7.5 #5 `@AppStorage("selectedDeliveryTarget")` 1行追加（永続化）
+
+#### 3.7.8 Phase 1 MVP UI 完成チェックリスト（CCO 提供）
+
+リリース直前に以下を確認:
+
+| # | チェック項目 |
+|---|---|
+| 1 | アプリ起動 → main window が前面表示（NSApp activate workaround 動作） |
+| 2 | TabView 3タブ全て切り替えで content 描画 |
+| 3 | CMD+, で Settings 画面が独立窓で開く |
+| 4 | Hoo MCP API キー未設定時 → ConnectionStatus "未設定"、保存後 → 接続テスト成功 |
+| 5 | concept 入力 → ① プロンプト生成 → echovnaPromptResult 表示 |
+| 6 | echovnaPromptResult ありの状態で ② 生成実行 → progress / step ラベル動的更新 |
+| 7 | 生成完了 → generatedAudioURL 表示 + AudioTransportView Play 可能 |
+| 8 | 生成完了後にマルチトラックタブ切替 → 自動 add された track 表示、Play 可能 |
+| 9 | per-track Volume / Pan / Mute / Solo が UI 即座反映 |
+| 10 | LUFS タブ → DeliveryTarget picker 7種類選択可、判定文言が gap で動的 |
+| 11 | エラー時に inline 表示（モーダルなし）、再実行で再生成可能 |
+| 12 | 評価 4項目（5★ × 2 + toggle × 2）が UI 操作で更新 |
+| 13 | アプリ終了で AVAudioEngine が clean stop（MultiTrackPlayerService.deinit、§3.5.7 #10 推奨追加後） |
+| 14 | Notarized DMG 配布版（§3.6）でも上記全機能が動作 |
+| 15 | 著作権警告が AI生成タブ最上部に常時表示 |
+
+→ チェック 14 が **最終ゲート**（dev 環境で全部 OK でも、Notarized 版で Python subprocess 落ちると致命的、§3.6.7 連動チェック）。
+
 ---
 
 ## 4. Phase 0 Week 2 想定スケジュールへの CCO サポート方針
@@ -1159,8 +1503,14 @@ cd apps/muedaw-macos
 - `apps/muedaw-macos/Sources/MUEDaw/Services/EchovnaService.swift` — Echovna 3 tools ラッパー（PR#49 wiring 完納）
 - `apps/muedaw-macos/Sources/MUEDaw/Services/EchovnaLocalInferenceService.swift` — Phase 1 MVP Python subprocess + MLX backend 実装（§1.5 reference、PR#58 + 01c243c で PYTHONUNBUFFERED / Cancellation 反映済）
 - `apps/muedaw-macos/Sources/MUEDaw/Services/MultiTrackPlayerService.swift` — Phase 1 MVP マルチトラック再生実装（§3.5 reference、AVAudioEngine + per-track AVAudioPlayerNode/Mixer）
-- `apps/muedaw-macos/Sources/MUEDaw/Views/MultiTrackPlayerView.swift` — マルチトラック UI（Transport / TrackRow / Slider）
-- `apps/muedaw-macos/Sources/MUEDaw/Views/LUFSControlView.swift` — LUFS制御 UI（Phase 1 MVP 後半に MultiTrackPlayerService の installTap と接続）
+- `apps/muedaw-macos/Sources/MUEDaw/MUEDawApp.swift` — @main エントリーポイント（§3.7 reference、30行）
+- `apps/muedaw-macos/Sources/MUEDaw/AppState.swift` — @MainActor ObservableObject 全state集約 + orchestration（§3.7 reference、153行）
+- `apps/muedaw-macos/Sources/MUEDaw/ContentView.swift` — TabView 3タブ root（§3.7 reference、32行）
+- `apps/muedaw-macos/Sources/MUEDaw/Views/GenerationEvaluationView.swift` — Suno軸 AI生成タブ（§3.7 reference、204行）
+- `apps/muedaw-macos/Sources/MUEDaw/Views/MultiTrackPlayerView.swift` — マルチトラック UI（Transport / TrackRow / Slider、§3.5 + §3.7 reference）
+- `apps/muedaw-macos/Sources/MUEDaw/Views/LUFSControlView.swift` — LUFS制御 UI（§3.5.8 / §3.7 reference）
+- `apps/muedaw-macos/Sources/MUEDaw/Views/HooMCPSettingsView.swift` — Settings Scene（§3.7 reference、68行）
+- `apps/muedaw-macos/Sources/MUEDaw/Models/DeliveryTarget.swift` — 配信先 enum 7種 + GenerationEvaluation struct（§3.7 reference、32行）
 - `apps/muedaw-macos/MUEDaw.entitlements` — Hardened Runtime 例外定義（§3.6 reference、12行）
 - `apps/muedaw-macos/Sources/MUEDaw/Resources/Info.plist` — Bundle ID `com.glasswerks.muedaw`、LSMinimumSystemVersion 14.0（§3.6 reference）
 - `apps/muedaw-macos/scripts/sign.sh` — Developer ID Application codesign + Hardened Runtime（§3.6 reference、112行）
@@ -1225,5 +1575,21 @@ cd apps/muedaw-macos
 - [x] **pending phrase scan**: §3.6 内に断定的 TODO/FIXME なし、Phase 1.5 自動化案は意図明示
 - [x] **Source Path 存在確認（最終）**: §3.6 で言及した全6ファイル + Team ID `F529L4WT3V` + Bundle ID `com.glasswerks.muedaw` 存在確認
 
-**改訂3**: 2026-04-26 PM JST（P3 §3.6 Notarized DMG 配布パイプライン 追加・1日前倒し完納）
-**次のアクション**: PR (Tier 1 self-merge) → native課（k9a3prsw）に push → P4 SwiftUI Suno+Ableton 2軸融合UI設計パターン（4/27 or 即時着手）
+**改訂3**: 2026-04-26 PM JST（P3 §3.6 Notarized DMG 配布パイプライン 追加）
+
+### 改訂版4（2026-04-26 PM、P4 §3.7 SwiftUI Suno+Ableton 2軸融合UI設計パターン 追加）
+
+**起草経緯**: P3 完納の流れで P4 を当日中に即着手。find確認原則継続適用で muedaw-macos 全 SwiftUI 構成（MUEDawApp / AppState / ContentView / 各View / Models = 計851行）を reference に articulate。
+
+- [x] **既存実装との整合 verify**: muedaw-macos/Sources/MUEDaw 配下の全 Swift ファイル 851行を §3.7 で reference 引用、架空コードなし
+- [x] **find 確認原則 P4 適用**: 全 View（GenerationEvaluationView 204 / MultiTrackPlayerView 241 / LUFSControlView 91 / HooMCPSettingsView 68）+ AppState 153 + Models（DeliveryTarget 32）を読了、設計判断を articulate
+- [x] **CCO レビュー価値の articulate**: §3.7.1（アプリ全体アーキテクチャ図 + 設計判断8項目）/ §3.7.2（5段階パイプライン状態フロー）/ §3.7.3（実コード reference 3+α）/ §3.7.4（良い点9項目）/ §3.7.5（強化候補7項目 + Phase 1.5 進化パス HSplitView提案）/ §3.7.6（**共通 Transport リファクタ提案コード付き**、最優先）/ §3.7.7（ハマりポイント12件）/ §3.7.8（**Phase 1 MVP UI 完成チェックリスト15項目**）
+- [x] **Phase 1.5 進化パス articulate**: Tab分離型 → HSplitView 融合型の移行図 + 移行難易度（低、既存 view 流用可）
+- [x] **最優先強化推奨3点の明示**: タブ切替時のキャンセル経路 / 共通 Transport リファクタ / @AppStorage 永続化（§3.7.5 + §3.7.7）
+- [x] **既存資産パス追記（最終）**: §5 に MUEDawApp / AppState / ContentView / GenerationEvaluationView / HooMCPSettingsView / DeliveryTarget を追加
+- [x] **pending phrase scan**: §3.7 内に断定的 TODO/FIXME なし、Phase 1.5 進化案は意図明示
+- [x] **Source Path 存在確認（最終）**: §3.7 言及全8ファイル + Models/DeliveryTarget 4/26 PM時点で全件存在
+- [x] **§3.6 Notarized DMG との連動明示**: §3.7.8 チェック14「Notarized DMG 配布版でも全機能動作」が最終ゲート
+
+**改訂4**: 2026-04-26 PM JST（P4 §3.7 SwiftUI 2軸融合UI設計パターン 追加、CCO P1-P4 全完納 = 当日中達成）
+**次のアクション**: PR (Tier 1 self-merge) → native課（k9a3prsw）に push → 待機モード（強化候補 watch + native課 PR レビュー対応）
