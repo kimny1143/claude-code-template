@@ -145,6 +145,79 @@ chrome拡張（claude-in-chrome）は共有リソース。同時に1課しか使
 
 
 
+## write課への canonical変更通知義務
+
+本peer（template課/CCO）が以下のcanonicalを変更/公開した場合、変更決裁完了タイミングで **write課にclaude-peers経由で通知する義務** を持つ。write課の公開済note記事 / proposal / style-guide に古い情報が残存することを防ぐ stale defense の起点。
+
+### 通知トリガー（template課/CCO固有）
+
+- **write課使用 skill 仕様変更**（`ai-interview-article` / `copywriting` / `marketing-psychology` 等）
+- **Premium / Gumroad Pro版 contents変更**（write課が記事内で訴求している場合）
+- **Gumroad pricing / packaging 変更**
+- **`cta_template.md` に影響する skill仕様変更**
+- **プロダクト基盤 / 品質基準 / 技術戦略 docs 変更**（write課proposalに影響する範囲）
+
+判断迷う場合は **過剰通知側に倒す**（write課が該当canonicalを参照している可能性が少しでもあれば通知）。
+
+### 通知方法
+
+1. write課peer ID は `mcp__claude-peers__list_peers` で最新ID取得（peer restartでID変動するためhard-code回避）
+   - cwd識別: `/Users/kimny/Dropbox/_DevProjects/_contents-writing`
+   - 代替: `peer-id-lookup` skill使用（課名→peer ID自動解決）
+2. SNS課（cwd `mued/threads-api`）と混同しないよう注意
+3. `mcp__claude-peers__send_message` で通知
+
+### 通知内容（必須項目）
+
+- canonical名（ファイルパス or skill名）
+- 変更要点（before / after の核心差分）
+- 影響範囲推定（write課公開済記事への影響あり / なし / 不明）
+- 緊急度（即時 / 通常 / 軽微）
+
+### 緊急度判定目安
+
+| 緊急度 | 条件 | 通知運用 |
+|--------|------|---------|
+| **即時** | 公開済記事の数値・機能訴求が誤情報になる、コンプラリスク | 即時通知 + 当日対応 |
+| **通常** | articulation陳腐化、リライト望ましい | 即時通知 + 2段階SLA |
+| **軽微** | 内部参考、新規記事から反映で十分 | **即時通知不要、ログのみ**（月次audit時にwrite課が参照） |
+
+### write課対応 = 2段階SLA
+
+write課受領後、`feedback_stale_source_retirement.md` write課版（`docs/drafts/fact-check/write_fact_check_proposal_v2.md` Section 5-2）の2段階SLA に沿って対応:
+- 内部更新（drafts/article_*.md）: 48時間以内
+- note.com反映（SNS課依頼必要）: 72-96時間以内
+- 全面陳腐化時 archived化判断: kimny / conductor協議後即時
+
+### self-attestation（template課月次scorecard組込み、3層防御 Layer 2）
+
+- 当月変更したcanonical一覧 + write課通知有無を月末に self-check
+- 通知漏れを発見した場合は即時遡及通知 + 根本原因（判定基準のどこで漏れたか）をwrite課に共有
+- 3層防御の位置付け:
+  - **Layer 1（能動）**: 本peer（canonical owner）の通知義務 + self-attestation
+  - **Layer 2（受動）**: write課月次audit（毎月最終週）
+  - **Layer 3（将来）**: PreToolUse/PostToolUse hookによるcanonical pathへのEdit/Write検知（技術投資要、現段階optional）
+
+### CCO観点 articulation（find確認原則との対称ペア）
+
+- **find確認原則**（CCO P1-P4 連続成功事例、`feedback_find_confirmation_principle.md`）= 起案前 **inflow check**
+- **canonical変更通知義務**（本ルール）= 変更後 **outflow notify**
+- 両者は **information lifecycle 対称設計** = CCO組織capability shift永続資産化として位置付け、単独原則でなく inflow/outflow ペアで運用
+
+### 適用範囲とTier判定
+
+- 現スコープ: mud / native / template (CCO) / conductor / kimny の 4peer閉じる = **Tier 2 妥当**
+- 他peer展開時（LP / SNS / data / freee / reserch / video）は **Tier 3 再合議**（CCO + conductor）
+
+### 関連ドキュメント
+
+- write課 workspace memory: `feedback_canonical_change_notification.md`
+- write課版両輪: `_contents-writing/docs/drafts/fact-check/write_fact_check_proposal_v2.md`
+- CFO起案根拠: `feedback_stale_source_retirement.md`
+- find確認原則（CCO永続資産）: `feedback_find_confirmation_principle.md`
+
+
+
 ## 組織体制（2026-04-04改定）
 
 ### 経営体制
