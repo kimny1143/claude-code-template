@@ -27,13 +27,13 @@ DSP plugin開発で「実機 (commercial plugin) 出力」 vs 「自実装出力
 
 ```bash
 # 1ペア比較
-python -m dsp_rta_comparison \
+python -m lib \
   --reference reference/shadow_hills_sin1k.wav \
   --test test-output/my_comp_sin1k.wav \
   --output reports/comparison_$(date +%Y%m%d).md
 
 # batch比較 (ディレクトリ全体)
-python -m dsp_rta_comparison \
+python -m lib \
   --reference-dir reference/ \
   --test-dir test-output/ \
   --output-dir reports/
@@ -42,7 +42,7 @@ python -m dsp_rta_comparison \
 ### pytest integration (commit前 quality gate)
 
 ```python
-from dsp_rta_comparison import compare, ComparisonResult
+from lib import compare, ComparisonResult
 
 def test_glue_comp_matches_shadow_hills():
     result: ComparisonResult = compare(
