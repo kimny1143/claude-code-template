@@ -1,0 +1,25 @@
+[project]
+name = "aax-validator-mcp"
+version = "0.1.0"
+description = "AAX plugin bundle / iLok署名 validation MCP server (MUEDsp Phase 5 critical infra)"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["server.py"]

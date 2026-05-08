@@ -1,6 +1,9 @@
 .DS_Store
 *.zip
 __pycache__/
+.venv/
+*.egg-info/
+.pytest_cache/
 mcps/*/data/*.json
 mcps/*/data/**/*.jsonl
 
