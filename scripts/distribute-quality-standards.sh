@@ -55,7 +55,7 @@ type: feedback
 
 ## マネタイズ
 - **体験談=無料、テンプレ/手順書=有料**
-- **価格管理policy v2** (案C採用 = 限界利益$4以上 + 月次COGS上限 + 原価率参考値、詳細: `project_pricing_policy_v2_20260508.md`)
+- **価格管理policy v2** (案X採用 = 粗利率二層 軸1A render系58-63%/軸1B 縦SaaS系65-75% + 月次COGS上限$200 + 業態定義「API-enabled vertical application」、詳細: `project_pricing_policy_v2_20260508.md`)
 
 ## Hoo IP不変の骨子
 1. フクロウ  2. 目がアナログテープ+メガネ  3. 線描  4. 「Hoo」  5. 「ほほう」
