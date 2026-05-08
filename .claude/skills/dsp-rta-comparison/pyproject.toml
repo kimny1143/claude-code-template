@@ -1,0 +1,30 @@
+[project]
+name = "dsp-rta-comparison"
+version = "0.1.0"
+description = "DSP実機 vs 自実装 出力差分自動計測 quality gate skill (MUEDsp Phase 1-3 commit前テスト)"
+requires-python = ">=3.11"
+dependencies = [
+    "librosa>=0.10.0",
+    "numpy>=1.24.0",
+    "scipy>=1.11.0",
+    "pyloudnorm>=0.1.1",
+    "soundfile>=0.12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+]
+
+[build-system]
+requires = ["setuptools>=68.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lib*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
