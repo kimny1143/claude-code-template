@@ -101,6 +101,10 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
   if echo "$FILE_PATH" | grep -qE "^$HOME/Dropbox/_DevProjects/_videos/"; then
     IS_ALLOWLIST=1
   fi
+  # Plan mode plans dir: Claude Code core機能（EnterPlanModeが ~/.claude/plans/<random>.md を強制指定、ExitPlanModeも同pathをread）
+  if echo "$FILE_PATH" | grep -qE "^$HOME/\.claude/plans/"; then
+    IS_ALLOWLIST=1
+  fi
 
   # CWD外へのWrite/Editをブロック（allowlist該当時はスキップ）
   # 絶対パスに正規化してCWD配下かチェック
