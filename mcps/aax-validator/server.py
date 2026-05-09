@@ -113,10 +113,39 @@ def _check_info_plist(bundle_path: Path) -> tuple[list[Violation], dict | None]:
     return violations, data
 
 
+def _detect_architectures(exe_path: Path) -> tuple[set[str], str | None]:
+    """`lipo -info` で binary が含む architecture set を返す。
+
+    Returns:
+        (archs, error_message): 検出失敗時 archs=空集合 + error_messageに理由
+    """
+    try:
+        result = subprocess.run(
+            ["lipo", "-info", str(exe_path)],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except FileNotFoundError:
+        return set(), "lipo not available (macOS only)"
+    except subprocess.TimeoutExpired:
+        return set(), "lipo -info timeout"
+
+    if result.returncode != 0:
+        return set(), f"lipo -info failed: {(result.stdout + result.stderr).strip()}"
+
+    out = (result.stdout + result.stderr).strip()
+    archs: set[str] = set()
+    for token in ("x86_64", "arm64", "i386", "ppc", "ppc64"):
+        if token in out:
+            archs.add(token)
+    return archs, None
+
+
 def _check_executable(
     bundle_path: Path, info_plist: dict | None
 ) -> list[Violation]:
-    """executable binary存在 + universal binary check (lipo -info 相当)."""
+    """executable binary存在 + architecture detection (universal2 / single-arch)."""
     violations: list[Violation] = []
     if info_plist is None:
         return violations
@@ -134,48 +163,53 @@ def _check_executable(
         )
         return violations
 
-    try:
-        result = subprocess.run(
-            ["lipo", "-info", str(exe_path)],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-        out = (result.stdout + result.stderr).strip()
-        if "is not a fat file" in out and "Non-fat" not in out:
-            pass  # single-arch binary OK as warning, not error
-        elif "x86_64" in out and "arm64" in out:
-            pass  # universal2 binary
-        elif result.returncode != 0:
-            violations.append(
-                Violation(
-                    path=str(exe_path),
-                    level="warning",
-                    message=f"lipo -info failed: {out}",
-                )
-            )
-        if "is not a fat file" in out and "x86_64 arm64" not in out:
-            violations.append(
-                Violation(
-                    path=str(exe_path),
-                    level="warning",
-                    message="not universal binary (Apple Silicon + Intel推奨)",
-                )
-            )
-    except FileNotFoundError:
+    archs, err = _detect_architectures(exe_path)
+    if err is not None:
         violations.append(
             Violation(
                 path=str(exe_path),
                 level="warning",
-                message="lipo not available (macOS only); skip binary arch check",
+                message=f"architecture detection skipped: {err}",
             )
         )
-    except subprocess.TimeoutExpired:
+        return violations
+
+    if not archs:
         violations.append(
             Violation(
                 path=str(exe_path),
                 level="warning",
-                message="lipo -info timeout",
+                message="no recognized architecture detected (binary may be invalid)",
+            )
+        )
+        return violations
+
+    has_arm64 = "arm64" in archs
+    has_x86_64 = "x86_64" in archs
+    if has_arm64 and has_x86_64:
+        return violations  # universal2 OK
+    if has_arm64 and not has_x86_64:
+        violations.append(
+            Violation(
+                path=str(exe_path),
+                level="warning",
+                message="single-arch arm64 binary (Intel Mac非対応、universal2推奨)",
+            )
+        )
+    elif has_x86_64 and not has_arm64:
+        violations.append(
+            Violation(
+                path=str(exe_path),
+                level="warning",
+                message="single-arch x86_64 binary (Apple Silicon非ネイティブ、universal2推奨)",
+            )
+        )
+    else:
+        violations.append(
+            Violation(
+                path=str(exe_path),
+                level="error",
+                message=f"unsupported architecture set: {sorted(archs)} (arm64 / x86_64 必須)",
             )
         )
     return violations
@@ -191,6 +225,43 @@ def _check_aax_manifest_present(bundle_path: Path) -> list[Violation]:
                 path=str(manifest_xml),
                 level="error",
                 message="missing AAX manifest: Contents/Resources/AAXManifest.xml",
+            )
+        )
+    return violations
+
+
+def _check_resources(bundle_path: Path) -> list[Violation]:
+    """Resources/配下の推奨asset check (icon / PluginResources等)。"""
+    violations: list[Violation] = []
+    resources = bundle_path / "Contents" / "Resources"
+    if not resources.is_dir():
+        return violations
+    icon_candidates = [
+        resources / "icon.png",
+        resources / "icon.icns",
+        resources / "Icon.png",
+    ]
+    if not any(p.is_file() for p in icon_candidates):
+        violations.append(
+            Violation(
+                path=str(resources),
+                level="warning",
+                message="recommended asset missing: icon.png / icon.icns (Pro Tools UI表示推奨)",
+            )
+        )
+    return violations
+
+
+def _check_pace_framework(bundle_path: Path) -> list[Violation]:
+    """Frameworks/PACE_AntiPiracy.framework の存在check (warning)。"""
+    violations: list[Violation] = []
+    pace = bundle_path / "Contents" / "Frameworks" / "PACE_AntiPiracy.framework"
+    if not pace.exists():
+        violations.append(
+            Violation(
+                path=str(pace),
+                level="warning",
+                message="PACE_AntiPiracy.framework not detected (Avid審査前 iLok署名必須、Phase 1.0で full check)",
             )
         )
     return violations
@@ -241,6 +312,8 @@ def validate_bundle(bundle_path: str) -> str:
     violations += plist_violations
     violations += _check_executable(p, plist_data)
     violations += _check_aax_manifest_present(p)
+    violations += _check_resources(p)
+    violations += _check_pace_framework(p)
 
     n_error = sum(1 for v in violations if v.level == "error")
     n_warn = sum(1 for v in violations if v.level == "warning")
@@ -322,10 +395,37 @@ REQUIRED_AAX_MANIFEST_ELEMENTS = (
     "AAXManufacturerID",
 )
 
+OPTIONAL_AAX_MANIFEST_ELEMENTS = (
+    "AAXPlugInName",
+    "AAXProductCategory",
+    "AAXMinProToolsVersion",
+)
+
+VALID_PRODUCT_CATEGORIES = frozenset(
+    {
+        "EQ",
+        "Dynamics",
+        "PitchShift",
+        "Reverb",
+        "Delay",
+        "Modulation",
+        "Harmonic",
+        "NoiseReduction",
+        "Dither",
+        "SoundField",
+        "Effect",
+        "Instrument",
+        "MIDIEffect",
+        "Other",
+    }
+)
+
 UUID_PATTERN = re.compile(
     r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
 )
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+(\.\d+)?(-[a-zA-Z0-9.+-]+)?$")
+FOUR_CHAR_CODE_PATTERN = re.compile(r"^[A-Z][A-Za-z0-9]{3}$")
+PROTOOLS_VERSION_PATTERN = re.compile(r"^\d+(\.\d+){1,2}$")
 
 
 def _parse_xml_manifest(manifest_path: Path) -> tuple[dict[str, str], list[str]]:
@@ -368,6 +468,16 @@ def _validate_manifest_values(elements: dict[str, Any]) -> list[dict]:
             }
         )
 
+    effect_id = elements.get("AAXEffectID", "")
+    if effect_id and not FOUR_CHAR_CODE_PATTERN.match(str(effect_id)):
+        invalid.append(
+            {
+                "field": "AAXEffectID",
+                "value": str(effect_id),
+                "reason": "expected 4-character code starting with uppercase letter (e.g. EFCT, Eq01)",
+            }
+        )
+
     version = elements.get("AAXPlugInVersion", "")
     if version and not SEMVER_PATTERN.match(str(version)):
         invalid.append(
@@ -379,16 +489,54 @@ def _validate_manifest_values(elements: dict[str, Any]) -> list[dict]:
         )
 
     mfr = elements.get("AAXManufacturerID", "")
-    if mfr and len(str(mfr)) != 4:
+    if mfr:
+        mfr_str = str(mfr)
+        if len(mfr_str) != 4:
+            invalid.append(
+                {
+                    "field": "AAXManufacturerID",
+                    "value": mfr_str,
+                    "reason": "expected 4-character code (Avid registered manufacturer ID)",
+                }
+            )
+        elif not mfr_str[0].isupper() or not mfr_str.isascii():
+            invalid.append(
+                {
+                    "field": "AAXManufacturerID",
+                    "value": mfr_str,
+                    "reason": "expected ASCII 4-char code starting with uppercase letter (Avid convention)",
+                }
+            )
+
+    category = elements.get("AAXProductCategory", "")
+    if category and str(category) not in VALID_PRODUCT_CATEGORIES:
         invalid.append(
             {
-                "field": "AAXManufacturerID",
-                "value": str(mfr),
-                "reason": "expected 4-character code (Avid registered manufacturer ID)",
+                "field": "AAXProductCategory",
+                "value": str(category),
+                "reason": (
+                    "unknown category; expected one of: "
+                    + ", ".join(sorted(VALID_PRODUCT_CATEGORIES))
+                ),
+            }
+        )
+
+    pt_version = elements.get("AAXMinProToolsVersion", "")
+    if pt_version and not PROTOOLS_VERSION_PATTERN.match(str(pt_version)):
+        invalid.append(
+            {
+                "field": "AAXMinProToolsVersion",
+                "value": str(pt_version),
+                "reason": "expected version format (e.g. 2023.6 / 12.5.0)",
             }
         )
 
     return invalid
+
+
+def _detect_optional_present(elements: dict[str, Any]) -> list[str]:
+    """validation OK時の参考情報: 検出された optional fields。"""
+    return [field for field in OPTIONAL_AAX_MANIFEST_ELEMENTS if field in elements]
 
 
 @mcp.tool()
@@ -448,15 +596,17 @@ def validate_manifest(manifest_path: str) -> str:
         field for field in REQUIRED_AAX_MANIFEST_ELEMENTS if field not in elements
     ]
     invalid = _validate_manifest_values(elements)
+    optional_present = _detect_optional_present(elements)
     valid = not missing and not invalid
     return json.dumps(
         {
             "valid": valid,
             "missing_required": missing,
             "invalid_values": invalid,
+            "optional_present": optional_present,
             "parse_errors": [],
             "summary": (
-                "ok"
+                f"ok ({len(optional_present)} optional fields present)"
                 if valid
                 else f"{len(missing)} missing, {len(invalid)} invalid"
             ),
