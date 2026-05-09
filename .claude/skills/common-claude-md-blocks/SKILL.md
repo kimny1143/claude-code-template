@@ -21,18 +21,35 @@ description: >
 - **diff PRサイズ削減**: 共通block変更時に 1 PR (template課) だけでmaintainance完納、各課PRは distribute実行のみ
 - **5/14 launch期との整合**: 5/13 launch期間中は変更最小化、Phase 2 完納で post-launch 運用負荷低減
 
-## blocks/*.md (8 共通block)
+## blocks/*.md (14 共通blocks)
 
-| block | source 4課 line numbers | 内容 |
-|-------|------------------------|------|
-| `01-operational-premise.md` | 稼働の前提 | "Claudeは休まない" + 24時間稼働 + kimnyより先に動く + 思考を止めない + 読んでいないファイルを変更しない |
-| `02-memory-cleanup.md` | メモリ棚卸し | セッション開始時 stale削除 + project型完了済削除 + MEMORY.md整合 |
-| `03-chrome-lock.md` | Chrome拡張ロック制 | 共有リソース先着制、conductor通過 |
-| `04-org-structure.md` | 組織体制 (2026-04-04改定) | 4部制 (経営/プロダクト/マーケティング/分析研究) + dsp/occur含む14課 + 役職対応 |
-| `05-opus-fixed-plan-mode.md` | Opus固定運用 + plan mode (2026-04-23〜) | template課 Opus固定移行 + plan mode discipline + 切替コスト消滅 + cognitive context separator役割 |
-| `06-plan-trigger-conditions.md` | /plan 発動条件 | 発動すべきケース + 発動しないケース + 判断指針 + 仕様変更判定基準 |
-| `07-available-models-rule.md` | availableModels運用ルール | settings.json追加禁止 + GitHub issue #41720 + モデル切替フラグ |
-| `08-conductor-delegation.md` | conductor委任権限 | Tier 1/2 PR merge / skill install / コンテンツ公開 / peer task割り振り + 対象外 (auth/価格/外部公開) |
+### Phase 2 0.1 (PR #56): 基盤 8 blocks
+
+| block | source 4課 | 内容 |
+|-------|------------|------|
+| `01-operational-premise.md` | 稼働の前提 | "Claudeは休まない" + 24時間稼働 + dormant自己宣言禁止 |
+| `02-memory-cleanup.md` | メモリ棚卸し | セッション開始時 stale削除 + MEMORY.md整合 |
+| `03-chrome-lock.md` | Chrome拡張ロック制 | 共有リソース先着制 |
+| `04-org-structure.md` | 組織体制 | 4部制 + 14課 (dsp/occur含む) + 役職対応 |
+| `05-opus-fixed-plan-mode.md` | plan mode discipline | Opus固定 + plan mode cognitive context separator役割 |
+| `06-plan-trigger-conditions.md` | /plan 発動条件 | 発動条件 + 判断指針 |
+| `07-available-models-rule.md` | availableModels運用 | settings.json追加禁止 |
+| `08-conductor-delegation.md` | conductor委任権限 | Tier 1/2 merge等 + 対象外 |
+
+### Phase 2 0.2 (5/9 conductor 19:34 JST承認): judgment quality 6 blocks
+
+| block | source memory | 内容 |
+|-------|--------------|------|
+| `09-peer-self-judgment-boundaries.md` | feedback_zero_kimny_manual_work (occur peer) | peer自走OK + escalation対象 + 判定3軸 (reversible/外部公開/本番影響) |
+| `10-mass-production-principle.md` | feedback_mass_production_default (occur peer) | 量産default + stand-by禁止 + 「ひたすら産み続ける」 (kimny 5/9 broadcast) |
+| `11-existing-state-first.md` | feedback_act_on_existing_state (occur peer) | cold-start実態確認 + assumption禁止 + destructive op前のverify |
+| `12-self-correction-as-growth.md` | feedback_self_correction_value (occur peer) | judgment reverse OK + 学習loop + memory化 |
+| `13-reference-vs-docs-complement.md` | feedback_reference_vs_docs_complement (occur peer) | reference memory ≠ docs structural complement原則 |
+| `14-conductor-active-judgment.md` | docs/drafts/conductor-active-judgment-principle.md (CCO PR #58) | passive endorsement禁止 + consistency check必須 + reverse事前検討 |
+
+### evidence base (Phase 2 0.2)
+
+5/9 occur peer judgment rule library 7件構築 + conductor自身の judgment ブレ反省 (15:08 vs 15:18矛盾) + kimny 5/9 17:55 JST「全部前倒し」 + 18:00 JST「ひたすら産み続けろ」 broadcast。
 
 ## marker-bounded section形式 (各課CLAUDE.md内)
 
