@@ -232,8 +232,8 @@ write課受領後、`feedback_stale_source_retirement.md` write課版（`docs/dr
 | 部 | 課 |
 |----|----|
 | 経営部 | conductor(COO)、template課(CCO)、freee課(CFO)、cowork課 |
-| プロダクト部 | mued課、native課 |
-| マーケティング部 | SNS課、write課、video課、LP課 |
+| プロダクト部 | mued課、native課、dsp課、occur課 |
+| マーケティング部 | SNS課、write課、LP課 |
 | 分析研究部 | reserch課、data課 |
 
 戦略的提案はconductor経由でpolicy-gate（経営部会議）を通してからCEO(kimny)に提示する。
@@ -252,9 +252,9 @@ conductorからの指示は、下記の範囲においてkimny直接指示と同
 - 価格変更
 - 外部への公開発言の初回承認
 
-## opusplan 運用と plan mode の出入りルール（2026-04-14〜）
+## plan mode の出入りルール（2026-04-14〜、Opus固定2026-04-23〜）
 
-本peerは 起動時に `--model` フラグで動作モードが指定されている（`_conductor/scripts/start-all-peers-ghostty.sh` 参照）。template課は `opusplan` モードで起動される。
+本peerは 起動時に `--model` フラグで動作モードが指定されている（`_conductor/scripts/start-all-peers-ghostty.sh` 参照）。template課は **Opus固定 (`--model opus`)** で起動される (2026-04-23〜、`project_exec_team_opus_fixed.md` 整合)。Opus固定下でも /plan は設計段階の cognitive context を明示する役割で有効、以下のルールに従う。
 
 ### plan mode の出入りは「タスク単位」で行う
 
@@ -262,7 +262,9 @@ conductorからの指示は、下記の範囲においてkimny直接指示と同
 
 #### 背景
 
-plan mode の出入りに伴う Opus/Sonnet 自動切替は、内部的に「会話履歴の再処理コスト」が乗る（template課調査結果）。長セッションで plan mode を頻繁に出入りする peer は、想定より消費が膨らむ可能性がある。本案の Opus 消費見込み（現状100 → v2適用後20-35）は、plan modeが必要なタスクで1回ずつ発動する前提で計算している。
+**opusplan時代の背景** (2026-04-14〜04-22): plan mode の出入りに伴う Opus/Sonnet 自動切替は、内部的に「会話履歴の再処理コスト」が乗る（template課調査結果）。長セッションで plan mode を頻繁に出入りする peer は、想定より消費が膨らむ可能性があった。
+
+**Opus固定移行後** (2026-04-23〜): 切替コストは消滅したが、plan mode の discipline は引き続き有効 — 設計段階を明示することでタスク粒度の管理 + cognitive context の整理 + commit history可読性向上に寄与する。
 
 #### 具体運用
 
@@ -294,8 +296,7 @@ plan mode の出入りに伴う Opus/Sonnet 自動切替は、内部的に「会
 
 ## /plan 発動条件
 
-このpeerは opusplan モードで動作する。/plan を発動した時のみ Opus が呼ばれ、
-それ以外は Sonnet で動作する。以下の条件に該当する場合に /plan を発動する。
+このpeerは **Opus固定** (`--model opus`、2026-04-23〜) で動作する。/plan は Opus を呼ぶための切替手段ではなく、設計段階を明示する cognitive context separator として使用する。以下の条件に該当する場合に /plan を発動する。
 
 ### 発動すべきケース
 - 新規skillの設計（SKILL.md を 0 から書き起こす、挙動仕様とトリガー条件を決める）
@@ -306,7 +307,7 @@ plan mode の出入りに伴う Opus/Sonnet 自動切替は、内部的に「会
 - reserch課から依頼された外部ベストプラクティスのスキル化判断（A+B+C評価の合議設計）
 - CCOとして全peerに影響するガードレール追加・運用ルール策定
 
-### 発動しないケース（Sonnetで処理する）
+### 発動しないケース（Sonnet時代の名残、Opus固定下でも /plan不要として継続）
 - 既存skillの誤字修正・例示追加・脱字修正（仕様変更を伴わないもの）
 - 既存skillのコメント変更・文言調整（挙動・トリガー条件・入出力に影響しないもの）
 - `skills-lock.json` のバージョン更新
@@ -317,7 +318,7 @@ plan mode の出入りに伴う Opus/Sonnet 自動切替は、内部的に「会
 - 既存commandの文言調整（/commit /pr /ship /build-fix /learn /security /ios）
 
 ### 判断に迷ったとき
-- 原則 Sonnet 側に倒す。skillやhookの「軽微修正」と「新規設計」の判定は**「新規ファイル作成 または既存ファイルの仕様変更を伴う書き換え」か「誤字・パラメータ調整・ログ文言変更・既定値差し替え」か**で分ける。前者は /plan 発動、後者は Sonnet。
+- 原則 /plan 発動なし側に倒す。skillやhookの「軽微修正」と「新規設計」の判定は**「新規ファイル作成 または既存ファイルの仕様変更を伴う書き換え」か「誤字・パラメータ調整・ログ文言変更・既定値差し替え」か**で分ける。前者は /plan 発動、後者は通常実装。
 - **「仕様変更」の判定基準**: skill/hookの挙動が変わる、トリガー条件が変わる、入出力フォーマットが変わる、対象ファイル・対象コマンドが変わる等。文言・例示・コメント・ログ表現の変更のみは仕様変更に該当しない。
 - 量的閾値（部分書き換え何％など）は使わない。仕様変更を伴うか否かの質的判定で切る。
 
@@ -332,16 +333,16 @@ CI / 配布確認中に以下を検知した場合は /plan を発動する。
 
 ## 運用ルール: `availableModels` は settings.json に追加しない
 
-2026-04-14 opusplan運用開始に伴い確立された全課共通ルール。
+2026-04-14 (opusplan運用開始時) に確立された全課共通ルール。Opus固定移行 (2026-04-23〜) 後も継続。
 
 ### ルール
 `~/.claude/settings.json` / `~/.claude/settings.local.json` / 各peer の `.claude/settings.local.json` いずれにも `availableModels` 項目を追加しない。現状追加されていないことは template課が2026-04-14時点で確認済み。
 
 ### 理由
-GitHub issue [anthropics/claude-code#41720](https://github.com/anthropics/claude-code/issues/41720) で、`availableModels` をカスタマイズした環境で `sonnet[1m]` / `opus[1m]` / `haiku` などを経由すると `/model opusplan` に戻れなくなるバグが報告されている。発動条件は `availableModels` のカスタム追加のみ。追加しなければこのバグ面を踏まない。
+GitHub issue [anthropics/claude-code#41720](https://github.com/anthropics/claude-code/issues/41720) で、`availableModels` をカスタマイズした環境で `sonnet[1m]` / `opus[1m]` / `haiku` などを経由すると `/model opusplan` (opusplan運用peer) や `/model opus` (Opus固定peer) に戻れなくなるバグが報告されている。発動条件は `availableModels` のカスタム追加のみ。追加しなければこのバグ面を踏まない。
 
 ### 運用
-- モデル切替は起動時の `--model` フラグ（`claudepeers --model opusplan` 等）または実行中の `/model default` → `/model opusplan` 2段切替で行う
+- モデル切替は起動時の `--model` フラグで行う (template課は `claudepeers --model opus` Opus固定。他peerは opusplan 等運用ありうる)。実行中の手動モデル切替は Opus固定運用整合のため推奨しない
 - 将来 `availableModels` が必要になるユースケースが出た場合は、本ルール改定を伴う承認フロー（policy-gate）を通すこと
 - Claude Code update（`claude update`）でバグ修正が取り込まれた後も、代替手段が十分機能しているため、`availableModels` の追加は原則継続して行わない
 
