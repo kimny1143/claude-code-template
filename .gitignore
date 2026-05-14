@@ -7,6 +7,11 @@ __pycache__/
 mcps/*/data/*.json
 mcps/*/data/**/*.jsonl
 
+# Blender MCP — CCO peer local setup (conductor #16 dispatch 2026-05-14、 option B project-scope local-only judgment)
+# 詳細: docs/blender-mcp-cco-peer-setup.md
+.mcp.json
+vendor/blender-mcp/
+
 # Broken symlinks to .agents/skills/ (created by npx skills add)
 skills/
 
