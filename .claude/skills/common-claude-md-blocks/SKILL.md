@@ -1,9 +1,10 @@
 ---
 name: common-claude-md-blocks
+disable-model-invocation: true
 description: >
-  経営部4課 (template/conductor/freee/cowork) CLAUDE.md間の重複block (8項目、248行) を共通化する管理skill。
+  経営部4課 (template/conductor/freee/cowork) → 5/18 cognitive load v3 rollout で全14課に展開された CLAUDE.md 共通block管理 skill (18 blocks)。
   source of truth: blocks/*.md、各課CLAUDE.mdへ marker-bounded section置換でdistribute。
-  使用タイミング: (1) 共通block仕様変更時 (2) 4課以上に同じpolicyを横展開時 (3) Phase 2 経営部4課完納後 残10課展開時 (5/22以降)。
+  使用タイミング: (1) 共通block仕様変更時 (2) 14課横断 policy 同期時 (3) cognitive load v3 trial期間 (5/19-5/29) で各 peer marker 挿入 PR 完納時。
 ---
 
 # common-claude-md-blocks — 経営部4課CLAUDE.md共通block管理
@@ -21,7 +22,7 @@ description: >
 - **diff PRサイズ削減**: 共通block変更時に 1 PR (template課) だけでmaintainance完納、各課PRは distribute実行のみ
 - **5/14 launch期との整合**: 5/13 launch期間中は変更最小化、Phase 2 完納で post-launch 運用負荷低減
 
-## blocks/*.md (14 共通blocks)
+## blocks/*.md (18 共通blocks)
 
 ### Phase 2 0.1 (PR #56): 基盤 8 blocks
 
@@ -46,6 +47,22 @@ description: >
 | `12-self-correction-as-growth.md` | feedback_self_correction_value (occur peer) | judgment reverse OK + 学習loop + memory化 |
 | `13-reference-vs-docs-complement.md` | feedback_reference_vs_docs_complement (occur peer) | reference memory ≠ docs structural complement原則 |
 | `14-conductor-active-judgment.md` | docs/drafts/conductor-active-judgment-principle.md (CCO PR #58) | passive endorsement禁止 + consistency check必須 + reverse事前検討 |
+
+### Phase 2 0.3 (PR #N、 2026-05-18 cognitive load v3 rollout): communication 4 blocks
+
+proposal `proposal-conductor-cognitive-load-v3.md` (c) hybrid path、 kimny 5/18 全採用 GO 受領後の 12 peer 横断 communication infra。
+
+| block | source spec | 内容 |
+|-------|-------------|------|
+| `15-urgency-marker.md` | proposal v3 §4.4 | URGENCY marker 6行 format + 基準 (high/mid/low) + 議論レーン protocol + post-hoc audit category |
+| `16-external-resource-gate.md` | proposal v3 §8.2 | 外部リソース新規作成 / 公開範囲変更 / 課金契約 / 不可逆操作 = 常に URGENCY: high + kimny/conductor pre-approval (dsp 5/17 incident 再発防止) |
+| `17-status-md-self-drive.md` | proposal v3 §4.3 | 各 peer 自走 status.md update protocol + cowork cron aggregation 統合 (5-15分間隔) |
+| `18-judgment-request-contract.md` | proposal v3 §4.6 | mid/high message に QUESTION + OPTIONS + RECOMMENDATION 追加 (Phase 1 soft enforcement、 Phase 2 strict) |
+
+関連 artifacts:
+- `docs/templates/peer-status-md.template.md` (各 peer 配布用 status.md template、 frontmatter YAML 13 fields)
+- `docs/cognitive-load-v3-rollout-20260519.md` (migration note)
+- `scripts/distribute-claude-md-blocks.sh` (TARGET_PEERS 4 → 14 paths 拡張)
 
 ### evidence base (Phase 2 0.2)
 
@@ -87,12 +104,14 @@ cd template課/
 
 ## 配布範囲
 
-### Phase 2 (5/14 launch完納後)
-- 経営部4課: template / conductor / freee / cowork
+### Phase 2 0.1+0.2 (5/14 launch完納後): 経営部4課
+- template / conductor / freee / cowork (基盤 8 blocks + judgment quality 6 blocks 配布対象)
 
-### 5/22以降 (通常peer体制移行後)
-- 残10課: mued / native / dsp / occur / SNS / write / LP / data / reserch / video (videoは2026-04-11クローズ済 → 9課)
-- 全12課展開で stale drift完全防止
+### Phase 2 0.3 (5/18 cognitive load v3 rollout): 全14課展開
+- 4 new blocks (15-18 communication infra) + status.md 自走 protocol
+- TARGET_PEERS 14 paths 拡張 (`scripts/distribute-claude-md-blocks.sh` per)
+- 各 peer marker挿入 PR は trial開始期 (5/19-5/22) と並行で各 peer 自 git repo に起案 (Tier 2 [peer-review: 自課])
+- distribute production run = 全 peer marker挿入完納後、 1 commit で 14 paths 同期
 
 ## 各課固有section (共通blockの外)
 
@@ -115,7 +134,9 @@ cd template課/
 | 0.1 | SKILL.md設計 + 8 blocks/*.md 抽出 + distribute script frame | 5/9 EOD (本) |
 | 0.2 | 4課 CLAUDE.md にmarker-bounded section挿入 (各課PR) | 5/14- launch完納後 |
 | 0.3 | distribute実行 + 4課同期確認 + commit記録 | 5/14- |
-| 1.0 | 5/22以降 残10課展開 + 全課PR | 5/22以降 |
+| 1.0 | cognitive load v3 rollout (proposal v3 (c) hybrid path、 4 new blocks 15-18 + status.md template + 全14課 TARGET_PEERS 拡張) | 5/18 |
+| 1.1 | 各 peer marker挿入 PR (5/19-5/22 trial開始期と並行、 各 peer Tier 2 [peer-review: 自課]) | 5/19-5/22 |
+| 1.2 | distribute production run で全14課 marker-bounded sections sync | 5/22+ |
 
 ## 関連リソース
 

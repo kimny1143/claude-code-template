@@ -17,12 +17,24 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_REPO="$(cd "$SCRIPT_DIR/.." && pwd)"
 BLOCKS_DIR="$TEMPLATE_REPO/.claude/skills/common-claude-md-blocks/blocks"
 
-# 配布対象 (経営部4課)
+# 配布対象 (cognitive load v3 rollout 2026-05-18 で全 14 課展開、 marker未挿入 peer は skip logic で no-op)
+# - 経営部4課: template / conductor / freee / cowork (Phase 2 0.1+0.2 既配布対象)
+# - 残10課: mued / native / dsp / occur / SNS / write / LP / reserch / data / blender (Phase 2 0.3 = cognitive load v3 trial 5/19- 並行 marker挿入 PR)
 declare -a TARGET_PEERS=(
     "$TEMPLATE_REPO/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/_conductor/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/freee-MCP/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/_cowork/CLAUDE.md"
+    "$HOME/Dropbox/_DevProjects/mued/mued_v2/CLAUDE.md"
+    "$HOME/Dropbox/_DevProjects/mued/mued_v2/apps/CLAUDE.md"
+    "$HOME/Dropbox/_DevProjects/_mued-dsp/CLAUDE.md"
+    "$HOME/Dropbox/_DevProjects/_mued-occur/CLAUDE.md"
+    "$HOME/Dropbox/_DevProjects/mued/threads-api/CLAUDE.md"
+    "$HOME/Dropbox/_DevProjects/_contents-writing/CLAUDE.md"
+    "$HOME/Dropbox/_DevProjects/_LandingPage/glasswerks-lp/CLAUDE.md"
+    "$HOME/Dropbox/_DevProjects/_Reserch/CLAUDE.md"
+    "$HOME/Dropbox/_DevProjects/_data-analysis/CLAUDE.md"
+    "$HOME/Dropbox/_DevProjects/_blender/CLAUDE.md"
 )
 
 DRY_RUN=false
