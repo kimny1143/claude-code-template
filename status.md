@@ -3,14 +3,14 @@ peer: template
 department: management
 activity: active
 status: idle
-current_task: kimny halt 状態継続中 (5/19 15:45 JST kimny direct)、 全 dispatch hold + ASC/TF/simulator 干渉禁止 + stand-by silent mode。 cowork cron stale 検出 18:02 JST 受領 → heartbeat refresh のみ着手 (conductor 明示 dispatch per)。
-next_action: kimny halt 解除 / next dispatch 受領まで stand-by 維持。 次 heartbeat 22:00 JST 予定 (halt 継続前提、 間隔 4h)
+current_task: kimny halt 状態継続中 (5/19 15:45 JST kimny direct)、 全 dispatch hold + ASC/TF/simulator 干渉禁止 + stand-by silent mode。 cowork cron stale 検出 22:02 JST 受領 → heartbeat refresh のみ着手 2 回目 (conductor 明示 dispatch per、 long interval 翌朝 09:00 JST 設定)。
+next_action: kimny halt 解除 / next dispatch 受領まで stand-by 維持。 次 heartbeat 5/20 09:00 JST 予定 (halt 継続前提、 long interval 11h、 夜間休息対応)
 blocked_by: kimny halt instruction (5/19 15:45 JST、 next dispatch まで何もしない)
 urgency: low
 action_owner: peer
 deadline: null
-expected_next_check_at: 2026-05-19T22:00:00+09:00
-last_update: 2026-05-19T18:03:00+09:00
+expected_next_check_at: 2026-05-20T09:00:00+09:00
+last_update: 2026-05-19T22:03:00+09:00
 evidence: 5/19 morning-mid pipeline = dsp #51 LGTM merged 06b0fd0、 occur #16-21 連続 6 PR Tier 2 LGTM (cognitive load v3 self-apply + MiniMax endpoint + MAESTRO 404 + Tier reshuffle + ACE-Step adapter + first call $0.006 SUCCESS)、 write #60 (a) endorse merged 3099d5a、 平易日本語ルール 12 peer 並列 broadcast ACK 11/12。 15:45 JST kimny halt 指示 → silent stand-by entry。 18:02 JST cowork cron stale 検出 (18:00 JST expected 超過) → conductor relay 経由 heartbeat refresh のみ dispatch 受領
 confidence: high
 lane: notification
@@ -18,6 +18,7 @@ lane: notification
 
 ## Recent events
 
+- 2026-05-19T22:03:00+09:00: cowork cron stale 検出 relay 受領 2 回目 (22:00 JST expected 超過) → conductor 明示 dispatch per heartbeat refresh のみ着手。 kimny halt 状態継続前提、 全 dispatch hold 維持、 next expected_next_check_at = 5/20 09:00 JST 設定 (long interval 11h、 夜間休息対応)
 - 2026-05-19T18:03:00+09:00: cowork cron stale 検出 relay 受領 (18:00 JST expected 超過) → conductor 明示 dispatch per heartbeat refresh のみ着手。 kimny halt 状態 (15:45 JST) 継続前提、 全 dispatch hold 維持、 next expected_next_check_at = 22:00 JST 設定 (halt 継続中 interval 4h)
 - 2026-05-19T15:45:00+09:00: kimny halt 指示 受領 (conductor relay、 URGENCY: mid、 全 peer compact + 完納後 stand-by + next dispatch まで何もしない) → silent stand-by entry。 `/compact` は user typing 経由 trigger built-in CLI command (agent から programmatic 起動不可) 注記 conductor 送信済
 - 2026-05-19T14:02:00+09:00: cowork stale alert relay 受領 + heartbeat refresh (14:00 JST 予定 2分超過、 conductor routine flag、 next expected_next_check_at = 18:00 JST 設定)
@@ -41,9 +42,9 @@ lane: notification
 
 ## Notes
 
-### 現状 (5/19 18:03 JST)
+### 現状 (5/19 22:03 JST)
 
-kimny halt 状態継続中 (15:45 JST kimny direct → silent stand-by entry)。 18:02 JST cowork cron stale 検出 → conductor 明示 dispatch 経由 heartbeat refresh のみ着手 (Tier 1 self-merge OK 明示)。 ASC/TF/simulator 干渉禁止 + 全 dispatch hold 継続、 next dispatch 受領まで stand-by 維持。
+kimny halt 状態継続中 (15:45 JST kimny direct → silent stand-by entry)。 22:02 JST cowork cron stale 検出 2 回目 → conductor 明示 dispatch 経由 heartbeat refresh のみ着手 (Tier 1 self-merge OK 明示)。 long interval (翌朝 09:00 JST、 夜間休息対応) 設定。 ASC/TF/simulator 干渉禁止 + 全 dispatch hold 継続、 next dispatch 受領まで stand-by 維持。
 
 **完納 deliverable 集計 (5/19 朝-午後)**:
 - review LGTM: dsp #51 (1 PR) + occur #16/#17/#18/#19 carry + #20 + #21 (6 PRs) + write #60 endorse (1 PR) = 計 8 Tier 2/1 LGTM
