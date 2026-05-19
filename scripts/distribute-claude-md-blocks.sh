@@ -79,11 +79,20 @@ def load_blocks(blocks_dir: Path) -> dict[str, str]:
 
 
 def replace_section(content: str, block_id_str: str, block_content: str) -> tuple[str, bool]:
-    """marker-bounded section置換、replaced=True if 置換実行された"""
+    """marker-bounded section置換、replaced=True if 置換実行された.
+
+    regex は 3 つの marker pair format に対応:
+    - empty placeholder: START -->\\n<!-- END -->                  (consecutive lines、 leading \\n optional)
+    - blank line:        START -->\\n\\n<!-- END -->               (blank line between)
+    - filled content:    START -->\\n<content>\\n<!-- END -->      (任意 content)
+
+    出力 format は normalize され、 常に START -->\\n<headers>\\n<content>\\n<!-- END -->
+    (blank line between content and END marker) になる。 = idempotent + cross-peer format consistency。
+    """
     pattern = re.compile(
         r"(<!-- COMMON-BLOCK-START: " + re.escape(block_id_str) + r" -->.*?\n)"
         r"(.*?)"
-        r"(\n<!-- COMMON-BLOCK-END: " + re.escape(block_id_str) + r" -->)",
+        r"((?:\n)?<!-- COMMON-BLOCK-END: " + re.escape(block_id_str) + r" -->)",
         re.DOTALL,
     )
     match = pattern.search(content)
@@ -97,7 +106,9 @@ def replace_section(content: str, block_id_str: str, block_content: str) -> tupl
         + "<!-- Distribute via: scripts/distribute-claude-md-blocks.sh -->\n\n"
         + block_content.rstrip() + "\n"
     )
-    return content[:match.start()] + new_section + match.group(3) + content[match.end():], True
+    # 出力 format 正規化: END marker 前に \n 保証 (input format 不問で同 output)
+    normalized_end = "\n<!-- COMMON-BLOCK-END: " + block_id_str + " -->"
+    return content[:match.start()] + new_section + normalized_end + content[match.end():], True
 
 
 def process_target(target: Path, blocks: dict[str, str]) -> tuple[int, int]:
