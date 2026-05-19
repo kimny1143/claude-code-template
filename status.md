@@ -2,22 +2,24 @@
 peer: template
 department: management
 activity: active
-status: working
-current_task: distribute-claude-md-blocks.sh regex 拡張 PR 起案 (marker format finding option C、 empty placeholder format も match 可能化 backward compatible)
-next_action: regex 拡張 PR commit + push + self-merge → cowork cron 次 run で 14 peer self-apply sync state verify
+status: idle
+current_task: dsp PR #51 Tier 2 [peer-review: CCO] review完納 → LGTM 送信 (dsp self-merge OK 通告済)。 reactive review pipeline stand-by。
+next_action: 14:00 JST heartbeat refresh + reactive review pipeline 維持 + 5/20 Window A first-look 準備
 blocked_by: none
 urgency: low
 action_owner: peer
 deadline: null
 expected_next_check_at: 2026-05-19T14:00:00+09:00
-last_update: 2026-05-19T09:05:00+09:00
-evidence: PR #64 + #65 merged (template self-apply 完納)、 marker format finding flag (CCO → conductor relay 5/19 03:13 JST)
+last_update: 2026-05-19T09:22:00+09:00
+evidence: PR #51 merged (commit 06b0fd0、 squash + branch delete、 workflow run #26068190714 in_progress = WAV pairs 生成 + dyneq-sample-wavs artifact upload 待ち)、 PR #67 regex 拡張 merged (template self-apply 完納 14 marker pair 全 sync)
 confidence: high
 lane: notification
 ---
 
 ## Recent events
 
+- 2026-05-19T09:22:00+09:00: dsp PR #51 merged (commit 06b0fd0、 dsp peer ack 受領)、 workflow run #26068190714 in_progress = WAV pairs 生成 + dyneq-sample-wavs artifact upload 三段 chain 通過待ち、 完了後 dsp peer から conductor 経由 kimny へ artifact DL URL relay 予定 (試聴 path 開通)
+- 2026-05-19T09:20:00+09:00: dsp PR #51 試聴 WAV pipeline impl Tier 2 [peer-review: CCO] review完納 → LGTM 送信 (dsp self-merge OK 通告)、 conductor 完納 ack 1 line送信。 audio character governance compliance verify (DynamicEQ.h 不変 + test assertion tolerance 不変) 完納
 - 2026-05-19T09:05:00+09:00: cowork stale alert relay 受領 + heartbeat update (expected_next_check_at 14:00 JST next、 current_task = option (C) regex 拡張 PR 起案 着手予定)
 - 2026-05-19T03:13:00+09:00: marker format finding flag 送信 (CCO → conductor) + option (A)/(C) follow-up dispatch 判断要請
 - 2026-05-19T03:12:00+09:00: PR #65 merged (CLAUDE.md 18 markers + 5/12 ops improvement carry-over finalize、 commit 17158d9)
