@@ -2,7 +2,7 @@
 name: common-claude-md-blocks
 disable-model-invocation: true
 description: >
-  経営部4課 (template/conductor/freee/cowork) → 5/18 cognitive load v3 rollout で全14課に展開された CLAUDE.md 共通block管理 skill (18 blocks)。
+  経営部4課 (template/conductor/freee/cowork) → 5/18 cognitive load v3 rollout で全14課に展開された CLAUDE.md 共通block管理 skill (19 blocks)。
   source of truth: blocks/*.md、各課CLAUDE.mdへ marker-bounded section置換でdistribute。
   使用タイミング: (1) 共通block仕様変更時 (2) 14課横断 policy 同期時 (3) cognitive load v3 trial期間 (5/19-5/29) で各 peer marker 挿入 PR 完納時。
 ---
@@ -22,7 +22,7 @@ description: >
 - **diff PRサイズ削減**: 共通block変更時に 1 PR (template課) だけでmaintainance完納、各課PRは distribute実行のみ
 - **5/14 launch期との整合**: 5/13 launch期間中は変更最小化、Phase 2 完納で post-launch 運用負荷低減
 
-## blocks/*.md (18 共通blocks)
+## blocks/*.md (19 共通blocks)
 
 ### Phase 2 0.1 (PR #56): 基盤 8 blocks
 
@@ -63,6 +63,19 @@ proposal `proposal-conductor-cognitive-load-v3.md` (c) hybrid path、 kimny 5/18
 - `docs/templates/peer-status-md.template.md` (各 peer 配布用 status.md template、 frontmatter YAML 13 fields)
 - `docs/cognitive-load-v3-rollout-20260519.md` (migration note)
 - `scripts/distribute-claude-md-blocks.sh` (TARGET_PEERS 4 → 14 paths 拡張)
+
+### Phase 2 0.4 (PR #N、 2026-05-20 開発フロー改善 MTG): quality gate 1 block
+
+開発フロー改善 MTG (`dev-flow-improvement-mtg-20260520.md`、 kimny 5/20 GO) 論点1 = MUEDear Build 78 事故 (基本 UI バグが TestFlight 素通り) 起点の再発防止 gate。 CCO Workstream 3。
+
+| block | source spec | 内容 |
+|-------|-------------|------|
+| `19-character-gate.md` | MTG §2 | キャラクター gate 概念 (機械テストで拾えない人間判断の合格基準) + 工程名分離 + 証拠なしには「通過」と書けない原則 + ツール化できない一線 |
+
+関連 artifacts:
+- `docs/templates/pull-request-template.base.md` (共通 PR テンプレ base、 機械チェック / 成果物 verify 別 section)
+- `docs/dev-flow-gate-rollout-20260520.md` (migration note)
+- `.claude/skills/tier-judge/SKILL.md` (Step 4 = UI/成果物変更検出 + evidence 必須 warning)
 
 ### evidence base (Phase 2 0.2)
 
@@ -137,6 +150,7 @@ cd template課/
 | 1.0 | cognitive load v3 rollout (proposal v3 (c) hybrid path、 4 new blocks 15-18 + status.md template + 全14課 TARGET_PEERS 拡張) | 5/18 |
 | 1.1 | 各 peer marker挿入 PR (5/19-5/22 trial開始期と並行、 各 peer Tier 2 [peer-review: 自課]) | 5/19-5/22 |
 | 1.2 | distribute production run で全14課 marker-bounded sections sync | 5/22+ |
+| 1.3 | 開発フロー改善 MTG 論点1 quality gate (block 19-character-gate + 共通 PR テンプレ + tier-judge Step 4) | 5/20 |
 
 ## 関連リソース
 
