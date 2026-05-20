@@ -1,7 +1,8 @@
 ---
 name: tier-judge
 description: >
-  git diff を解析して PR の Tier（1/2/3）を自動提案する。判定根拠と境界ケース注意も出力。
+  git diff を解析して PR の Tier（1/2/3）を自動提案する。判定根拠・境界ケース注意に加え、
+  UI / 成果物変更を検出した場合は成果物 evidence 必須 warning も出力。
   使用タイミング: (1) PR作成前にTierを確認したい時 (2) 境界ケースで判断に迷った時
   (3) git diffを見てTier判定してほしい時。
   トリガー例: 「これ何Tier?」「Tier判定して」「このPRはTier何になる?」
@@ -56,6 +57,28 @@ description: >
 - `CREATE TABLE`, `ADD COLUMN nullable`, index追加のみ → 純粋追加DBスキーマ
 - hook/settings の変更が自ピア内のみに影響する場合
 
+### Step 4: UI / 成果物変更検出（Tier 数値とは独立して必ず実行）
+
+Tier 1/2/3 の数値判定とは別に、変更が **UI / 成果物の見た目・挙動** に影響するかを判定する。
+以下のいずれかに該当 → 「成果物 evidence 必須」。
+
+| チェック項目 | 検出パターン例 |
+|------------|--------------|
+| フロントUI | `*.tsx`, `*.jsx`, `*.vue`, `*.css`, `*.scss`, component / layout / viewport file |
+| ネイティブUI | `*.swift`, `*.kt`, Storyboard, Compose 画面 file |
+| LP / Webページ | LP page, ランディング HTML / テンプレート |
+| 3D / グラフィック | `*.blend`, シーン / レンダリング設定 |
+| CLI / 出力成果物 | CLI 出力 format, 生成物 (WAV / 画像 / レポート) のフォーマット変更 |
+
+検出時は、Tier 判定結果に **必ず** 「成果物 evidence 必須」 section を付けて出力する（Step 4
+は条件分岐ではなく常時実行。検出が真なら出力は無条件で発火する = MUEDear Build 78 型の素通りを
+構造で防ぐ最低ライン）。
+
+- evidence = スクショ / 録画 / 実機操作ログ + 自課キャラクター gate の確認結果
+- evidence なしの PR は Tier 1/2/3 いずれであっても merge 不可
+- 「型エラー 0」「ビルド成功」「コード LGTM」 は機械チェックであり、成果物 verify を兼ねない
+- 詳細は共通 block `19-character-gate` + `.github/pull_request_template.md` の「成果物 verify」section
+
 ---
 
 ## 出力フォーマット
@@ -78,6 +101,11 @@ description: >
 | LP課 | mued課 |
 | data課 | mued課 |
 | freee課 | LP課 |
+
+**成果物 evidence 必須（Step 4 で UI / 成果物変更を検出した場合は必ず出力）:**
+⚠ この PR は UI / 成果物変更を含みます。
+→ スクショ / 録画 + 自課キャラクター gate の確認結果を PR の「成果物 verify」section に必須添付。
+→ evidence なしの PR は Tier 1/2/3 いずれであっても merge 不可（機械チェック通過 ≠ 成果物 verify）。
 
 **境界ケース注意（該当する場合のみ）:**
 - [境界ケースの警告と推奨対応]
