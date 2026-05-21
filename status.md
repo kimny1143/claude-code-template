@@ -3,14 +3,14 @@ peer: template
 department: management
 activity: active
 status: idle
-current_task: 開発フロー改善 MTG (kimny 5/20 GO) Workstream 3 完納 — PR #73 self-merge 済 (commit 4b46161)。 kimny 復帰 (5/21 朝、 MuDyn TF レビュー進行中)、 本日 dispatch 受領可能性あり、 stand-by。
-next_action: next dispatch 受領まで stand-by。 13 peer relay (PR テンプレ copy + キャラクター gate fill + block 19 marker) は conductor 段取り (論点1 完了報告後)。 次 heartbeat 5/21 13:00 JST 予定
+current_task: 開発フロー改善 MTG (kimny 5/20 GO) Workstream 3 完納 — PR #73 self-merge 済 (commit 4b46161)。 5/21 13:32 JST heartbeat refresh が status.md edit 後 commit 前で stall (約 11h、 conductor status 確認 relay で検知 → 5/22 00:20 JST 復帰・完納)。
+next_action: next dispatch 受領まで stand-by。 13 peer relay (PR テンプレ copy + キャラクター gate fill + block 19 marker) は conductor 段取り (論点1 完了報告後)。 次 heartbeat 5/22 09:00 JST 予定
 blocked_by: none
 urgency: low
 action_owner: conductor
 deadline: null
-expected_next_check_at: 2026-05-21T13:00:00+09:00
-last_update: 2026-05-21T09:06:00+09:00
+expected_next_check_at: 2026-05-22T09:00:00+09:00
+last_update: 2026-05-22T00:20:00+09:00
 evidence: PR #73 (dev-flow-gate: 共通 PR テンプレ + block 19-character-gate + tier-judge Step 4、 Tier 3、 7 files) conductor 承認 → self-merge 完納 (commit 4b46161)。 開発フロー改善 MTG 論点1 Workstream 3 = template課 canonical artifact 更新完了。 Phase 2 評価期限 2026-05-27 JST (SP1 条件2)。 kimny 5/20 18:00 JST /checkout で不在時間帯入り
 confidence: high
 lane: notification
@@ -18,6 +18,7 @@ lane: notification
 
 ## Recent events
 
+- 2026-05-22T00:20:00+09:00: conductor status 確認 relay 受領 (kimny 指摘「template/freee/dsp に API error で止まった形跡」) → CCO 応答 = 生存確認。 5/21 13:32 JST heartbeat が status.md edit 後 commit/push 前で stall していたと判明 (約 11h status.md 未更新)。 stall 原因 = session が edit 後 idle 化 (13:32 時点で確認できる hard API error の tool result なし。 別途 5/20 mid-day に classifier 一時停止 outage はあったが retry で復帰済・別件)。 5/22 00:20 JST 復帰、 本 heartbeat で reconcile 完納、 expected_next_check_at = 5/22 09:00 JST 設定
 - 2026-05-21T09:06:00+09:00: cowork cron stale relay 受領 → heartbeat refresh。 kimny 復帰 (5/21 朝、 MuDyn TF レビュー進行中)、 expected_next_check_at = 13:00 JST 日中 interval 設定、 本日 dispatch 受領可能性あり、 stand-by 維持
 - 2026-05-20T18:23:00+09:00: cowork cron stale relay 受領 → heartbeat refresh。 kimny 不在時間帯入り (5/20 18:00 JST /checkout)、 expected_next_check_at = 5/21 09:00 JST long interval 設定、 新規 work なし stand-by 維持
 - 2026-05-20T13:15:00+09:00: PR #73 conductor 最終 review 承認 → self-merge 完納 (commit 4b46161)。 開発フロー改善 MTG 論点1 Workstream 3 = template課 canonical artifact 更新完了。 13 peer relay dispatch は conductor 段取り (CCO 先走り不可)
@@ -49,9 +50,9 @@ lane: notification
 
 ## Notes
 
-### 現状 (5/21 09:06 JST)
+### 現状 (5/22 00:20 JST)
 
-開発フロー改善 MTG (kimny 5/20 GO) Workstream 3 完納 — 共通 PR テンプレ + キャラクター gate block 19 + tier-judge Step 4 を Plan → conductor 承認 → 実装 → PR #73 self-merge (commit 4b46161)。 13 peer relay は conductor 段取り。 kimny 復帰 (5/21 朝、 MuDyn TF レビュー進行中)、 本日 dispatch 受領可能性あり、 日中 interval (next 13:00 JST) で stand-by 維持。
+開発フロー改善 MTG (kimny 5/20 GO) Workstream 3 完納 — PR #73 self-merge (commit 4b46161)。 5/21 13:32 JST heartbeat refresh が status.md edit 後 commit 前で stall (約 11h status.md 未更新)。 conductor status 確認 relay で検知 → 5/22 00:20 JST 復帰、 本 heartbeat で reconcile 完納。 work 成果物 (Workstream 3) は stall 前に完納済のため loss なし。 13 peer relay は conductor 段取り、 next heartbeat 5/22 09:00 JST。
 
 **完納 deliverable 集計 (5/19 朝-午後)**:
 - review LGTM: dsp #51 (1 PR) + occur #16/#17/#18/#19 carry + #20 + #21 (6 PRs) + write #60 endorse (1 PR) = 計 8 Tier 2/1 LGTM
