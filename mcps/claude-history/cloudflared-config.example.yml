@@ -1,0 +1,34 @@
+# Cloudflare Tunnel config template for claude-history MCP remote bridge.
+#
+# Usage:
+#   1. cloudflared tunnel create claude-history          # 出力に tunnel UUID
+#   2. cloudflared tunnel route dns claude-history claude-history.<your-domain>
+#   3. copy this file to ~/.cloudflared/config.yml と rename + 値を埋める
+#   4. cloudflared tunnel run claude-history             # foreground 動作確認
+#   5. brew services start cloudflared (常駐化、 任意)
+#
+# 詳細手順: docs/claude-history-remote-mcp-setup.md
+
+# ── tunnel identification ──────────────────────────────────────────────
+# `cloudflared tunnel create` で出力された UUID を貼る。
+tunnel: REPLACE_WITH_TUNNEL_UUID
+
+# `cloudflared tunnel create` で生成された credentials JSON の絶対 path。
+# default = ~/.cloudflared/<UUID>.json
+credentials-file: /Users/kimny/.cloudflared/REPLACE_WITH_TUNNEL_UUID.json
+
+# ── routing ────────────────────────────────────────────────────────────
+# Anthropic cloud → Cloudflare edge → このトンネル → ローカル MCP server
+# (127.0.0.1:8000) の経路を確立する。 server は MCP_HTTP_HOST=127.0.0.1
+# (default) で起動し、 公開面は Cloudflare のみが触る形を維持する。
+ingress:
+  - hostname: claude-history.REPLACE_WITH_YOUR_DOMAIN
+    service: http://127.0.0.1:8000
+  # catch-all (Cloudflare Tunnel 仕様で末尾必須)。 該当しないアクセスは 404。
+  - service: http_status:404
+
+# ── 任意: 待機時間 / 接続数チューニング ─────────────────────────────
+# 通常デフォルトで足りる。 iOS から散発的な呼び出しのみで負荷は軽い想定。
+# originRequest:
+#   connectTimeout: 30s
+#   tlsTimeout: 10s

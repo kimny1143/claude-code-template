@@ -81,4 +81,17 @@ claude.ai のデータは自動同期されない。
 - 日本語: unigram + bigram でトークン化（MeCab 不要）
 - 英語: 単語分割
 - TF-IDF スコアリングで関連度順に返す
-- 外部ライブラリは `mcp[cli]` のみ
+- 外部ライブラリは `mcp[cli]` のみ（remote MCP 化する時のみ `uvicorn` / `starlette` を追加）
+
+## iOS / リモート MCP として公開する
+
+iOS / iPhone の Claude アプリから同じ履歴を検索したい場合は、 `streamable-http` transport + Cloudflare Tunnel + Bearer トークンの組合せで公開できる。 環境変数 `MCP_TRANSPORT=streamable-http` を指定したときだけ HTTP server 化するので、 Claude Code / Claude Desktop 向けの既存の stdio 動作は影響を受けない。
+
+詳細手順は [`docs/claude-history-remote-mcp-setup.md`](../../docs/claude-history-remote-mcp-setup.md) を参照。 Cloudflare Tunnel 用の設定 template は [`cloudflared-config.example.yml`](./cloudflared-config.example.yml) にある。
+
+| 環境変数 | 用途 |
+|----------|------|
+| `MCP_TRANSPORT` | `stdio` (既定) / `streamable-http` |
+| `MCP_AUTH_TOKEN` | streamable-http 時の Bearer トークン (32 文字以上必須、 `openssl rand -hex 32` 推奨) |
+| `MCP_HTTP_HOST` | listen するアドレス (既定 `127.0.0.1`、 Cloudflare Tunnel の origin 以外には公開しない) |
+| `MCP_HTTP_PORT` | listen するポート (既定 `8000`) |
