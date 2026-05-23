@@ -3,9 +3,16 @@
 Supports two data sources:
 1. claude.ai export (conversations.json) — DATA_DIR/*.json
 2. Claude Code local transcripts (~/.claude/projects/**/*.jsonl) — CLAUDE_CODE_DIR
+
+Transports (selected via MCP_TRANSPORT env var):
+- stdio (default): Local Claude Code / Claude Desktop integration.
+- streamable-http: Remote MCP via Anthropic Custom Connectors (claude.ai / iOS / Android).
+  Requires MCP_AUTH_TOKEN; expose via Cloudflare Tunnel (or similar) since Anthropic
+  cloud must reach the server over the public internet.
 """
 
-import json, os, re, math
+import hmac
+import json, os, re, math, sys
 from pathlib import Path
 from collections import defaultdict
 from mcp.server.fastmcp import FastMCP
@@ -421,5 +428,78 @@ def history_stats() -> str:
     return json.dumps(ix.stats(), ensure_ascii=False, indent=2)
 
 
+def _run_streamable_http() -> None:
+    """Run with streamable-http transport behind a bearer-token auth wall.
+
+    Required env: MCP_AUTH_TOKEN. Optional: MCP_HTTP_HOST (default 127.0.0.1),
+    MCP_HTTP_PORT (default 8000). Bind to 127.0.0.1 so Cloudflare Tunnel (or a
+    similar reverse path) is the only public entry point — never bind 0.0.0.0
+    without an external auth layer in front.
+    """
+    token = os.environ.get("MCP_AUTH_TOKEN", "").strip()
+    if not token:
+        print(
+            "ERROR: MCP_AUTH_TOKEN env var is required when MCP_TRANSPORT=streamable-http. "
+            "Generate one with: openssl rand -hex 32",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    if len(token) < 32:
+        print(
+            "ERROR: MCP_AUTH_TOKEN is too short (<32 chars). Use openssl rand -hex 32.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    import uvicorn
+    from starlette.middleware.base import BaseHTTPMiddleware
+    from starlette.responses import JSONResponse
+
+    class BearerAuthMiddleware(BaseHTTPMiddleware):
+        def __init__(self, app, expected_token: str) -> None:
+            super().__init__(app)
+            self._expected = expected_token
+
+        async def dispatch(self, request, call_next):
+            auth = request.headers.get("authorization", "")
+            # RFC 7235 §3.1: 401 must include a WWW-Authenticate challenge.
+            unauth_headers = {"WWW-Authenticate": 'Bearer realm="claude-history"'}
+            if not auth.startswith("Bearer "):
+                return JSONResponse(
+                    {"error": "unauthorized"}, status_code=401, headers=unauth_headers
+                )
+            # hmac.compare_digest avoids timing-based token disclosure.
+            if not hmac.compare_digest(auth[7:].strip(), self._expected):
+                return JSONResponse(
+                    {"error": "unauthorized"}, status_code=401, headers=unauth_headers
+                )
+            return await call_next(request)
+
+    app = mcp.streamable_http_app()
+    app.add_middleware(BearerAuthMiddleware, expected_token=token)
+
+    host = os.environ.get("MCP_HTTP_HOST", "127.0.0.1")
+    port_raw = os.environ.get("MCP_HTTP_PORT", "8000")
+    try:
+        port = int(port_raw)
+    except ValueError:
+        print(
+            f"ERROR: MCP_HTTP_PORT must be an integer, got {port_raw!r}.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    print(
+        f"claude-history MCP listening on http://{host}:{port}/mcp "
+        f"(bearer auth enabled, expose via Cloudflare Tunnel)",
+        file=sys.stderr,
+    )
+    uvicorn.run(app, host=host, port=port, log_level="info")
+
+
 if __name__ == "__main__":
-    mcp.run()
+    transport = os.environ.get("MCP_TRANSPORT", "stdio").strip()
+    if transport == "streamable-http":
+        _run_streamable_http()
+    else:
+        # Default stdio: Claude Code / Claude Desktop local integration.
+        mcp.run()
