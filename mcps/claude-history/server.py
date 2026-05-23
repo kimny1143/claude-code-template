@@ -462,18 +462,32 @@ def _run_streamable_http() -> None:
 
         async def dispatch(self, request, call_next):
             auth = request.headers.get("authorization", "")
+            # RFC 7235 §3.1: 401 must include a WWW-Authenticate challenge.
+            unauth_headers = {"WWW-Authenticate": 'Bearer realm="claude-history"'}
             if not auth.startswith("Bearer "):
-                return JSONResponse({"error": "unauthorized"}, status_code=401)
+                return JSONResponse(
+                    {"error": "unauthorized"}, status_code=401, headers=unauth_headers
+                )
             # hmac.compare_digest avoids timing-based token disclosure.
             if not hmac.compare_digest(auth[7:].strip(), self._expected):
-                return JSONResponse({"error": "unauthorized"}, status_code=401)
+                return JSONResponse(
+                    {"error": "unauthorized"}, status_code=401, headers=unauth_headers
+                )
             return await call_next(request)
 
     app = mcp.streamable_http_app()
     app.add_middleware(BearerAuthMiddleware, expected_token=token)
 
     host = os.environ.get("MCP_HTTP_HOST", "127.0.0.1")
-    port = int(os.environ.get("MCP_HTTP_PORT", "8000"))
+    port_raw = os.environ.get("MCP_HTTP_PORT", "8000")
+    try:
+        port = int(port_raw)
+    except ValueError:
+        print(
+            f"ERROR: MCP_HTTP_PORT must be an integer, got {port_raw!r}.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     print(
         f"claude-history MCP listening on http://{host}:{port}/mcp "
         f"(bearer auth enabled, expose via Cloudflare Tunnel)",
