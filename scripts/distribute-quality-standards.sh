@@ -17,8 +17,9 @@ PROJECTS_BASE="/Users/kimny/.claude/projects"
 MEMORY_FILENAME="feedback_kimny_quality_standards.md"
 MEMORY_INDEX_ENTRY="- [feedback_kimny_quality_standards.md](feedback_kimny_quality_standards.md) — kimny判断基準（声チェック/15年禁止/サイト分離/Hoo IP/価格管理policy v2/運用ルール）"
 
-# 全13課: 課名|プロジェクトディレクトリ名
+# 全14課: 課名|プロジェクトディレクトリ名
 # 2026-05-26 task #24 ii-a hybrid: cowork + occur 追加 (kimny Q5 GO、 conductor 承認 5/12 14:04 JST)
+# 2026-05-26 growth 課新設 (A 案、 kimny 直接承認 + conductor relay、 14 peer 体制)
 DIVISIONS="
 conductor|-Users-kimny-Dropbox--DevProjects--conductor
 mued|-Users-kimny-Dropbox--DevProjects-mued-mued-v2
@@ -33,6 +34,7 @@ template|-Users-kimny-Dropbox--DevProjects-claude-code-template
 reserch|-Users-kimny-Dropbox--DevProjects--Reserch
 cowork|-Users-kimny-Dropbox--DevProjects--cowork
 occur|-Users-kimny-Dropbox--DevProjects--mued-occur
+growth|-Users-kimny-Dropbox--DevProjects--growth
 "
 
 # メモリファイルの内容（frontmatter付き）

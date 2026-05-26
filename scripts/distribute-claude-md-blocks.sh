@@ -20,6 +20,7 @@ BLOCKS_DIR="$TEMPLATE_REPO/.claude/skills/common-claude-md-blocks/blocks"
 # 配布対象 (cognitive load v3 rollout 2026-05-18 で全 14 課展開、 marker未挿入 peer は skip logic で no-op)
 # - 経営部4課: template / conductor / freee / cowork (Phase 2 0.1+0.2 既配布対象)
 # - 残10課: mued / native / dsp / occur / SNS / write / LP / reserch / data / blender (Phase 2 0.3 = cognitive load v3 trial 5/19- 並行 marker挿入 PR)
+# 2026-05-26 growth 課新設 (A 案、 kimny 直接承認 + conductor relay、 15 paths) — marker 挿入は 5/28 active launch 後 別 PR
 declare -a TARGET_PEERS=(
     "$TEMPLATE_REPO/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/_conductor/CLAUDE.md"
@@ -35,6 +36,7 @@ declare -a TARGET_PEERS=(
     "$HOME/Dropbox/_DevProjects/_Reserch/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/_data-analysis/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/_blender/CLAUDE.md"
+    "$HOME/Dropbox/_DevProjects/_growth/CLAUDE.md"
 )
 
 DRY_RUN=false
