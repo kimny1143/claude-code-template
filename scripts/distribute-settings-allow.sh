@@ -21,6 +21,7 @@ if [[ "${1:-}" == "--dry-run" ]]; then
 fi
 
 # 全課のsettings.local.jsonパス（経営部4課+プロダクト部2課+マーケ部4課+分析研究部2課 = 12課構成、うち_cowork/mued_v2は複数ディレクトリ未統合のため個別追加）
+# 2026-05-26 growth 課新設 (A 案、 kimny 直接承認 + conductor relay、 12 paths)
 TARGETS=(
   "/Users/kimny/Dropbox/_DevProjects/_conductor/.claude/settings.local.json"
   "/Users/kimny/Dropbox/_DevProjects/_contents-writing/.claude/settings.local.json"
@@ -33,6 +34,7 @@ TARGETS=(
   "/Users/kimny/Dropbox/_DevProjects/freee-MCP/.claude/settings.local.json"
   "/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/.claude/settings.local.json"
   "/Users/kimny/Dropbox/_DevProjects/mued/threads-api/.claude/settings.local.json"
+  "/Users/kimny/Dropbox/_DevProjects/_growth/.claude/settings.local.json"
 )
 
 # 課名抽出（パスから）

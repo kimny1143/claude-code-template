@@ -34,8 +34,9 @@ COMMON_SKILLS=(
   "plan-mode-policy"
 )
 
-# 配布対象課（template課自身は除外、全10課）
+# 配布対象課（template課自身は除外、全11課）
 # 課名|.claude/skills絶対パス
+# 2026-05-26 growth 課新設 (A 案、 kimny 直接承認 + conductor relay、 11 課体制)
 TARGETS="
 conductor|/Users/kimny/Dropbox/_DevProjects/_conductor/.claude/skills
 write|/Users/kimny/Dropbox/_DevProjects/_contents-writing/.claude/skills
@@ -47,6 +48,7 @@ freee|/Users/kimny/Dropbox/_DevProjects/freee-MCP/.claude/skills
 mued|/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/.claude/skills
 native|/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/apps/.claude/skills
 SNS|/Users/kimny/Dropbox/_DevProjects/mued/threads-api/.claude/skills
+growth|/Users/kimny/Dropbox/_DevProjects/_growth/.claude/skills
 "
 
 UPDATED=0
