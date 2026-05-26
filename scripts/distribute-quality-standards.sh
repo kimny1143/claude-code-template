@@ -15,9 +15,10 @@ fi
 
 PROJECTS_BASE="/Users/kimny/.claude/projects"
 MEMORY_FILENAME="feedback_kimny_quality_standards.md"
-MEMORY_INDEX_ENTRY="- [feedback_kimny_quality_standards.md](feedback_kimny_quality_standards.md) — kimny判断基準（声チェック/15年禁止/サイト分離/Hoo IP/運用ルール）"
+MEMORY_INDEX_ENTRY="- [feedback_kimny_quality_standards.md](feedback_kimny_quality_standards.md) — kimny判断基準（声チェック/15年禁止/サイト分離/Hoo IP/価格管理policy v2/運用ルール）"
 
-# 全11課: 課名|プロジェクトディレクトリ名
+# 全13課: 課名|プロジェクトディレクトリ名
+# 2026-05-26 task #24 ii-a hybrid: cowork + occur 追加 (kimny Q5 GO、 conductor 承認 5/12 14:04 JST)
 DIVISIONS="
 conductor|-Users-kimny-Dropbox--DevProjects--conductor
 mued|-Users-kimny-Dropbox--DevProjects-mued-mued-v2
@@ -30,13 +31,15 @@ freee|-Users-kimny-Dropbox--DevProjects-freee-MCP
 data|-Users-kimny-Dropbox--DevProjects--data-analysis
 template|-Users-kimny-Dropbox--DevProjects-claude-code-template
 reserch|-Users-kimny-Dropbox--DevProjects--Reserch
+cowork|-Users-kimny-Dropbox--DevProjects--cowork
+occur|-Users-kimny-Dropbox--DevProjects--mued-occur
 "
 
 # メモリファイルの内容（frontmatter付き）
 read -r -d '' MEMORY_CONTENT << 'MEMEOF' || true
 ---
 name: kimny判断基準 — 全課共通クオリティスタンダード
-description: 声チェック/15年禁止/サイト分離/Hoo IP/運用ルール等。全課が共有すべきkimnyの判断基準
+description: 声チェック/15年禁止/サイト分離/Hoo IP/価格管理policy v2/運用ルール等。全課が共有すべきkimnyの判断基準
 type: feedback
 ---
 
@@ -55,21 +58,21 @@ type: feedback
 
 ## マネタイズ
 - **体験談=無料、テンプレ/手順書=有料**
-- **価格管理policy v2** (案X採用 = 粗利率二層 軸1A render系58-63%/軸1B 縦SaaS系50-60% (Twilio標準ベース、 直販basis、 2026-05-10 kimny判断A確定で 旧65-75% Hoo Pass想定 から修正) + 月次COGS上限$200 + 業態定義「API-enabled vertical application」、詳細: `project_pricing_policy_v2_20260508.md`)
+- **価格管理policy v2** (案X採用 = 粗利率二層 軸1A render系58-63%/軸1B 縦SaaS系50-60% (Twilio標準ベース、 直販basis、 2026-05-10 kimny判断A確定で 旧65-75% Hoo Pass想定 から修正) + 月次COGS上限$200 + 業態定義「API-enabled vertical application」、詳細: `project_pricing_policy_v2_20260508.md` + canonical参照 [[reference_pricing_canonicals_v2]] (本peer未配置時 conductor版直接参照))
 
 ## Hoo IP不変の骨子
 1. フクロウ  2. 目がアナログテープ+メガネ  3. 線描  4. 「Hoo」  5. 「ほほう」
 
 ## 運用
 - **kimnyへの質問はconductor経由**
-- **勝手に切り上げない** — 終了タイミングは100% kimnyが決める
-- **ユーザーに作業させない** — 各ピアが最大限を極める
-- **全力で出し切る** — MAXプラン。トークン節約するな
+- **勝手に切り上げない** — 終了タイミングは100% kimnyが決める ([[feedback_peer_session_continuity]])
+- **ユーザーに作業させない** — 各ピアが最大限を極める ([[feedback_zero_kimny_manual_work]])
+- **全力で出し切る** — MAXプラン。トークン節約するな ([[feedback_mass_production_default]])
 - **シンプルな解決策を先に試す** — 構造的議論は問題解決後
 - **SendMessage ≠ mcp__claude-peers__send_message** — 他課通信は後者
 
-**Why:** 課によってkimnyの意図の理解度に差がある。全課が同じ判断基準を共有すべき
-**How to apply:** コンテンツ作成・コピーライティング・設計判断・運用の全場面でこの基準を参照する
+**Why:** 課によってkimnyの意図の理解度に差がある。全課が同じ判断基準を共有すべき。canonical 4件 (`reference_pricing_canonicals_v2.md`) #4 の対象peer群と整合させ、価格・原価率・業態定義の peer間齟齬を防ぐ。
+**How to apply:** コンテンツ作成・コピーライティング・設計判断・運用の全場面で本基準を参照する。
 MEMEOF
 
 UPDATED=0
