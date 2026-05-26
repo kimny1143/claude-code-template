@@ -5,6 +5,20 @@
 - [x] kimny 直接承認 (A 案 GO、 2026-05-26 11:00 JST 頃、 conductor relay 経由 報告済)
 - ETA: 5/26 EOD まで本 doc + feature branch 完納 → 5/27 Phase 2 Gate 並行 kimny final approve → 5/28 active launch
 
+## 0-pre. Scope discipline 注記 (2026-05-26 追加、 kimny critical reflection 反映)
+
+⚠️ **本 doc は peer 創設 + infrastructure + audit + setup scope のみ**。 以下は **growth 課着任後 own work** であり、 **本 doc は preseed strategy ではなく reference framing**:
+
+- ❌ **strategy 立案** (channel 選択 / quick-win priority / sequencing)
+- ❌ **sprint priority 決定** (どの product を first / 2nd wave か等)
+- ❌ **prioritization framework 反映** (priority 表を growth backlog に直接 fill)
+
+Section 1 「担当 scope」 + 「分担境界 表」 = **role definition + 役割境界 reference**、 具体的 strategy 決定ではない。 growth 課着任時 audit doc + 本 doc + welcome dispatch package を読んで **own priority 起案** が正しい flow。
+
+起源: 2026-05-26 kimny critical reality check「3 つとも良いけど、 そういう企画を立案して管理するための growth 課だよね？ ここで展開してたら意味ないよね？」 = trilateral (conductor + codex + freee + CCO) が growth own work を 80% 先回り完了 → growth existence rationale 喪失 risk → B 採用 (部分 pause) で本 doc + PR #28 review amendment。
+
+詳細: CCO memory `feedback_peer_creation_vs_peer_work_scope.md` + conductor task #73 reflection。
+
 ## 0. CCO hook 制約による executor 役割分担
 
 CCO `.claude/hooks/validate-dangerous-ops-v2.sh` が CWD-外 file 編集 (本 CCO session の場合 `_growth/*`) を block 設計 (CLAUDE.md「他peerワークスペースを直接変更しない」 rule の enforcement)。
@@ -28,13 +42,17 @@ CCO `.claude/hooks/validate-dangerous-ops-v2.sh` が CWD-外 file 編集 (本 CC
 
 ### 担当 scope
 
-1. **流入経路設計**: SEO / paid ad (Google Ads / Meta) / referral / partnerships / コンテンツマーケ
-2. **conversion funnel design + A/B test**: LP optimization / signup CRO / paywall design / upgrade flow
+⚠️ **role definition reference**、 各項目の括弧内は **可能 channel の例示** であり「これを採用せよ」 ではない。 channel 選択 / sequencing / priority は growth 着任後 own 起案。
+
+1. **流入経路設計**: 可能 channel 例 (SEO / paid ad / referral / partnerships / コンテンツマーケ等)
+2. **conversion funnel design + A/B test**: 可能領域例 (LP optimization / signup CRO / paywall design / upgrade flow 等)
 3. **acquisition cadence + budget management**: 月次 acquisition target + budget tracking + ROI 監視
-4. **死蔵商品 (Gumroad / Ko-fi) 再起動**: Pro$29 / 旧テンプレ商品の retention strategy + relaunch campaign
+4. **死蔵商品再起動**: freee CFO audit (PR #28) で identified 商品 retention strategy + relaunch campaign の起案 + 実行
 5. **既 peer 横串 acquisition layer**: LP / SNS / data peer の output を funnel 観点で統合
 
 ### 既 peer との分担境界 (重複 / drift 防止)
+
+⚠️ **role boundary reference**、 各 peer 行の「growth scope」 列は **想定 work area の例示**、 具体的 work item 選択は growth 着任後 own 起案。
 
 | 既 peer | 既 scope | growth scope | sync point |
 |---------|---------|-------------|-----------|
@@ -74,15 +92,17 @@ CCO `.claude/hooks/validate-dangerous-ops-v2.sh` が CWD-外 file 編集 (本 CC
 
 ## 担当 scope
 
-1. 流入経路設計 (SEO / paid ad / referral / partnerships / コンテンツマーケ)
-2. conversion funnel design + A/B test (LP / signup / paywall / upgrade)
+⚠️ role definition、 channel 選択 / sequencing / priority は **着任後 own 起案**。
+
+1. 流入経路設計 (可能 channel 例: SEO / paid ad / referral / partnerships / コンテンツマーケ等)
+2. conversion funnel design + A/B test (可能領域例: LP / signup / paywall / upgrade 等)
 3. acquisition cadence + budget management (月次 target + ROI 監視)
-4. 死蔵商品再起動 (Gumroad / Ko-fi、 freee CFO audit 連携)
+4. 死蔵商品再起動 (freee CFO audit PR #28 で identified 商品の retention strategy + relaunch)
 5. 既 peer 横串 acquisition layer (LP / SNS / data / write の output 統合)
 
 ## 既 peer との分担境界
 
-→ template repo `docs/drafts/growth-peer-claude-md-draft-20260526.md` Section 1 表参照 (恒久 doc 化は 5/28 active launch 後 `docs/peer-boundaries.md` 候補)
+→ template repo `docs/drafts/growth-peer-claude-md-draft-20260526.md` Section 1 表参照 (恒久 doc 化は 5/28 active launch 後 `docs/peer-boundaries.md` 候補、 内容は role boundary reference のみ、 具体 work item 着任後 own 起案)
 
 ## Tier 判定 + PR レビュー権限
 
