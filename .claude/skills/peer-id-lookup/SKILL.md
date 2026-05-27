@@ -37,30 +37,37 @@ description: >
 
 ## CWD → 課名 マッピング表
 
+CWD部分文字列は、symlink path (`~/Dropbox/_DevProjects/...`) と direct path (`/Volumes/strage/_DevProjects/...`) どちらでも一致する。
+
 | 課名 | CWD部分文字列（いずれか一致） |
 |------|------------------------------|
 | conductor課 | `_conductor` |
-| template課 | `claude-code-template` |
+| template課 / CCO | `claude-code-template` |
+| freee課 / CFO | `freee-MCP` |
+| cowork課 | `_cowork` |
+| growth課 | `_growth` |
 | mued課 | `mued/mued_v2`（`/apps` を含まない） |
 | native課 | `mued/mued_v2/apps` |
+| dsp課 | `_mued-dsp` |
+| occur課 | `_mued-occur` |
 | SNS課 | `mued/threads-api` |
 | write課 | `_contents-writing` |
-| data課 | `_data-analysis` |
-| LP課 | `_LandingPage` |
+| LP課 | `_LandingPage/glasswerks-lp` |
+| blender課 | `_blender` |
 | reserch課 | `_Reserch` |
-| freee課 | `freee-MCP` |
-| cowork課 | `_cowork` |
-| video課 | `_videos` |
+| data課 | `_data-analysis` |
 
-**注意**: mued課とnative課はCWDが重複する。`/apps` を含むかどうかで区別する。
+**注意**:
+- mued課とnative課はCWDが重複する。`/apps` を含むかどうかで区別する。
+- video課はクローズ済み（2026-04-11）。通常の送信対象にしない。過去ログや archive に出ても、現行構成へ戻して判断する。
 
 ---
 
 ## 出力例
 
 ```
-native課のpeer ID: fyl8gi3j
-CWD: /Users/kimny/Dropbox/_DevProjects/mued/mued_v2/apps
+native課のpeer ID: mz3ubfhc
+CWD: /Volumes/strage/_DevProjects/mued/mued_v2/apps
 ```
 
 複数ヒットした場合（同課が複数起動中）:
