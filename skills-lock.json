@@ -4,43 +4,330 @@
     "freee-api-skill": {
       "source": "freee/freee-mcp",
       "sourceType": "github",
-      "computedHash": "5336ed4d7391096e17c8dd51532fb125c279732ed33418fccf010800b04e1e7b"
+      "computedHash": "1b6cf34026879a33e88d28811fb87ca2e3ad05a9dd59564ea1ff2a4fd2006e3f",
+      "lastAuditedAt": "2026-05-27",
+      "lastAuditedBy": "scripts/audit-skills-lock.sh --update"
     },
     "stripe-best-practices": {
       "source": "docs.stripe.com",
       "sourceType": "well-known",
-      "computedHash": "e35a14609076a8a7ffeec41b449dd2d36eebea6c278e73d83f86db40e6232031"
+      "computedHash": "78455e40cd2ea691f3177991a94355a0cc067518ab2e8b5f1cabb654505b8cf1",
+      "lastAuditedAt": "2026-05-27",
+      "lastAuditedBy": "scripts/audit-skills-lock.sh --update"
     },
     "stripe-projects": {
       "source": "docs.stripe.com",
       "sourceType": "well-known",
-      "computedHash": "74b5f9e1e24d7662000c28d6572e438ac71847d60ea0a8704b088441355e3371"
+      "computedHash": "3226b728d132022f6b2356197a1634159654044903187251d8e19cd4c0a887a9",
+      "lastAuditedAt": "2026-05-27",
+      "lastAuditedBy": "scripts/audit-skills-lock.sh --update"
     },
     "upgrade-stripe": {
       "source": "docs.stripe.com",
       "sourceType": "well-known",
-      "computedHash": "06c5c3fd85657ff9aaadff65bd2d63f606da8e44802dc1f9aaf42c73263a11b7"
+      "computedHash": "7c056c56b21a75b6f82f4253dfe96a9e6134e731e11165d186d0f507e91db466",
+      "lastAuditedAt": "2026-05-27",
+      "lastAuditedBy": "scripts/audit-skills-lock.sh --update"
     },
     "peer-id-lookup": {
       "source": "claude-code-template",
       "sourceType": "internal-common",
-      "computedHash": "c2454ea73c00ca92c345eb9f9810b1da95f8f5fe13311b63e6481905a35384e9",
+      "computedHash": "3368e4370a2faffd4e7ef36edfeb283d76e0464c1542e0b6502275873abc198d",
       "distributedAt": "2026-04-26",
-      "distributedBy": "scripts/distribute-skills.sh"
+      "distributedBy": "scripts/distribute-skills.sh",
+      "lastAuditedAt": "2026-05-27",
+      "lastAuditedBy": "scripts/audit-skills-lock.sh --update"
     },
     "tier-judge": {
       "source": "claude-code-template",
       "sourceType": "internal-common",
-      "computedHash": "2714666a558e6478861ff49cd2bb8aacfca0fe4b213429137111b27cd464d797",
+      "computedHash": "dd339bd2b0dfcd58ed51334ce844456ccef9320e1597c17425d145edd41431f5",
       "distributedAt": "2026-04-26",
-      "distributedBy": "scripts/distribute-skills.sh"
+      "distributedBy": "scripts/distribute-skills.sh",
+      "lastAuditedAt": "2026-05-27",
+      "lastAuditedBy": "scripts/audit-skills-lock.sh --update"
     },
     "plan-mode-policy": {
       "source": "claude-code-template",
       "sourceType": "internal-common",
-      "computedHash": "2b3186fdaef99582378d74b629c8b7d8f4ae7b09c0871a2e3da6098eadd7642c",
+      "computedHash": "b0f4b146a336e4c35d0685528a0e242e5f185c52b0d933d2da191b8b41d4c083",
       "distributedAt": "2026-04-26",
-      "distributedBy": "scripts/distribute-skills.sh"
+      "distributedBy": "scripts/distribute-skills.sh",
+      "lastAuditedAt": "2026-05-27",
+      "lastAuditedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "aax-validator": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "f07b74baef98ed74f1f82523150622c36ca3446d631569e43380b2491bb542d4",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "ab-test-setup": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "c495b17a2e0061e63a7579a7554db9de75cdf10d44312752427766e5bf7adbf0",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "ai-interview-article": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "388ffeb8f9dec8471796bf198b9788ae03a32af6aabb8004cddb5cde70f119de",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "analytics-tracking": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "8bce2de135aaa0045d8ead9a567e0af8299acd1bd7cb1574174910359fed614b",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "app-onboarding": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "d4679562bc6644df788b15a0cab5055bd080ac6d965fcb40439bee94604b183d",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "backend-patterns": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "bd031f0c211d6c04e0c299bd82f280f4cf900465bb110955ff0d1c4b9caae7f6",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "coding-rules": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "a06a67a1db62bc6c82f6d24a32bfb26547562819aae9926b16ba16a9bd650cde",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "common-claude-md-blocks": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "f94c793a20b76ccb1d7d9b748d45c7bc0c7b0af3067fada10d39c88dbc1b56d7",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "copywriting": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "b2abdcb67465e8b13cd35ab995cf345ec0fc0a17e02647a17da06603305ce17b",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "core-web-vitals": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "db56579ba3cab2b8b8abe9bc773202b792823f88f30c388d71f646361e961fc9",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "dsp-rta-comparison": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "e7e00833c846877942694a60f275cc0792a70c69875f82c7e882ad8099a09a61",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "email-sequence": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "08e50af12c882e2dfa4f74381c78c3f51cc15a40fa6a11f8c35c09f89a3b7e2c",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "form-cro": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "024de5b26316a6142cf1b7645688494de8454c86601b1e7e1bc67655771f4f66",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "git-worktree": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "b8c547a357a8e2de6cafd6d0d5679fccfafb42cdb342ce242c4e67da6e4169a9",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "hooks": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "62dcce17f85a4e0fe8458cbd711c664d36284462a112d9a960f48f558d164f75",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "i18n-key-diff": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "501f6928cd386ab57282aff54e8f680e339f8f69893904f300b79173f1db477a",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "ios-app-store-submission": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "6178f7c3b25e24aca76ac3f792378b88fa98e09b5e4042e6800188351b65f725",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "launch-strategy": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "74afe6c1c2fb082e6a5d80d592bcf3bd9bd2690f441d9aa10c70d17a4209c0fd",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "lp-optimizer": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "cbff289306b4aefdfd8e58ec1f0fb61cf22a27cec393ab5526c4f2af8717ba7d",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "marketing-audit": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "0f3137071bc0378c48f37491b4ae2ae9f608bade34330f5028fb13b4631c77be",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "marketing-psychology": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "b70dd18b2eaf9aa7db85ff04f256130eb6db1415c9f288ddcc031722beba08c9",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "mcp": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "cf529147ee05475311d980d62fa8bd57e630a14094d72cea40fbd2808b67b5e3",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "note-publish-flow": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "623d6ad78e42808b909597aa0f47241b559e070e78596850554f94ef8e2b8905",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "note-serial-monetization": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "646d046c6d103698675839b7c88d3ebf6fab0fd099879020dd1859c608da8321",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "onboarding-cro": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "d660778f523caa1cec9291ebedc243647e5101ffdaabb5c771f448ce88e684ef",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "paywall-upgrade-cro": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "17817dce9bb2db32576f91861f74c56562f71551393fa4d6e7b1b5aeefbe1618",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "pricing-strategy": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "46e027d8867eb6e4509eaf6af671a139db9b89e57e229bc97191e1866b02e2a5",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "referral-program": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "18b27d7f2caee4db426eb896f045e9c35e98a2e0f107f94cc872a602f69e7742",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "remotion": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "6806cc2da5bc1b60c546c13c1162ee2dd34ab248836deffc2fa6a2cff497c4f0",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "seo-audit": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "7ef15e270ec0f08f09906dd151c944728bfe1be437c4571b1785fc5b8954e1bc",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "signup-flow-cro": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "ce41714627a0f7b6716c88588ba312c9913ab507ea454822b5c7ea876d375bdc",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "source-eval": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "8abd6ff2bc67c35035f200ebea79c877146f8306007508174e89b94bd7e93df5",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "tdd": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "fd16be1043b993ff981b93bcb2f1267afa932c41b1249227a38da66899454c64",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "ui-ux-pro-max": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "d385a0381c11298ea76b9f586208c5491e2b8a9e12b7d740ae0abd36e3bc74a6",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "ux-psychology": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "9b7d5d4714a7c517912516b4d0b5a156efc8688b73e3ee2f8e60ebe827ca6870",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "vercel-composition-patterns": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "33c2aa7cc912d2dfa168903d6f6fb738b914a17140d0d150ca2ce17a464878ce",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "vercel-react-best-practices": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "9d0bb6f7cfc87c5fec23e9f15783bb487cf96a595171b8d4c293736db69f1f38",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "vercel-react-native-skills": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "6dbbeab0fef75c48f8da9a380ab301ed61b644b95adbb937b8639175af4671a4",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "web-design-guidelines": {
+      "source": "claude-code-template",
+      "sourceType": "local",
+      "computedHash": "e9596b4d8c877954a9350596c1f885b2e4112485a202f3e9848416d8fa30b19f",
+      "distributedAt": "2026-05-27",
+      "distributedBy": "scripts/audit-skills-lock.sh --update"
     }
   }
 }
