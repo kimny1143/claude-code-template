@@ -34,7 +34,7 @@ COMMON_SKILLS=(
   "plan-mode-policy"
 )
 
-# 配布対象課（template課自身は除外、全10課）
+# 配布対象課（template課自身は除外、全14課 = audit-peer-drift.sh の 13 peer + conductor）
 # 課名|.claude/skills絶対パス
 TARGETS="
 conductor|/Users/kimny/Dropbox/_DevProjects/_conductor/.claude/skills
@@ -44,9 +44,13 @@ data|/Users/kimny/Dropbox/_DevProjects/_data-analysis/.claude/skills
 LP|/Users/kimny/Dropbox/_DevProjects/_LandingPage/glasswerks-lp/.claude/skills
 reserch|/Users/kimny/Dropbox/_DevProjects/_Reserch/.claude/skills
 freee|/Users/kimny/Dropbox/_DevProjects/freee-MCP/.claude/skills
+growth|/Users/kimny/Dropbox/_DevProjects/_growth/.claude/skills
+blender|/Users/kimny/Dropbox/_DevProjects/_blender/.claude/skills
 mued|/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/.claude/skills
 native|/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/apps/.claude/skills
 SNS|/Users/kimny/Dropbox/_DevProjects/mued/threads-api/.claude/skills
+dsp|/Users/kimny/Dropbox/_DevProjects/_mued-dsp/.claude/skills
+occur|/Users/kimny/Dropbox/_DevProjects/_mued-occur/.claude/skills
 "
 
 UPDATED=0
