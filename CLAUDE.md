@@ -91,7 +91,7 @@ git check-ignore -v .claude/settings.local.json
 
 ## Common blocks (cognitive load v3、 2026-05-19 self-apply)
 
-以下 18 block は本 template 課 `.claude/skills/common-claude-md-blocks/blocks/` source of truth、 `scripts/distribute-claude-md-blocks.sh` で自動 fill。 marker 間は直接編集しない (blank line within each pair = distribute script regex compatibility per `feedback_distribute_script_marker_format` note)。
+以下 19 block は本 template 課 `.claude/skills/common-claude-md-blocks/blocks/` source of truth、 `scripts/distribute-claude-md-blocks.sh` で自動 fill。 marker 間は直接編集しない (blank line within each pair = distribute script regex compatibility per `feedback_distribute_script_marker_format` note)。
 
 <!-- COMMON-BLOCK-START: 01-operational-premise -->
 
