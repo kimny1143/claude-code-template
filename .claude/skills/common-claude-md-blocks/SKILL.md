@@ -46,7 +46,7 @@ description: >
 | `11-existing-state-first.md` | feedback_act_on_existing_state (occur peer) | cold-start実態確認 + assumption禁止 + destructive op前のverify |
 | `12-self-correction-as-growth.md` | feedback_self_correction_value (occur peer) | judgment reverse OK + 学習loop + memory化 |
 | `13-reference-vs-docs-complement.md` | feedback_reference_vs_docs_complement (occur peer) | reference memory ≠ docs structural complement原則 |
-| `14-conductor-active-judgment.md` | docs/drafts/conductor-active-judgment-principle.md (CCO PR #58) | passive endorsement禁止 + consistency check必須 + reverse事前検討 |
+| `14-conductor-active-judgment.md` | docs/drafts/conductor-active-judgment-principle.md (CCO PR #58) | passive endorsement禁止 + consistency check必須 + reverse事前検討。**conductor専用配布** (organizational hierarchy 上 conductor が第一義 owner、非conductor peer には marker を置かない / 2026-05-29 再配置) |
 
 ### Phase 2 0.3 (PR #N、 2026-05-18 cognitive load v3 rollout): communication 4 blocks
 
@@ -151,6 +151,7 @@ cd template課/
 | 1.1 | 各 peer marker挿入 PR (5/19-5/22 trial開始期と並行、 各 peer Tier 2 [peer-review: 自課]) | 5/19-5/22 |
 | 1.2 | distribute production run で全14課 marker-bounded sections sync | 5/22+ |
 | 1.3 | 開発フロー改善 MTG 論点1 quality gate (block 19-character-gate + 共通 PR テンプレ + tier-judge Step 4) | 5/20 |
+| 2.0 | cognitive load 圧縮 (19 block source を 582→312行へ圧縮 = 散文/履歴/Why削減・format+ルール core 保持。block14 conductor専用再配置。後続: block16 hook 化 PR-B) | 5/29 |
 
 ## 関連リソース
 
