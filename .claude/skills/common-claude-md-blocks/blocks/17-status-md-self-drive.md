@@ -6,7 +6,8 @@
 
 ### update timing (必須)
 - **task accept** (dispatch / review request 受領) / **blocked** (外部依存・kimny 待ち・cross-peer 停滞) / **PR submit** / **done**
-- **high urgency 発生時**: 即 status.md update + URGENCY: high send_message 並行
+- **low / mid の連絡は status.md のみ** (send_message しない = 入口絞り block 15)。progress / done / routine PR / FYI / conductor 判断候補だが即時でない 等はここに集約され、cowork が `peer-raw-status.md` へ、conductor が FIFO で拾う
+- **high urgency 発生時のみ**: 即 status.md update + URGENCY: high send_message 並行
 - **1 日 1 回 minimum heartbeat**: 朝の自走開始時 + EOD 区切り
 
 ### 並行 update
@@ -17,6 +18,6 @@
 - main 直接 push 禁止 peer は feature branch + PR (docs only = Tier 1 self-merge OK)
 
 ### 統合
-- `urgency` field は URGENCY marker (block 15) と同一 vocabulary (high / mid / low)。high 時は send_message 並行
+- `urgency` field は URGENCY marker (block 15) と同一 vocabulary (high / mid / low)。**high 時のみ send_message 並行、low / mid は status.md 記入のみ** (入口絞り)
 - `current_task` / `next_action` に外部リソース新規作成 (block 16 対象) を含む場合、pre-approval URGENCY: high send_message を必ず並行
 - stale 判定 (cowork cron): active 6h / blocked-waiting 2h / dormant 72h 超 (`expected_next_check_at` 優先) → conductor alert + ping

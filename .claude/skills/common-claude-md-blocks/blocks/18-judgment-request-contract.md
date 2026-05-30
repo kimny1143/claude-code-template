@@ -1,6 +1,8 @@
-## judgment request contract — mid / high message format
+## judgment request contract — judgment request form
 
-mid / high の URGENCY marker (block 15) で conductor 判断要請する場合、urgency 報告でなく **conductor 即決可能な judgment request form** で送る (判断材料収集を peer 側に shift)。
+conductor 判断要請は urgency 報告でなく **conductor 即決可能な judgment request form** で渡す (判断材料収集を peer 側に shift)。
+
+**チャネル (入口絞り block 15 準拠)**: **high** の判断要請のみ send_message に下記 form を添付。**mid** の判断要請は send_message せず status.md の `next_action` / `## Notes` に form を記入し、conductor が `peer-raw-status.md` を FIFO で拾って即決する。いずれも form 構造は同一。
 
 ### Required format (URGENCY 6 行の後ろに続けて)
 
@@ -20,11 +22,13 @@ RECOMMENDATION: <peer 推奨 (a/b/c) + 理由 1 文>
 
 ### Example
 
+high の例 (send_message)。mid なら同 form を status.md `next_action` / `Notes` に記入:
+
 ```
-URGENCY: mid
+URGENCY: high
 NEEDS_ATTENTION: yes
 ACTION_OWNER: conductor
-REASON: PR scope creep 判定
+REASON: 外部リソース新規作成の可否判定 (不可逆)
 DEADLINE: 2026-05-19T12:00:00+09:00
 EVIDENCE: PR #45
 
