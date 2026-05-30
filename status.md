@@ -2,22 +2,23 @@
 peer: template
 department: management
 activity: active
-status: clean-halt-pending
-current_task: 5/29 context shape-up 再起動待機。本session完納=共通ブロック圧縮 fleet-wide ✅(40k超8→0課/-3,589行、PR#90-94 merged)+peer review(dsp #83-86・#91 / occur #39 全 infra LGTM)+dsp #83 compile-break incident 解決(真因=#87 mis-branch、revert+#84-86 close+#91 main基点re-PR)。
-next_action: 再起動後 新session は [[project_handoff_20260529]] 読込→OPEN 5件継続: allowlist拡張(kimny GO待ち)/tier-judge改修(CCO owner 5/30 batch)/aax-validator(公式binary wrap reframe、dsp叩き台待ち)/PR-B block16(block09↔16 conflict 要解決)/CI billing workaround(conductor回答待ち)。
-blocked_by: 外部依存 (kimny GO / conductor 回答 / dsp 叩き台 / 5/30 batch)
-urgency: low
-action_owner: kimny
+status: working
+current_task: 入口絞り(URGENCY:high のみ send_message)全ピア展開 PR #96 提出済 → conductor(lv3h0a6c) Tier 3 review 待ち。本日 occur Phase 1 review #42-46 全 APPROVE 完納も。
+next_action: conductor #96 承認 + 2 判断(§4.1 (B)resync方針 / (A)未到達4課=dsp,occur,SNS,blender の dispatch 周知経路)確定 待ち → 承認後 CCO が marker 有 8課へ distribute、未到達4課は conductor dispatch。OPEN: tier-judge改修(CCO owner 5/30)/allowlist(kimny GO)/aax-validator/PR-B/CI billing。
+blocked_by: conductor (#96 Tier 3 review + 2 判断)
+urgency: mid
+action_owner: conductor
 deadline: null
-expected_next_check_at: 2026-05-30T09:00:00+09:00
-last_update: 2026-05-29T20:00:00+09:00
-evidence: PR #90-94 (template repo: 圧縮source 582→312 / template slim 166→94 / docs / fanout-apply.sh / allowlist設計 全merged) + dsp #83-86・#91 + occur #39 review LGTM + dsp #83 incident root-cause&resolve。引き継ぎ [[project_handoff_20260529]] + [[project_common_blocks_compression_20260529]] + [[feedback_merge_target_duplication_check]]。
+expected_next_check_at: 2026-05-31T09:00:00+09:00
+last_update: 2026-05-30T15:45:00+09:00
+evidence: PR #96 (入口絞り blocks 15/17/18 整合修正 + migration note、被覆実測 marker有8課/未到達4課) + occur #42-46 review 全 APPROVE。引き継ぎ [[project_handoff_20260529]] + [[feedback_perceptual_deck_anchoring_check]] + [[feedback_merge_target_duplication_check]]。
 confidence: high
 lane: notification
 ---
 
 ## Recent events
 
+- 2026-05-30T15:45:00+09:00: 入口絞り(URGENCY:high のみ send_message)全ピア展開 = handoff #44 残タスク 着手 (conductor lv3h0a6c dispatch)。find 確認 → 新block追加せず blocks 15/17/18 最小整合修正(slim維持)+ migration note。dry-run実測で被覆ギャップ判明: marker有8課(freee/cowork/mued/apps/write/LP/reserch/data)のみ distribute 到達、**dsp/occur/SNS/blender 4課は marker 無=未到達**(別途 conductor dispatch 要)、8課は18-block drift(圧縮後未同期)で素 distribute は entry-narrowing+圧縮同期 同時適用。PR #96 提出 → conductor Tier 3 review + 2判断((A)未到達4課経路/(B)resync方針)待ち。承認まで distribute 実行せず。本日午前は occur Phase 1 review #42-46 全 APPROVE 完納(#43 time-align/#44 DDSP negative/#45 試聴#3/#46 proper DSP v2、anchoring指摘→PWA#69 中立化波及、memory化)。
 - 2026-05-29T20:00:00+09:00: context shape-up 再起動 dispatch 受領 (conductor k84di7l4) → クリーン halt 準備。本session大量完納: ①共通ブロック圧縮 fleet-wide ✅(40k超8→0課/-3,589行、PR#90 source圧縮582→312/#91 template slim/#92 docs/#93 fanout-apply.sh/#94 allowlist設計、fanout-apply は reserch/data 等で本番稼働) ②peer review(dsp #83-86 D-2〜D-5 + #91 chain+song_render renderer / occur #39 ACE-Step batch2、全 infra LGTM) ③dsp #83 compile-break incident 解決(真因=dsp #87 docs PR が stage-2 全code混入→#83 D-2 test重複 redefinition、revert+#84-86 close+#91 main基点re-PR、教訓memory化) ④予防仕組み化(feedback_merge_target_duplication_check + tier-judge改修scope確定 CCO owner 5/30) ⑤CI billing workaround提案。引き継ぎ memory [[project_handoff_20260529]] 化完了。未commit `.gitignore`/`.codex/`/cco-memory-retain draft は本session作成物でない(session開始時から存在、未読/intent不明)ため未commit維持。OPEN actionable 5件は全外部依存gated。再起動後 continue なし再開 → status.md next_action + handoff memory が継続性の鍵。
 - 2026-05-22T14:23:00+09:00: conductor status 確認 relay 2 通受領 (13:00 expected 超過 + 再 ping)。 (1) heartbeat reconcile = status.md を現在時刻基準に更新。 (2) heartbeat 運用切替 = expected_next_check_at を長め固定 (24h、 翌日同時刻) + 以降 event-driven 更新 (CFO 適用済 暫定対応を CCO も適用、 short interval は peer self-wake 不可で定期 stale 量産するため)。 (3) working tree の `.claude/hooks/block-main-push.sh` 未 commit 編集 = 5/10 19:34 JST LP課/kimny 直接編集の carry-over (handoff memory `project_handoff_20260511.md` 記載済、 本 session 由来でない) → conductor dispatch per Tier 3 PR で conductor review に回送
 - 2026-05-22T09:23:00+09:00: conductor status 確認 relay 受領 (09:00 expected 22 分超過) → working tree 確認 = 未 commit の status.md 編集なし (PR #77 clean 完納済)。 09:00 超過は session 未起動による heartbeat 待ちで stall ではないと確認 → 09:23 JST 通常 heartbeat refresh、 expected_next_check_at = 13:00 JST 設定
