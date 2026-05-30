@@ -2,22 +2,23 @@
 peer: template
 department: management
 activity: active
-status: working
-current_task: 入口絞り PR #96 = conductor Tier3 承認 + merged (902b6f8)。判断(A)未到達4課周知=conductor持ち確定。判断(B)resync=条件付承認(8課 dry-run 差分 目視後 distribute)→ **差分提示済 (PR#96 comment)**、conductor 目視OK + mued_apps 判断待ち。
-next_action: conductor 目視OK 後に **7課 distribute** (freee/cowork/mued_v2/write/LP/reserch/data = entry-narrowing 15/17/18 のみ変更・承認内容と一致を read-only 実測確認済)。**mued_apps は本ロールアウト除外推奨** (12-block drift + 誤 block14 conductor-only marker、別 step 化を conductor 判断)。承認後 step5 全ピア通知。
-blocked_by: conductor (PR#96 comment の dry-run 差分 目視 + mued_apps 判断)
-urgency: mid
+status: clean-halt-pending
+current_task: 全ピアシャットダウン→再起動準備 (kimny指示、conductor lv3h0a6c 5/30 21:54 broadcast)。安全区切りで停止、全成果 commit/push 済 (working tree に未commit の自作成物なし)。再起動後は新 peer ID で再接続。
+next_action: 【再起動後 継続】① 入口絞り: conductor の PR#96 comment dry-run 差分 目視OK + mued_apps 判断を待って 7課 distribute (freee/cowork/mued_v2/write/LP/reserch/data=entry-narrowing 15/17/18 のみ・承認一致を実測確認済) + step5 全ピア通知、mued_apps は別扱い。② OPEN: tier-judge改修(CCO owner)/allowlist(kimny GO)/PR-B block16/CI billing。③ aax-validator は Phase 5.4 trigger で /plan。
+blocked_by: conductor (再起動 + 入口絞り PR#96 dry-run 目視 + mued_apps 判断)
+urgency: low
 action_owner: conductor
 deadline: null
-expected_next_check_at: 2026-05-31T09:00:00+09:00
-last_update: 2026-05-30T16:10:00+09:00
-evidence: PR #96 merged (902b6f8、blocks 15/17/18 + migration note)。dry-run 差分 read-only 実測 (7課 clean=entry-narrowing のみ / mued_apps 単独 12-block drift incl 誤block14) = PR#96 comment 提示。occur #42-46 review 全 APPROVE。[[project_common_block_marker_coverage_20260530]] + [[project_handoff_20260529]]。
+expected_next_check_at: 2026-05-31T12:00:00+09:00
+last_update: 2026-05-30T22:00:00+09:00
+evidence: 入口絞り PR #96 merged (902b6f8、blocks 15/17/18 + migration note)、dry-run 差分提示 (PR#96 comment、7課clean/mued_apps異常)。occur #42-46 全 APPROVE (6/1 batch)。aax-validator wrap 確定 (dsp PR#95、[[project_aax_validator_wrap_decision_20260530]])。継続 anchor: [[project_common_block_marker_coverage_20260530]] + [[project_handoff_20260529]] + [[feedback_perceptual_deck_anchoring_check]]。
 confidence: high
 lane: notification
 ---
 
 ## Recent events
 
+- 2026-05-30T22:00:00+09:00: 全ピアシャットダウン→再起動 broadcast 受領 (conductor lv3h0a6c) + API エラー確認通達。**CCO 側 API エラーなし (正常稼働中)**。安全区切りで停止、状態保存。git 確認 = main 未push なし・入口絞り全成果 merged (902b6f8)・自作成物の未commit ゼロ。working tree の `.gitignore`(M)/`.codex/`/`docs/drafts/cco-memory-retain-review-prep-20260530.md` は **session開始時から存在=CCO作成物でない**ため未commit維持 (触らず、次session 要intent確認)。本session成果 anchor = memory 3本追加 ([[project_aax_validator_wrap_decision_20260530]] / [[project_common_block_marker_coverage_20260530]] / [[feedback_perceptual_deck_anchoring_check]]) + 既存 [[project_handoff_20260529]]。再起動後 新 peer ID 再接続、上記 next_action 継続。
 - 2026-05-30T16:10:00+09:00: PR #96 conductor Tier3 承認 + merged (902b6f8)。判断(A)=未到達4課(dsp/occur/SNS/blender)周知は conductor 持ち (occur/dsp 既周知済、SNS/blender は conductor)。判断(B)=条件付承認(差分目視後 distribute)。→ read-only で distribute transform 再現し 8課実差分を分類 (peer 未変更): **7課(freee/cowork/mued_v2/write/LP/reserch/data) = blocks 15/17/18 のみ変更=承認内容と完全一致** (当初「18-block drift」は過大評価、圧縮同期は既済)。**mued_apps のみ異常** = 15/17/18 + 12 blocks canonical 遅れ、うち block14-conductor-active-judgment は conductor 専用なのに mued_apps に誤 marker (8課中唯一)。→ PR#96 comment に差分提示 + CCO 推奨(①7課 distribute GO + mued_apps 別扱い)。conductor 目視 + mued_apps 判断待ち、distribute 未実行。本連絡は入口絞り self-apply で send_message せず status.md 集約。
 - 2026-05-30T15:45:00+09:00: 入口絞り(URGENCY:high のみ send_message)全ピア展開 = handoff #44 残タスク 着手 (conductor lv3h0a6c dispatch)。find 確認 → 新block追加せず blocks 15/17/18 最小整合修正(slim維持)+ migration note。dry-run実測で被覆ギャップ判明: marker有8課(freee/cowork/mued/apps/write/LP/reserch/data)のみ distribute 到達、**dsp/occur/SNS/blender 4課は marker 無=未到達**(別途 conductor dispatch 要)、8課は18-block drift(圧縮後未同期)で素 distribute は entry-narrowing+圧縮同期 同時適用。PR #96 提出 → conductor Tier 3 review + 2判断((A)未到達4課経路/(B)resync方針)待ち。承認まで distribute 実行せず。本日午前は occur Phase 1 review #42-46 全 APPROVE 完納(#43 time-align/#44 DDSP negative/#45 試聴#3/#46 proper DSP v2、anchoring指摘→PWA#69 中立化波及、memory化)。
 - 2026-05-29T20:00:00+09:00: context shape-up 再起動 dispatch 受領 (conductor k84di7l4) → クリーン halt 準備。本session大量完納: ①共通ブロック圧縮 fleet-wide ✅(40k超8→0課/-3,589行、PR#90 source圧縮582→312/#91 template slim/#92 docs/#93 fanout-apply.sh/#94 allowlist設計、fanout-apply は reserch/data 等で本番稼働) ②peer review(dsp #83-86 D-2〜D-5 + #91 chain+song_render renderer / occur #39 ACE-Step batch2、全 infra LGTM) ③dsp #83 compile-break incident 解決(真因=dsp #87 docs PR が stage-2 全code混入→#83 D-2 test重複 redefinition、revert+#84-86 close+#91 main基点re-PR、教訓memory化) ④予防仕組み化(feedback_merge_target_duplication_check + tier-judge改修scope確定 CCO owner 5/30) ⑤CI billing workaround提案。引き継ぎ memory [[project_handoff_20260529]] 化完了。未commit `.gitignore`/`.codex/`/cco-memory-retain draft は本session作成物でない(session開始時から存在、未読/intent不明)ため未commit維持。OPEN actionable 5件は全外部依存gated。再起動後 continue なし再開 → status.md next_action + handoff memory が継続性の鍵。
