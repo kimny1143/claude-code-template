@@ -198,8 +198,12 @@ if [ -d "$TEMPLATE_ROOT/mcps" ]; then
     echo "   • $mcp_name (see $TEMPLATE_ROOT/mcps/$mcp_name/README.md)"
   done
   echo ""
-  echo "   To register an MCP server, run:"
-  echo "   claude mcp add -s user <name> -e KEY=VALUE -- python /path/to/server.py"
+  echo "   To register an MCP server, prefer LOCAL scope (this peer only):"
+  echo "   claude mcp add -s local <name> -- /path/to/launch.sh"
+  echo "   ⚠️  Do NOT use '-s user' for key-requiring MCPs (mcp-image / fal-video):"
+  echo "       user scope loads them in every project and fails (Connection closed)"
+  echo "       wherever the API key is absent. Register per-peer with -s local instead."
+  echo "   See docs/template-mcp-distribution-manifest.md for the peer→MCP mapping."
   echo "   (See each MCP's README.md for the exact command)"
 else
   echo "   (none found)"
