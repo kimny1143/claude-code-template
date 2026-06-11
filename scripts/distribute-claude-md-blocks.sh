@@ -19,7 +19,7 @@ BLOCKS_DIR="$TEMPLATE_REPO/.claude/skills/common-claude-md-blocks/blocks"
 
 # 配布対象 (cognitive load v3 rollout 2026-05-18 で全 14 課展開、 marker未挿入 peer は skip logic で no-op)
 # - 経営部4課: template / conductor / freee / cowork (Phase 2 0.1+0.2 既配布対象)
-# - 残10課: mued / native / dsp / occur / SNS / write / LP / reserch / data / blender (Phase 2 0.3 = cognitive load v3 trial 5/19- 並行 marker挿入 PR)
+# - 残9課: mued / native / dsp / SNS / write / LP / reserch / data / blender (occur 2026-06-11 closed Q3=a)。(Phase 2 0.3 = cognitive load v3 trial 5/19- 並行 marker挿入 PR)
 declare -a TARGET_PEERS=(
     "$TEMPLATE_REPO/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/_conductor/CLAUDE.md"
@@ -28,7 +28,7 @@ declare -a TARGET_PEERS=(
     "$HOME/Dropbox/_DevProjects/mued/mued_v2/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/mued/mued_v2/apps/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/_mued-dsp/CLAUDE.md"
-    "$HOME/Dropbox/_DevProjects/_mued-occur/CLAUDE.md"
+    # occur課 2026-06-11 closed (Q3=a 組織再編 v2)。再開時復活: "$HOME/Dropbox/_DevProjects/_mued-occur/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/mued/threads-api/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/_contents-writing/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/_LandingPage/glasswerks-lp/CLAUDE.md"
