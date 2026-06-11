@@ -3,21 +3,22 @@ peer: template
 department: management
 activity: idle
 status: clean
-current_task: PR #112 (block15「from_id 正本原則」Tier2) merged + step5 distribute 実行済。distribute で ★durability 問題検出 = 過去の DoD(#109)/org-v2(#104) が複数 peer の committed CLAUDE.md に不在 (working tree 書込のみで self-commit されず evaporate)。conductor へ escalate、durability fix (A)CCO直接commit / (B)peer dispatch / (C)script auto-commit の判断待ち。
-next_action: conductor の durability fix 判断 (A/B/C) 待ち。(A)認可で marker有9課の CLAUDE.md を直接 commit (canonical派生 DO-NOT-EDIT 区画・Tier1相当) して即 durable 化。恒久fix=distribute script に post-write auto-commit (次session hygiene #3)。anchor=[[project_next_session_hygiene_queue]] / [[feedback_status_md_dod]]。
-blocked_by: conductor (common-block distribute durability fix 判断 A/B/C)
-urgency: mid
-action_owner: conductor
+current_task: なし (CCO 手当て完了)。block15 from_id distribute (PR#112) + durability 問題対応 完了。conductor 判断=(A)CCO直接commit不採用/(B)各live課 checkout self-commit/(C)恒久fix所有尊重設計。CCO 成果=(B) checkout リスト doc (PR#114 merged)、working tree 9課分は保持 (canonical-ward 無害、conductor が checkout dispatch)。
+next_action: 自走 (新規 dispatch / peer review 待ち)。残 CCO=(C) common-block distribute durability 恒久fix の design draft (次session・各peer自走self-commit機構)。+既存次session hygiene=dsp/SNS marker挿入・conductor ID動的解決化。anchor=[[project_next_session_hygiene_queue]] / [[feedback_status_md_dod]]。
+blocked_by: null
+urgency: low
+action_owner: null
 deadline: null
 expected_next_check_at: 2026-06-12T12:00:00+09:00
-last_update: 2026-06-12T01:30:00+09:00
-evidence: PR#112 merged (49ca47e)→clean worktree から distribute=marker有9課 working tree に block15 反映。ほぼ全課で DoD(17)/org-v2(04) も「新規追加」=過去distribute evaporate 証跡 (各+49/-13、mued_v2/apps +162/-384、_product/_contents +17〜33)。dsp/SNS/blender=marker無 NO CHANGES。peer working tree は canonical-ward で無害、commit 判断まで保持。
+last_update: 2026-06-12T02:00:00+09:00
+evidence: PR#112(block15 from_id・merged)/#113(status)/#114((B)checkout リスト doc) 全 merged。conductor 判断=A不採用/B checkout self-commit/C所有尊重恒久fix。(B)doc=docs/drafts/common-block-self-commit-checklist-20260612.md (live課6 課→repo→base+worktree分離コマンド、apps stale別件/reserch defer/conductor自commit除外)。working tree 9課保持。
 confidence: high
 lane: notification
 ---
 
 ## Recent events
 
+- 2026-06-12T02:00:00+09:00: **durability 問題 conductor 判断確定 + (B) checkout リスト納品**。conductor(p51fvyup): (A)CCO 9repo直接commit=**不採用**(所有ガードLIVE直後の境界+branch protection)/(B)今回分=各live課が/checkout時に自repo self-commit/(C)恒久fix=**所有尊重設計**(CCO cross-repo commitでなく各peer自走self-commit機構=distributeがcommit指示emit or checkin/checkout hygieneでDO-NOT-EDIT区画自動self-commit)。CCO納品: (B) `docs/drafts/common-block-self-commit-checklist-20260612.md` (PR#114 merged)=live課6(freee/cowork/mued/insight/product/content)の課→repo→base表+各課が自repoで叩くorigin/<base> worktree分離コマンド(他WIP非干渉・CLAUDE.mdのみadd、product=master/glasswerks-lp 42WIP/cowork 12WIP edge対応)。除外=apps stale別件/reserch dormant defer/conductor自commit。(C)恒久fix design draft=次session起案 (hygiene queue #3 本丸)。working tree 9課分distributeは今すぐcommitせず保持(canonical-ward無害、conductorがcheckout dispatch)。CCO手当て完了・blocked_by解消。
 - 2026-06-12T01:30:00+09:00: **PR #112 merged + step5 distribute 実行 + ★durability 問題検出**。conductor(p51fvyup) が #112 を即 squash merge (15:55Z) → CCO が merge済 canonical(49ca47e) から clean worktree 経由で distribute 実行。block15 from_id ルール=marker有9課の working tree に反映、dsp/SNS/blender=marker無 NO CHANGES (conductor 直接ルール伝達+次session marker挿入で合意)。**検出**: distribute diff が block15 単独でなく大きく、ほぼ全 marker課の committed CLAUDE.md に DoD(block17 #109)/org-v2(block04) が不在=過去「distribute済」が peer working tree 書込のみで self-commit されず evaporate (branch操作でrevert推定)。from_id silent-partition と同類のサイレント非伝播。→ conductor escalate (URGENCY mid)、durability fix (A)CCO直接commit認可 /(B)peer dispatch /(C)script auto-commit を提案 (推奨=今回A+恒久C)。CCO は他peer repo 無断commit不可ゆえ認可待ち、working tree は canonical-ward で保持。memory [[project_next_session_hygiene_queue]] #3 記録。DoD自己実践=区切りでstatus更新。
 - 2026-06-11T18:30:00+09:00: **status.md = DoD (block 17) クローズ**。PR#109 merged + conductor step5 で marker有10課 distribute 完了。marker無 dsp/SNS/blender の被覆ギャップは dry-run で先行検出→conductor 対応: dsp/SNS=直接dispatch+両課遵守+memory で機能カバー済 (distribute未到達でも実質OK)、CLAUDE.md marker 挿入=次session hygiene follow-up にキュー、blender=content課畳込 dormant ゆえ defer。memory [[feedback_status_md_dod]] 追記。CCO 残作業ゼロ・blocked_by 全解消。
 - 2026-06-11T18:10:00+09:00: **status.md = DoD 明文化 PR#109 提出 (kimny指示・Tier2)**。共通block 17 に「DoD: status.md 更新 = タスク完了の定義」subsection 追加 (task done/milestone/blocked/PR submit/high urgency 区切りで更新してから完了・未更新=未完扱い、live session 直やり取り作業も反映=conductor 再構築を作らない)。起案根拠=dsp/SNS/insight 未更新事案。配布 dry-run= marker有10課到達 / **dsp・SNS・blender は marker無=distribute 未到達**(step5 で dispatch 要・caveat 明記)。memory [[feedback_status_md_dod]] 記録。本更新自体が DoD 実践。
