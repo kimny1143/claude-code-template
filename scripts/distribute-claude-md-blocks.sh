@@ -28,6 +28,7 @@ declare -a TARGET_PEERS=(
     "$HOME/Dropbox/_DevProjects/mued/mued_v2/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/mued/mued_v2/apps/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/_mued-dsp/CLAUDE.md"
+    "$HOME/Dropbox/_DevProjects/_product/CLAUDE.md"  # product課 新設 (組織再編 v2 2026-06-11、native/occur 畳み先)
     # occur課 2026-06-11 closed (Q3=a 組織再編 v2)。再開時復活: "$HOME/Dropbox/_DevProjects/_mued-occur/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/mued/threads-api/CLAUDE.md"
     "$HOME/Dropbox/_DevProjects/_contents-writing/CLAUDE.md"
