@@ -29,3 +29,13 @@ EVIDENCE: <PR# | file | commit>
 - **`high` は REASON + EVIDENCE 必須** (EVIDENCE 不在の high は audit で `evidence_missing` 分類)
 - **議論レーン** (kimny ↔ conductor 対話中) では high も送信抑制。conductor `set_summary` の hold 表示を peer 側 read で判定し、解除まで status.md 集約に寄せる
 - **誤判定で mid を high にしない**: high は不可逆/当日 hard deadline/security/secret/外部リソース新規作成/課金・契約/production outage/data loss/kimny Tier 3 に限定 (上表 high 基準)。判断要請は block 18 form を high send_message or status.md に記入
+
+### peer ID 自称禁止・from_id 正本原則
+
+peer の識別子は **受信 channel の `from_id` 属性を唯一の正本**とする (self は `list_peers` が self を除外する構造ゆえ自分の ID を確実に知れない)。
+
+1. **peer は告知・メッセージ本文に自分の peer ID を書かない** (self からは自 ID を確実に知れないため)。
+2. **受信側は常に channel の `from_id` 属性を正とし**、本文中の自称 ID と矛盾したら `from_id` を採る。
+3. **再起動告知は「この `from_id` が新 ID」形式に統一** (本文に ID 文字列を書かない)。
+
+> 背景 (2026-06-11): conductor 再起動時、`list_peers` が self を除外する構造のため出力に残ったゴースト `_conductor` エントリを自分と誤認 → 全課に誤 ID を配布。外部観測で訂正されたが、検知者不在なら全課送信が死箱へ向かうサイレント分断だった。
