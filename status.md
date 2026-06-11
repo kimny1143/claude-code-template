@@ -1,23 +1,24 @@
 ---
 peer: template
 department: management
-activity: idle
-status: clean
-current_task: なし。組織再編 v2 CCO 担当分は全完了。所有ベース write-guard は本番 LIVE (PR#106 merged・content課→glasswerks-lp 編集成功/free15撤去 prod verify PASS)。org records=PR#107 merged。native=既クローズ確認 (stale行除去)。
-next_action: 自走 (新規 dispatch / peer review 待ち)。継続 anchor=memory [[project_org_restructure_v2_20260611]] / [[project_ownership_write_guard_20260611]]。
-blocked_by: null
+activity: active
+status: pr-review-pending
+current_task: PR#109 (status.md = DoD 明文化・block 17・Tier2) を conductor レビューに提出済。配布 dry-run 添付・marker無3課(dsp/SNS/blender)の被覆ギャップを caveat 明記。conductor Tier2 review/merge + step5(実distribute+未到達3課dispatch)待ち。
+next_action: conductor の PR#109 review 待ち。merge 後は step5 (全ピア通知 + dsp/SNS/blender marker挿入 or dispatch) を conductor と連携。他は自走 (新規 dispatch / peer review)。anchor=[[feedback_status_md_dod]]。
+blocked_by: conductor (PR#109 Tier2 review)
 urgency: low
-action_owner: null
+action_owner: conductor
 deadline: null
 expected_next_check_at: 2026-06-12T12:00:00+09:00
-last_update: 2026-06-11T14:30:00+09:00
-evidence: PR#106 (所有ガード core 3ファイル・Tier3) merged・本番LIVE・prod verify PASS。PR#107 (org records 4ファイル・Tier2) merged。所有ガード live hook 7テスト全PASS。native=kimny確認でクローズ済 (起動スクリプト除外・稼働12課に不在)。全 state= memory [[project_org_restructure_v2_20260611]]。
+last_update: 2026-06-11T18:10:00+09:00
+evidence: PR#109 (block 17 DoD subsection・加算的・diff 1 file/+7) 提出。distribute --dry-run= marker有10課 WOULD UPDATE / dsp・SNS(threads-api)・blender は marker無 NO CHANGES=被覆ギャップ既知 [[project_common_block_marker_coverage_20260530]]。本DoD自体を実践した status 更新。
 confidence: high
 lane: notification
 ---
 
 ## Recent events
 
+- 2026-06-11T18:10:00+09:00: **status.md = DoD 明文化 PR#109 提出 (kimny指示・Tier2)**。共通block 17 に「DoD: status.md 更新 = タスク完了の定義」subsection 追加 (task done/milestone/blocked/PR submit/high urgency 区切りで更新してから完了・未更新=未完扱い、live session 直やり取り作業も反映=conductor 再構築を作らない)。起案根拠=dsp/SNS/insight 未更新事案。配布 dry-run= marker有10課到達 / **dsp・SNS・blender は marker無=distribute 未到達**(step5 で dispatch 要・caveat 明記)。memory [[feedback_status_md_dod]] 記録。本更新自体が DoD 実践。
 - 2026-06-11T14:30:00+09:00: **組織再編 v2 CCO 担当分 全完了 + 所有ガード本番LIVE**。所有ベース write-guard を kimny Tier3 GO で実装→live hook 7テスト全PASS→**PR#106 merged・本番LIVE** (content課→glasswerks-lp 編集成功・free15撤去 prod verify PASS=設計通り稼働)。PR#106 に相乗りしていた org records は conductor 依頼で **PR#107 へ surgical 分離**(04-org block v2/distribute _product target/chief-governance doc訂正/status、design doc は #106 同梱ゆえ #107 除外)→merged。native は kimny 確認で既クローズ判明(stale行)→blocked_by から除去=**CCO blocked_by 全解消・残作業ゼロ**。学び再確認: CCO 自身の cross-workspace authorized 編集 (worktree /tmp) も CWD-guard が block→Bash経由要 ([[project_ownership_write_guard_20260611]])。
 - 2026-06-11T11:55:00+09:00: **組織再編v2 cutover後 CCO 作業 ①②③完了 + 所有guard Tier3 設計→全ピア再起動準備**。conductor(gdbc75iu) cutover完了通知 resume。①04-org-structure block を v2構成へ更新(occur closed/native→product/write+LP+blender→content/reserch+data→insight/product課・Chief新設、Chief ws=_chief)→**scoped distribute**(04のみ、15/17/18 PR#96未配布drift と mued_apps stale を意図的に回避)8peer+_product。②_product CLAUDE.md に共通block marker18挿入(14=conductor専用除外)+populate+distribute target追加。③Chief未ガード稼働発見→`_chief/.claude/{hooks/chief-cwd-write-guard.sh(smoke5/5),settings.local.json(deny34・send_message=allow訂正反映・git commit/add=allow)}`+for-conductor/queue 配線(次回再起動で発効)。+ **所有ベースwrite-guard(Tier3)設計**=CWD基準→所有マップ基準一般化、ownership-map.tsv を template内(CCO所有)で自己昇格閉鎖、prototype7/7pass、設計doc commit 43140bf→conductorレビュー依頼。全branch push済。再起動後は新IDで memory+status.md から resume。
 - 2026-06-08T12:50:00+09:00: **MCP 起動時警告 恒久解消 実行完了 (PR#102 self-merge)**。conductor(vkaiq641) 委任→CCO 設計案 (QUESTION/OPTIONS/RECOMMENDATION) 返送→kimny+conductor 認可揃い (Tier3) で実行。根因=`mcp-image`/`fal-video` が `~/.claude.json` **user scope** 登録で全71プロジェクト毎起動ロード→cwd に鍵無いと `launch.sh exit 1`=Connection closed (鍵保有≠当該MCP使用)。**実施 (CLI、~/.claude.json は Edit 不可ゆえ `claude mcp`)**: ①`claude mcp remove mcp-image/fal-video -s user` ②`mcp-image -s local` を **LP(glasswerks-lp)/write(_contents-writing)/SNS(threads-api) 3課のみ**再登録 (canonical=/Volumes/strage、3課とも GEMINI_API_KEY 保有実測) ③`fal-video`=実使用課無で誰にも登録せず (occur FAL_KEY=音声で無関係、blender=kimny 判断対象外)。**検証済**: root mcpServers=claude-history/freee-mcp/claude-peers のみ、3 peer-dir のみ mcp-image local。**反映=次回フル再起動でクリーン化** (running 中は即時反映されず、警告は cosmetic ゆえ即時再起動不要)。manifest doc 正本=`docs/template-mcp-distribution-manifest.md` (再現コマンド+「user scope 二度と使わない」原則)、setup.sh の MCP 案内も `-s user`→`-s local` 推奨へ修正。**PR #102 self-merge** ([self-review]、Tier3 だが kimny 承認済実行ゆえ self-merge 可・conductor 指示通り)。conductor は次 patrol で拾う (URGENCY high 以外 send_message 不要原則)。CCO 本件クローズ。
