@@ -3,21 +3,22 @@ peer: template
 department: management
 activity: idle
 status: clean
-current_task: なし。status.md = DoD 明文化 (block 17) = PR#109 merged + step5 (10課 distribute) 完了。dsp/SNS は conductor 直接 dispatch で機能的カバー済、marker 挿入は次session follow-up、blender defer。CCO 残作業ゼロ。
-next_action: 自走 (新規 dispatch / peer review 待ち)。次session hygiene = dsp/SNS CLAUDE.md への共通block marker 挿入 (被覆ギャップ恒久解消)。anchor=[[feedback_status_md_dod]] / [[project_common_block_marker_coverage_20260530]]。
-blocked_by: null
-urgency: low
-action_owner: null
+current_task: PR #112 (block15「from_id 正本原則」Tier2) merged + step5 distribute 実行済。distribute で ★durability 問題検出 = 過去の DoD(#109)/org-v2(#104) が複数 peer の committed CLAUDE.md に不在 (working tree 書込のみで self-commit されず evaporate)。conductor へ escalate、durability fix (A)CCO直接commit / (B)peer dispatch / (C)script auto-commit の判断待ち。
+next_action: conductor の durability fix 判断 (A/B/C) 待ち。(A)認可で marker有9課の CLAUDE.md を直接 commit (canonical派生 DO-NOT-EDIT 区画・Tier1相当) して即 durable 化。恒久fix=distribute script に post-write auto-commit (次session hygiene #3)。anchor=[[project_next_session_hygiene_queue]] / [[feedback_status_md_dod]]。
+blocked_by: conductor (common-block distribute durability fix 判断 A/B/C)
+urgency: mid
+action_owner: conductor
 deadline: null
 expected_next_check_at: 2026-06-12T12:00:00+09:00
-last_update: 2026-06-11T18:30:00+09:00
-evidence: PR#109 (DoD block 17) merged・conductor step5 で marker有10課 distribute 済。dsp/SNS=直接dispatch+両課遵守で機能カバー (distribute未到達でも実質OK)、marker挿入=次session。本セッション=所有ガードLIVE(PR#106)+org records(PR#107)+status DoD(PR#109)+status自己更新(PR#108/110) 全 merged。CCO blocked_by 全解消。
+last_update: 2026-06-12T01:30:00+09:00
+evidence: PR#112 merged (49ca47e)→clean worktree から distribute=marker有9課 working tree に block15 反映。ほぼ全課で DoD(17)/org-v2(04) も「新規追加」=過去distribute evaporate 証跡 (各+49/-13、mued_v2/apps +162/-384、_product/_contents +17〜33)。dsp/SNS/blender=marker無 NO CHANGES。peer working tree は canonical-ward で無害、commit 判断まで保持。
 confidence: high
 lane: notification
 ---
 
 ## Recent events
 
+- 2026-06-12T01:30:00+09:00: **PR #112 merged + step5 distribute 実行 + ★durability 問題検出**。conductor(p51fvyup) が #112 を即 squash merge (15:55Z) → CCO が merge済 canonical(49ca47e) から clean worktree 経由で distribute 実行。block15 from_id ルール=marker有9課の working tree に反映、dsp/SNS/blender=marker無 NO CHANGES (conductor 直接ルール伝達+次session marker挿入で合意)。**検出**: distribute diff が block15 単独でなく大きく、ほぼ全 marker課の committed CLAUDE.md に DoD(block17 #109)/org-v2(block04) が不在=過去「distribute済」が peer working tree 書込のみで self-commit されず evaporate (branch操作でrevert推定)。from_id silent-partition と同類のサイレント非伝播。→ conductor escalate (URGENCY mid)、durability fix (A)CCO直接commit認可 /(B)peer dispatch /(C)script auto-commit を提案 (推奨=今回A+恒久C)。CCO は他peer repo 無断commit不可ゆえ認可待ち、working tree は canonical-ward で保持。memory [[project_next_session_hygiene_queue]] #3 記録。DoD自己実践=区切りでstatus更新。
 - 2026-06-11T18:30:00+09:00: **status.md = DoD (block 17) クローズ**。PR#109 merged + conductor step5 で marker有10課 distribute 完了。marker無 dsp/SNS/blender の被覆ギャップは dry-run で先行検出→conductor 対応: dsp/SNS=直接dispatch+両課遵守+memory で機能カバー済 (distribute未到達でも実質OK)、CLAUDE.md marker 挿入=次session hygiene follow-up にキュー、blender=content課畳込 dormant ゆえ defer。memory [[feedback_status_md_dod]] 追記。CCO 残作業ゼロ・blocked_by 全解消。
 - 2026-06-11T18:10:00+09:00: **status.md = DoD 明文化 PR#109 提出 (kimny指示・Tier2)**。共通block 17 に「DoD: status.md 更新 = タスク完了の定義」subsection 追加 (task done/milestone/blocked/PR submit/high urgency 区切りで更新してから完了・未更新=未完扱い、live session 直やり取り作業も反映=conductor 再構築を作らない)。起案根拠=dsp/SNS/insight 未更新事案。配布 dry-run= marker有10課到達 / **dsp・SNS・blender は marker無=distribute 未到達**(step5 で dispatch 要・caveat 明記)。memory [[feedback_status_md_dod]] 記録。本更新自体が DoD 実践。
 - 2026-06-11T14:30:00+09:00: **組織再編 v2 CCO 担当分 全完了 + 所有ガード本番LIVE**。所有ベース write-guard を kimny Tier3 GO で実装→live hook 7テスト全PASS→**PR#106 merged・本番LIVE** (content課→glasswerks-lp 編集成功・free15撤去 prod verify PASS=設計通り稼働)。PR#106 に相乗りしていた org records は conductor 依頼で **PR#107 へ surgical 分離**(04-org block v2/distribute _product target/chief-governance doc訂正/status、design doc は #106 同梱ゆえ #107 除外)→merged。native は kimny 確認で既クローズ判明(stale行)→blocked_by から除去=**CCO blocked_by 全解消・残作業ゼロ**。学び再確認: CCO 自身の cross-workspace authorized 編集 (worktree /tmp) も CWD-guard が block→Bash経由要 ([[project_ownership_write_guard_20260611]])。
