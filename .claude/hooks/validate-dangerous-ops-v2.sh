@@ -106,6 +106,28 @@ if [ "$TOOL_NAME" = "Write" ] || [ "$TOOL_NAME" = "Edit" ]; then
     IS_ALLOWLIST=1
   fi
 
+  # --- 所有マップ判定 (CWD 基準 → 所有リポ基準への一般化) ---
+  # template 内 ownership-map.tsv を読み、現 CWD が所有する追加リポへの書込を許可。
+  # マップは template 内 (CCO所有) = peer は自己所有を増やせない (guard が自己昇格を block)。
+  # fail-safe: マップ不在なら no-op = 現行 CWD-only 挙動 (退行ゼロ)。
+  OWNERSHIP_MAP="$HOME/Dropbox/_DevProjects/claude-code-template/.claude/hooks/ownership-map.tsv"
+  if [ "$IS_ALLOWLIST" = "0" ] && [ -f "$OWNERSHIP_MAP" ]; then
+    CWD_REAL=$(realpath "$PWD" 2>/dev/null || echo "$PWD")
+    FP_REAL=$(realpath "$FILE_PATH" 2>/dev/null || python3 -c "import os,sys;print(os.path.realpath(sys.argv[1]))" "$FILE_PATH" 2>/dev/null || echo "$FILE_PATH")
+    while IFS=$'\t' read -r OWNER REPO; do
+      case "$OWNER" in ''|\#*) continue;; esac      # blank / comment skip
+      [ -n "$REPO" ] || continue
+      OWNER_REAL=$(realpath "$OWNER" 2>/dev/null || echo "$OWNER")
+      REPO_REAL=$(realpath "$REPO" 2>/dev/null || echo "$REPO")
+      if [ "$CWD_REAL" = "$OWNER_REAL" ]; then
+        if [ "$FP_REAL" = "$REPO_REAL" ] || [ "${FP_REAL#$REPO_REAL/}" != "$FP_REAL" ]; then
+          IS_ALLOWLIST=1
+          break
+        fi
+      fi
+    done < "$OWNERSHIP_MAP"
+  fi
+
   # CWD外へのWrite/Editをブロック（allowlist該当時はスキップ）
   # 絶対パスに正規化してCWD配下かチェック
   if [ "$IS_ALLOWLIST" = "0" ]; then

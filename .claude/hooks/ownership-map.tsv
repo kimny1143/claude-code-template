@@ -1,0 +1,9 @@
+# ownership-map.tsv — 所有ベース write-guard の所有マップ (canonical = 権限の正本)
+# 形式: <owner workspace realpath> <TAB> <owned repo realpath>   ※ # はコメント
+# 編集は CCO のみ (本ファイルは template 内 = 他 peer は guard で block)。
+# 各行 justification = related handoff を Evidence コメント併記。
+#
+# content課 (_contents-writing) ← 組織再編v2 LP統合
+#   Evidence: _LandingPage/glasswerks-lp/docs/handoff-lp-to-content-20260611.md (WIP=0, prod=Vercel main自動deploy)
+#   下流防御: block-main-push.sh で main 直 push 物理 block + PR レビュー必須 (編集可 ≠ 本番 deploy 可)
+/Volumes/strage/_DevProjects/_contents-writing	/Volumes/strage/_DevProjects/_LandingPage/glasswerks-lp
