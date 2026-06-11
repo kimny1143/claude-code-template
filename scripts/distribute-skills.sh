@@ -50,8 +50,9 @@ mued|/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/.claude/skills
 native|/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/apps/.claude/skills
 SNS|/Users/kimny/Dropbox/_DevProjects/mued/threads-api/.claude/skills
 dsp|/Users/kimny/Dropbox/_DevProjects/_mued-dsp/.claude/skills
-occur|/Users/kimny/Dropbox/_DevProjects/_mued-occur/.claude/skills
 "
+# occur課: 2026-06-11 closed (Q3=a 組織再編 v2)。配布対象から除外。
+# 再開時はリストへ復活: occur|/Users/kimny/Dropbox/_DevProjects/_mued-occur/.claude/skills
 
 UPDATED=0
 CREATED=0

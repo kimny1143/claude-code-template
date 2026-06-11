@@ -35,7 +35,8 @@ COMMON_SKILLS=(
 
 # peer ターゲット: 課名|.claude ベースパス
 # conductor + template は audit 対象外 (audit consumer + source 自己ループ回避)。
-# 14 peer 体制 から conductor + template 除外 → 13 peer audit。
+# occur課 2026-06-11 closed (Q3=a 組織再編 v2) → audit 対象から除外 (drift false-positive 回避)。
+#   再開時は下記リストへ復活: occur|/Users/kimny/Dropbox/_DevProjects/_mued-occur/.claude
 TARGETS="
 write|/Users/kimny/Dropbox/_DevProjects/_contents-writing/.claude
 SNS|/Users/kimny/Dropbox/_DevProjects/mued/threads-api/.claude
@@ -43,7 +44,6 @@ data|/Users/kimny/Dropbox/_DevProjects/_data-analysis/.claude
 reserch|/Users/kimny/Dropbox/_DevProjects/_Reserch/.claude
 LP|/Users/kimny/Dropbox/_DevProjects/_LandingPage/glasswerks-lp/.claude
 blender|/Users/kimny/Dropbox/_DevProjects/_blender/.claude
-occur|/Users/kimny/Dropbox/_DevProjects/_mued-occur/.claude
 mued|/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/.claude
 native|/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/apps/.claude
 freee|/Users/kimny/Dropbox/_DevProjects/freee-MCP/.claude

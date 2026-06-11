@@ -32,8 +32,9 @@ data|-Users-kimny-Dropbox--DevProjects--data-analysis
 template|-Users-kimny-Dropbox--DevProjects-claude-code-template
 reserch|-Users-kimny-Dropbox--DevProjects--Reserch
 cowork|-Users-kimny-Dropbox--DevProjects--cowork
-occur|-Users-kimny-Dropbox--DevProjects--mued-occur
 "
+# occur課: 2026-06-11 closed (Q3=a 組織再編 v2)。配布対象から除外。
+# 再開時はリストへ復活: occur|-Users-kimny-Dropbox--DevProjects--mued-occur
 
 # メモリファイルの内容（frontmatter付き）
 read -r -d '' MEMORY_CONTENT << 'MEMEOF' || true
