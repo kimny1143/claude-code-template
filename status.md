@@ -1,23 +1,24 @@
 ---
 peer: template
 department: management
-activity: active
-status: clean-halt-pending
-current_task: 組織再編v2 cutover後 CCO作業。①②③ 完了 (04-org-structure block→9 scoped配布 / _product CLAUDE.md marker18+populate / Chief governance hook配線+settings deny+queue)。所有ベース write-guard (Tier3) 設計完了→conductor レビュー待ち。全ピア再起動準備、全成果 commit/push 済。
-next_action: 【再起動後 継続】★最優先=所有ベース write-guard (Tier3、conductor 承認待ち)。承認 GO で実装: (1) 新設 `.claude/hooks/ownership-map.tsv` = content課(_contents-writing)→glasswerks-lp の **1行のみ** (blender は handoff doc 不在で defer、product/insight は実書込時 Tier2 追加) (2) `validate-dangerous-ops-v2.sh` の Write/Edit CWD ブロック直前に設計doc §2.2 の所有判定ブロック挿入 (3) live で単体テスト7件再実行・証跡化 (4) commit→conductor PR レビュー。★**live hook は 10 workspace が絶対パス参照=編集即 fleet 反映ゆえ承認まで絶対に触らない**。設計doc=`docs/drafts/ownership-write-guard-design-20260611.md`(commit 43140bf、prototype 7/7 pass)、ブリーフ=`_chief/for-conductor/brief-ownership-guard-20260611.md`。確認2点 conductor 回答待ち=(i)glasswerks-lp 本番性(Vercel)OK か (ii)blender defer 異議。 — 他継続: Chief governance は配線済(_chief/.claude/{hooks,settings.local.json}+for-conductor/、Chief 次回再起動で発効) / ④ native 物理畳込=conductor 手順待ち / org-restructure ブランチ(be2ab31..43140bf push済)の PR#105 化=conductor レビュー。継続の鍵=memory [[project_org_restructure_v2_20260611]]。
-blocked_by: conductor (所有guard Tier3承認 + ④native畳込手順 + PR#105レビュー)
+activity: idle
+status: clean
+current_task: なし。組織再編 v2 CCO 担当分は全完了。所有ベース write-guard は本番 LIVE (PR#106 merged・content課→glasswerks-lp 編集成功/free15撤去 prod verify PASS)。org records=PR#107 merged。native=既クローズ確認 (stale行除去)。
+next_action: 自走 (新規 dispatch / peer review 待ち)。継続 anchor=memory [[project_org_restructure_v2_20260611]] / [[project_ownership_write_guard_20260611]]。
+blocked_by: null
 urgency: low
-action_owner: conductor
+action_owner: null
 deadline: null
 expected_next_check_at: 2026-06-12T12:00:00+09:00
-last_update: 2026-06-11T11:55:00+09:00
-evidence: branch docs/org-restructure-cco-records を origin push 済 (be2ab31..43140bf: 04-org block/_product target/governance doc訂正/所有guard設計)。所有guard prototype 7/7 pass(自己昇格閉鎖T5含む)。Chief hook smoke 5/5 pass。全 state= memory [[project_org_restructure_v2_20260611]]。
+last_update: 2026-06-11T14:30:00+09:00
+evidence: PR#106 (所有ガード core 3ファイル・Tier3) merged・本番LIVE・prod verify PASS。PR#107 (org records 4ファイル・Tier2) merged。所有ガード live hook 7テスト全PASS。native=kimny確認でクローズ済 (起動スクリプト除外・稼働12課に不在)。全 state= memory [[project_org_restructure_v2_20260611]]。
 confidence: high
 lane: notification
 ---
 
 ## Recent events
 
+- 2026-06-11T14:30:00+09:00: **組織再編 v2 CCO 担当分 全完了 + 所有ガード本番LIVE**。所有ベース write-guard を kimny Tier3 GO で実装→live hook 7テスト全PASS→**PR#106 merged・本番LIVE** (content課→glasswerks-lp 編集成功・free15撤去 prod verify PASS=設計通り稼働)。PR#106 に相乗りしていた org records は conductor 依頼で **PR#107 へ surgical 分離**(04-org block v2/distribute _product target/chief-governance doc訂正/status、design doc は #106 同梱ゆえ #107 除外)→merged。native は kimny 確認で既クローズ判明(stale行)→blocked_by から除去=**CCO blocked_by 全解消・残作業ゼロ**。学び再確認: CCO 自身の cross-workspace authorized 編集 (worktree /tmp) も CWD-guard が block→Bash経由要 ([[project_ownership_write_guard_20260611]])。
 - 2026-06-11T11:55:00+09:00: **組織再編v2 cutover後 CCO 作業 ①②③完了 + 所有guard Tier3 設計→全ピア再起動準備**。conductor(gdbc75iu) cutover完了通知 resume。①04-org-structure block を v2構成へ更新(occur closed/native→product/write+LP+blender→content/reserch+data→insight/product課・Chief新設、Chief ws=_chief)→**scoped distribute**(04のみ、15/17/18 PR#96未配布drift と mued_apps stale を意図的に回避)8peer+_product。②_product CLAUDE.md に共通block marker18挿入(14=conductor専用除外)+populate+distribute target追加。③Chief未ガード稼働発見→`_chief/.claude/{hooks/chief-cwd-write-guard.sh(smoke5/5),settings.local.json(deny34・send_message=allow訂正反映・git commit/add=allow)}`+for-conductor/queue 配線(次回再起動で発効)。+ **所有ベースwrite-guard(Tier3)設計**=CWD基準→所有マップ基準一般化、ownership-map.tsv を template内(CCO所有)で自己昇格閉鎖、prototype7/7pass、設計doc commit 43140bf→conductorレビュー依頼。全branch push済。再起動後は新IDで memory+status.md から resume。
 - 2026-06-08T12:50:00+09:00: **MCP 起動時警告 恒久解消 実行完了 (PR#102 self-merge)**。conductor(vkaiq641) 委任→CCO 設計案 (QUESTION/OPTIONS/RECOMMENDATION) 返送→kimny+conductor 認可揃い (Tier3) で実行。根因=`mcp-image`/`fal-video` が `~/.claude.json` **user scope** 登録で全71プロジェクト毎起動ロード→cwd に鍵無いと `launch.sh exit 1`=Connection closed (鍵保有≠当該MCP使用)。**実施 (CLI、~/.claude.json は Edit 不可ゆえ `claude mcp`)**: ①`claude mcp remove mcp-image/fal-video -s user` ②`mcp-image -s local` を **LP(glasswerks-lp)/write(_contents-writing)/SNS(threads-api) 3課のみ**再登録 (canonical=/Volumes/strage、3課とも GEMINI_API_KEY 保有実測) ③`fal-video`=実使用課無で誰にも登録せず (occur FAL_KEY=音声で無関係、blender=kimny 判断対象外)。**検証済**: root mcpServers=claude-history/freee-mcp/claude-peers のみ、3 peer-dir のみ mcp-image local。**反映=次回フル再起動でクリーン化** (running 中は即時反映されず、警告は cosmetic ゆえ即時再起動不要)。manifest doc 正本=`docs/template-mcp-distribution-manifest.md` (再現コマンド+「user scope 二度と使わない」原則)、setup.sh の MCP 案内も `-s user`→`-s local` 推奨へ修正。**PR #102 self-merge** ([self-review]、Tier3 だが kimny 承認済実行ゆえ self-merge 可・conductor 指示通り)。conductor は次 patrol で拾う (URGENCY high 以外 send_message 不要原則)。CCO 本件クローズ。
 - 2026-06-05T11:30:00+09:00: **dsp PR#111 Tier2 → LGTM・指摘ゼロ** (OverSampler を host block size 追従＝block>1024 heap overflow→crackle 修正、2行/MUEDsp.cpp のみ、DSP math 不変)。kimny 実機 Pro Tools 連続クリック発覚→iPlug2 `Oversampler.h` 実ソースまで追って裏取り。根本原因: `Reset(blockSize)` がバッファを `8*blockSize*nCh` に sizing するが ctor 既定 `OverSampler{k8x,true,2,2}`=1024 のまま、`SetOverSampling` は factor 不変で no-op、`ProcessBlock` が 8x で `nFrames*4` 書込み→host block 2048 で `FPUUpsampler2x` heap overflow(ASAN 一致)→crackle。修正=OnReset+OnParamChange に `mOverSampler.Reset(GetBlockSize())` 追加(公式 IPlugOverSampler idiom)。**dsp 3懸念全解消確認**: ①配置=SetOverSampling 後で最終サイズ host block に確定し正 ②二重 Reset=`Reset()` 冪等(Resize+ptr 配列 Empty→Add)ゆえ最後の blockSize 勝ち＝leak/不整合なし、かつ OnParamChange 側も**必須**(無いと runtime OS factor 変更で SetOverSampling 内部 Reset が 1024 に戻し再発) ③GetBlockSize()=iPlug2 が SetBlockSize 後に OnReset 呼ぶ＋block 変更で再発火ゆえ有効、`nFrames<=GetBlockSize()` 契約も標準。非ブロッカー情報: 二重 Reset の冗長 Resize は SetOverSampling の DEFAULT_BLOCK_SIZE ハードコード由来で dsp 不備でない/OnParamChange の確保は本 PR 以前から存在。ASAN(1024/2048/4096 clean)＋AAX rebuild OK。audio 最終確認は kimny 再試聴ゲート。→ dsp(tulnpouu) kimny 確認後 conductor マージ予定 + conductor 報告済。CCO クローズ。〔Phase 5.4 文脈: dsp PACE AAX 署名成功済(MUEDsp 0.1.0/Universal、codesign --verify PASS、AAX Validator PASS、物理iLok不要確定)〕
