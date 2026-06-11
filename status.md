@@ -1,23 +1,24 @@
 ---
 peer: template
 department: management
-activity: active
-status: pr-review-pending
-current_task: PR#109 (status.md = DoD 明文化・block 17・Tier2) を conductor レビューに提出済。配布 dry-run 添付・marker無3課(dsp/SNS/blender)の被覆ギャップを caveat 明記。conductor Tier2 review/merge + step5(実distribute+未到達3課dispatch)待ち。
-next_action: conductor の PR#109 review 待ち。merge 後は step5 (全ピア通知 + dsp/SNS/blender marker挿入 or dispatch) を conductor と連携。他は自走 (新規 dispatch / peer review)。anchor=[[feedback_status_md_dod]]。
-blocked_by: conductor (PR#109 Tier2 review)
+activity: idle
+status: clean
+current_task: なし。status.md = DoD 明文化 (block 17) = PR#109 merged + step5 (10課 distribute) 完了。dsp/SNS は conductor 直接 dispatch で機能的カバー済、marker 挿入は次session follow-up、blender defer。CCO 残作業ゼロ。
+next_action: 自走 (新規 dispatch / peer review 待ち)。次session hygiene = dsp/SNS CLAUDE.md への共通block marker 挿入 (被覆ギャップ恒久解消)。anchor=[[feedback_status_md_dod]] / [[project_common_block_marker_coverage_20260530]]。
+blocked_by: null
 urgency: low
-action_owner: conductor
+action_owner: null
 deadline: null
 expected_next_check_at: 2026-06-12T12:00:00+09:00
-last_update: 2026-06-11T18:10:00+09:00
-evidence: PR#109 (block 17 DoD subsection・加算的・diff 1 file/+7) 提出。distribute --dry-run= marker有10課 WOULD UPDATE / dsp・SNS(threads-api)・blender は marker無 NO CHANGES=被覆ギャップ既知 [[project_common_block_marker_coverage_20260530]]。本DoD自体を実践した status 更新。
+last_update: 2026-06-11T18:30:00+09:00
+evidence: PR#109 (DoD block 17) merged・conductor step5 で marker有10課 distribute 済。dsp/SNS=直接dispatch+両課遵守で機能カバー (distribute未到達でも実質OK)、marker挿入=次session。本セッション=所有ガードLIVE(PR#106)+org records(PR#107)+status DoD(PR#109)+status自己更新(PR#108/110) 全 merged。CCO blocked_by 全解消。
 confidence: high
 lane: notification
 ---
 
 ## Recent events
 
+- 2026-06-11T18:30:00+09:00: **status.md = DoD (block 17) クローズ**。PR#109 merged + conductor step5 で marker有10課 distribute 完了。marker無 dsp/SNS/blender の被覆ギャップは dry-run で先行検出→conductor 対応: dsp/SNS=直接dispatch+両課遵守+memory で機能カバー済 (distribute未到達でも実質OK)、CLAUDE.md marker 挿入=次session hygiene follow-up にキュー、blender=content課畳込 dormant ゆえ defer。memory [[feedback_status_md_dod]] 追記。CCO 残作業ゼロ・blocked_by 全解消。
 - 2026-06-11T18:10:00+09:00: **status.md = DoD 明文化 PR#109 提出 (kimny指示・Tier2)**。共通block 17 に「DoD: status.md 更新 = タスク完了の定義」subsection 追加 (task done/milestone/blocked/PR submit/high urgency 区切りで更新してから完了・未更新=未完扱い、live session 直やり取り作業も反映=conductor 再構築を作らない)。起案根拠=dsp/SNS/insight 未更新事案。配布 dry-run= marker有10課到達 / **dsp・SNS・blender は marker無=distribute 未到達**(step5 で dispatch 要・caveat 明記)。memory [[feedback_status_md_dod]] 記録。本更新自体が DoD 実践。
 - 2026-06-11T14:30:00+09:00: **組織再編 v2 CCO 担当分 全完了 + 所有ガード本番LIVE**。所有ベース write-guard を kimny Tier3 GO で実装→live hook 7テスト全PASS→**PR#106 merged・本番LIVE** (content課→glasswerks-lp 編集成功・free15撤去 prod verify PASS=設計通り稼働)。PR#106 に相乗りしていた org records は conductor 依頼で **PR#107 へ surgical 分離**(04-org block v2/distribute _product target/chief-governance doc訂正/status、design doc は #106 同梱ゆえ #107 除外)→merged。native は kimny 確認で既クローズ判明(stale行)→blocked_by から除去=**CCO blocked_by 全解消・残作業ゼロ**。学び再確認: CCO 自身の cross-workspace authorized 編集 (worktree /tmp) も CWD-guard が block→Bash経由要 ([[project_ownership_write_guard_20260611]])。
 - 2026-06-11T11:55:00+09:00: **組織再編v2 cutover後 CCO 作業 ①②③完了 + 所有guard Tier3 設計→全ピア再起動準備**。conductor(gdbc75iu) cutover完了通知 resume。①04-org-structure block を v2構成へ更新(occur closed/native→product/write+LP+blender→content/reserch+data→insight/product課・Chief新設、Chief ws=_chief)→**scoped distribute**(04のみ、15/17/18 PR#96未配布drift と mued_apps stale を意図的に回避)8peer+_product。②_product CLAUDE.md に共通block marker18挿入(14=conductor専用除外)+populate+distribute target追加。③Chief未ガード稼働発見→`_chief/.claude/{hooks/chief-cwd-write-guard.sh(smoke5/5),settings.local.json(deny34・send_message=allow訂正反映・git commit/add=allow)}`+for-conductor/queue 配線(次回再起動で発効)。+ **所有ベースwrite-guard(Tier3)設計**=CWD基準→所有マップ基準一般化、ownership-map.tsv を template内(CCO所有)で自己昇格閉鎖、prototype7/7pass、設計doc commit 43140bf→conductorレビュー依頼。全branch push済。再起動後は新IDで memory+status.md から resume。
