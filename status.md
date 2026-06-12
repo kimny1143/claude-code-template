@@ -1,23 +1,24 @@
 ---
 peer: template
 department: management
-activity: active
+activity: idle
 status: clean
-current_task: (B) 共通block self-commit を CCO 主導で coordinating (conductor 委譲 6/12)。live 6課 (freee/cowork/mued/insight/product/content) へ自repo用 worktree分離 self-commit コマンドを送付済。各課 landing を確認し全揃いで conductor へ完了報告。conductor 自repo分は PR#688 で済。
+current_task: 全フリート再起動準備 (kimny指示・conductor p51fvyup)。WIP=全merged (commitすべき自WIPなし)、status保存=本update。(B)共通block self-commit coordination は再起動を跨いで継続 (reminder/manifest経由)。landing tally=✅insight(PR#209)/✅cowork(PR#20)/✅product(578cf96既済・local-only repo)/⏳freee・mued・content(2repo)。再起動後CCOがcoordinator継続。
 next_action: 自走 (新規 dispatch / peer review 待ち)。残 CCO=(C) common-block distribute durability 恒久fix の design draft (次session・各peer自走self-commit機構)。+既存次session hygiene=dsp/SNS marker挿入・conductor ID動的解決化。anchor=[[project_next_session_hygiene_queue]] / [[feedback_status_md_dod]]。
-blocked_by: 6課 self-commit landing 待ち (CCO coordinating、低urgency=次フリート再起動前)
+blocked_by: なし(再起動準備saved)。再起動後継続=(B)残3課landing確認(freee/mued/content)→conductor完了報告 + (C)durability恒久fix draft
 urgency: low
 action_owner: null
 deadline: null
 expected_next_check_at: 2026-06-12T12:00:00+09:00
-last_update: 2026-06-12T02:20:00+09:00
-evidence: (B) live6課へ send_message 送付済 (freee 3wse450c/cowork 8z1agqkd/mued 9lqtvxxs/insight ndlqjrto/product 7h1eepeg/content a5q66tok)。各課 origin/<base> worktree分離で CLAUDE.md のみ commit→PR→Tier1 self-merge。product=master、content=2repo(_contents-writing+glasswerks-lp)。landing 確認方法=各repo default branch に docs/common-block-sync commit。
+last_update: 2026-06-12T02:35:00+09:00
+evidence: (B)送付済→landing: insight gw-data-analysis#209 / cowork gw-cowork#20 / product 578cf96(master・remote無local-only=push/PR不可、local commit済). ⏳freee/mued/content未landing(再起動跨ぎ継続)。★product finding=local-only repoゆえpush/PRコマンド失敗→local master commitのみが正(distribute精度・(C)で分岐設計)。再起動後landing検証=各repo default branchのdocs/common-block-sync-20260612 commit。全成果PR#112-116+#114 merged。
 confidence: high
 lane: notification
 ---
 
 ## Recent events
 
+- 2026-06-12T02:35:00+09:00: **全フリート再起動準備 saved + (B)coordination 再起動跨ぎ継続**。conductor(p51fvyup): kimny指示で全員フル再起動準備=①WIP commit/push ②status保存→「saved」、conductor全課確認後kimnyがstart-all-peers 1回。6課self-commit調整は再起動跨ぎOK(reminder/manifest継続)。CCO: 自WIPは全merged(commitすべき残なし)、冗長block15 working-tree編集discard=working tree not-mineのみ。**(B)landing tally**: ✅insight(PR#209)/✅cowork(PR#20)/✅product(578cf96既済) / ⏳freee・mued・content(2repo)未landing。★product finding: _productはremote無local-only repoゆえ配布push/PRコマンド失敗→local master commitのみ正(既に578cf96でcommit済・durable)。distribute精度として(C)恒久fix設計に「remote有無で分岐」織込。memory [[project_next_session_hygiene_queue]] #3記録。再起動後CCOがcoordinator継続し残3課landing→conductor完了報告。
 - 2026-06-12T02:20:00+09:00: **(B) 共通block self-commit を CCO 主導で coordinating 開始 (conductor 委譲)**。conductor が checkout で「6課個別 dispatch より checklist owner の CCO が回す方が正確・低ノイズ」と委譲。conductor 自repo分は PR#688 で self-commit 済。CCO: list_peers で live 6課を動的解決 (from_id 原則、ghost nxd367mx 除外し live conductor p51fvyup 確認) → 各課へ自repo用 worktree分離 self-commit コマンドを send_message (freee/cowork/mued/insight/product/content、product=master注意、content=2repo[_contents-writing+glasswerks-lp 42WIP隔離])。各課 CLAUDE.md のみ commit (他WIP非干渉)・Tier1 [self-review]。全課 landing 確認後 conductor へ完了報告。低urgency=次フリート再起動前。
 - 2026-06-12T02:00:00+09:00: **durability 問題 conductor 判断確定 + (B) checkout リスト納品**。conductor(p51fvyup): (A)CCO 9repo直接commit=**不採用**(所有ガードLIVE直後の境界+branch protection)/(B)今回分=各live課が/checkout時に自repo self-commit/(C)恒久fix=**所有尊重設計**(CCO cross-repo commitでなく各peer自走self-commit機構=distributeがcommit指示emit or checkin/checkout hygieneでDO-NOT-EDIT区画自動self-commit)。CCO納品: (B) `docs/drafts/common-block-self-commit-checklist-20260612.md` (PR#114 merged)=live課6(freee/cowork/mued/insight/product/content)の課→repo→base表+各課が自repoで叩くorigin/<base> worktree分離コマンド(他WIP非干渉・CLAUDE.mdのみadd、product=master/glasswerks-lp 42WIP/cowork 12WIP edge対応)。除外=apps stale別件/reserch dormant defer/conductor自commit。(C)恒久fix design draft=次session起案 (hygiene queue #3 本丸)。working tree 9課分distributeは今すぐcommitせず保持(canonical-ward無害、conductorがcheckout dispatch)。CCO手当て完了・blocked_by解消。
 - 2026-06-12T01:30:00+09:00: **PR #112 merged + step5 distribute 実行 + ★durability 問題検出**。conductor(p51fvyup) が #112 を即 squash merge (15:55Z) → CCO が merge済 canonical(49ca47e) から clean worktree 経由で distribute 実行。block15 from_id ルール=marker有9課の working tree に反映、dsp/SNS/blender=marker無 NO CHANGES (conductor 直接ルール伝達+次session marker挿入で合意)。**検出**: distribute diff が block15 単独でなく大きく、ほぼ全 marker課の committed CLAUDE.md に DoD(block17 #109)/org-v2(block04) が不在=過去「distribute済」が peer working tree 書込のみで self-commit されず evaporate (branch操作でrevert推定)。from_id silent-partition と同類のサイレント非伝播。→ conductor escalate (URGENCY mid)、durability fix (A)CCO直接commit認可 /(B)peer dispatch /(C)script auto-commit を提案 (推奨=今回A+恒久C)。CCO は他peer repo 無断commit不可ゆえ認可待ち、working tree は canonical-ward で保持。memory [[project_next_session_hygiene_queue]] #3 記録。DoD自己実践=区切りでstatus更新。
