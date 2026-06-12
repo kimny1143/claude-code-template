@@ -56,6 +56,15 @@
       "lastAuditedAt": "2026-05-27",
       "lastAuditedBy": "scripts/audit-skills-lock.sh --update"
     },
+    "pwa-dashboard": {
+      "source": "claude-code-template",
+      "sourceType": "internal-common",
+      "computedHash": "3c0dfcf291d23c9c8fa3fada9c305a829d49ef987aa059efe0a1657a03b7f1ea",
+      "distributedAt": "2026-06-13",
+      "distributedBy": "scripts/distribute-skills.sh",
+      "lastAuditedAt": "2026-06-13",
+      "lastAuditedBy": "manual (CCO shared-skill 化 PR)"
+    },
     "aax-validator": {
       "source": "claude-code-template",
       "sourceType": "local",
