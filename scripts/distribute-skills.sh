@@ -1,6 +1,6 @@
 #!/bin/bash
 # distribute-skills.sh
-# 全課共通必須スキル3件（peer-id-lookup / tier-judge / plan-mode-policy）を配布する
+# 全課共通必須スキル4件（peer-id-lookup / tier-judge / plan-mode-policy / pwa-dashboard）を配布する
 # 課固有 skill は触らず、配布対象 skill のみ rsync で同期
 # 既存 distribute-quality-standards.sh / distribute-settings-allow.sh と同パターン
 #
@@ -32,6 +32,7 @@ COMMON_SKILLS=(
   "peer-id-lookup"
   "tier-judge"
   "plan-mode-policy"
+  "pwa-dashboard"
 )
 
 # 配布対象課（template課自身は除外、全14課 = audit-peer-drift.sh の 13 peer + conductor）
