@@ -44,3 +44,4 @@ skills/
 .trae/
 .vibe/
 .zencoder/
+.env*
