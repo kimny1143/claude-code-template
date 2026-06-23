@@ -23,6 +23,11 @@ if [[ "$COMMAND" =~ git[[:space:]]+-C[[:space:]]+([^[:space:]]+) ]]; then
   GIT_DIR_FLAG="${BASH_REMATCH[1]}"
 fi
 
+# gw-dash リポジトリは除外（LP課フック対象外の独立リポ）
+if [[ "$GIT_DIR_FLAG" == *"gw-dash"* ]]; then
+  exit 0
+fi
+
 # cd <path> && git push ... のパターンを検出
 if [[ -z "$GIT_DIR_FLAG" && "$COMMAND" =~ cd[[:space:]]+([^[:space:];&]+).*git[[:space:]]+push ]]; then
   GIT_DIR_FLAG="${BASH_REMATCH[1]}"
