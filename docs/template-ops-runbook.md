@@ -107,6 +107,18 @@ bash scripts/distribute-quality-standards.sh --dry-run
 
 このscriptは `~/.claude/projects/.../memory` を対象にするため、dry-run結果を必ず残してから配布候補にします。
 
+### Conductor / peer ID 動的解決 (ハードコード禁止)
+
+conductor は court バグで再起動するたび peer ID が変わり、旧 ID はゾンビ化する (実例: 2時間弱で `gdbc75iu`/`6milkg5v` → `k84di7l4` → `3hla7koq` → 正 `p51fvyup`、途中 conductor 自身が ghost ID `nxd367mx` を誤周知する事案も発生)。
+
+原則:
+
+- 配布物 (`CLAUDE.md` 各block / `setup.sh` / `scripts/distribute-*.sh` / 共通block / hook) に **conductor・peer ID literal をハードコードしない**。
+- 宛先解決は **`mcp__claude-peers__list_peers` で `CWD=_conductor` の live instance を都度確認**する (= 実際に生きている送信元 `from_id` が真の ID)。**手動周知は不信頼** (ghost ID 誤周知の前例)。
+- 課名→peer ID 解決が必要な dispatch / CronCreate では `peer-id-lookup` skill を使う。
+- 配布物・CLAUDE.md 変更時は、新規に peer ID literal が混入していないか確認する (2026-06-11 スキャン時点で配布 payload にハードコード無し、混入を防ぐ lint/guard は将来候補)。
+- transient state (`status.md` / memory handoff snapshot) に当座の conductor ID を書くのは可だが、それは時点情報であり恒久参照源にしない。
+
 ## Hook Safety
 
 - HookはClaudeの判断ではなくクライアント側で実行されるガードレールです
