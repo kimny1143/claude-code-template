@@ -51,7 +51,10 @@ mued|/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/.claude/skills
 native|/Users/kimny/Dropbox/_DevProjects/mued/mued_v2/apps/.claude/skills
 SNS|/Users/kimny/Dropbox/_DevProjects/mued/threads-api/.claude/skills
 dsp|/Users/kimny/Dropbox/_DevProjects/_mued-dsp/.claude/skills
+product|/Users/kimny/Dropbox/_DevProjects/_product/.claude/skills
 "
+# product課: 組織再編 v2 新設 (native/occur 畳み先・PR 出す課)。org 棚卸し F5 (2026-07-02) で
+#   distribute-claude-md-blocks.sh には有るが本 script TARGETS に未登録=不整合を検出し追加。
 # occur課: 2026-06-11 closed (Q3=a 組織再編 v2)。配布対象から除外。
 # 再開時はリストへ復活: occur|/Users/kimny/Dropbox/_DevProjects/_mued-occur/.claude/skills
 
