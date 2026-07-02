@@ -16,7 +16,7 @@
 | **frontend-design** | G1 | Anthropic 公式 (anthropics/skills) | 全 gate PASS・実行面ゼロ | ★**ADOPT** (最優先・最安全) |
 | **ui-design-brain** | G2 | community (carmahhawwari, MIT, 830★) | SKILL.md clean・実行面ゼロ | **CONDITIONAL ADOPT** (components.md 通読後) |
 | theme-factory | G1 | Anthropic 公式 | PASS (価値=10 preset のみ) | ADOPT 可 (任意・補助) |
-| **clone-website** | G3 | community (JCodesMore, MIT, 24.6k★) | 技術面 clean・**法務/利用規約リスク大** | ⚠**HOLD (kimny/法務 gate)** |
+| **clone-website** | G3 | community (JCodesMore, MIT, 24.6k★) | 技術面 clean・**法務/利用規約リスク大** | ⚠**HOLD→見送り** (conductor 判断) |
 | **brand-design-md** | G2 | community (zephyrwang6, 94★, **license無**) | **Gate3 FAIL** (未pin npx 二段依存) | ✕**REJECT as-is** (代替=直 vendor) |
 | canvas-design | (G1隣接) | Anthropic 公式 | clean だが静的画像専用=LP非該当 | SKIP (scope外) |
 | G4 / G5 候補 | G4/G5 | — | insight recon で**候補なし** | 未充足のまま記録 |
@@ -82,6 +82,8 @@
 2. **導入フットプリント**: 単体では非機能 — Next.js+shadcn+Tailwind scaffold 前提。採用 = template 全体統合 or 大幅 adapt + npm deps 継承。
 
 **推奨**: **verbatim 複製目的では ADOPT せず kimny/法務 gate へ**。「デザイン参照抽出」が欲しいなら skillui (DOM→token 抽出・verbatim 複製しない・insight recon 記載) 等の方が用途適合。そもそも G3「参照移植」は Claude Design 製品側の機能で skill 不足でない可能性 (Chief reconcile 中) = 本 skill の中心性自体が低下しうる。
+
+> ★conductor 判断 (2026-07-02): HOLD より一段強く **見送り (現時点 非採用)**。理由=(1) 主用途=他サイト verbatim 複製=IP/ToS リスクが MUED brand と非整合・複製ツール常備の need が薄い (2) Chief reconcile 通り参照移植は Claude Design 製品でカバー=**現に need がない**。将来 自社/許諾サイト限定の例外用途が出たら**個別 gate で足りる**。
 
 ### ✕REJECT as-is: brand-design-md (G2 ブランド token)
 
