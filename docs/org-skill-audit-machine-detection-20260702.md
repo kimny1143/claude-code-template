@@ -4,6 +4,7 @@
 - スコープ: **skill の機械検出のみ** (①未登録 ②hash drift ③残登録 ④課間重複)。memory/durable 層監査 (#1) は Chief/Fable 担当ゆえ**本レポート対象外**。design gap 採否 (kimny QA 待ち) とも**別線**。
 - 手法: 既存 script (`audit-skills-lock.sh` / `audit-peer-drift.sh`) + read-only enumeration (find/shasum、**新規 script 開発ゼロ・commit なし・peer file 不変更**)。対象 = template + 15 workspace。
 - 前提確認: `/Users/kimny/Dropbox/_DevProjects` は `/Volumes/strage/_DevProjects` への symlink = 両 script のパス解決 OK (パス不整合は finding でない)。
+- ★owner 訂正 (2026-07-02 conductor): 本文中の **「LP」= `glasswerks-lp` workspace (物理実体) を指すが、旧 LP 課は 2026-06-11 に content 課へ統合済** (`current-organization.md`)。F2/F4 の LP divergent skill = content の LP spinup 文脈ゆえ、intent 確認は **content 課経由** (旧 LP peer は非存在)。findings 自体は有効・owner ラベルのみ訂正。
 
 ---
 
@@ -28,14 +29,16 @@
 - **tier-judge**: template + 大半 peer = `dd339bd2`、**SNS のみ `a3e75eab` (divergent)**。
 - 解釈: 両 skill は編集・再配布されたが (a) `skills-lock.json` の再lock 漏れ (b) **SNS が配布を取りこぼし** (SNS=threads-api は marker 無・from_id silent-partition の常連課、既知パターンと一致)。
 - 対応: (a) 意図確認後 `audit-skills-lock.sh --update --confirm` で再lock (CCO 可・template 内) (b) SNS へ再配布 = conductor dispatch。
+- ★intent verify 済 (2026-07-02): template on-disk `peer-id-lookup` = **意図的 commit の結果** (#88 "sync mapping table from conductor PR #294"・未commit 変更なし) → **再lock 安全** (lock が意図的編集に lag しているだけ)。`tier-judge` は template では lock と一致 (dd339bd2) = drift なし → template 再lock 不要、SNS のみ再同期対象。conductor workspace の tier-judge 未commit 変更は conductor-local ゆえ conductor が commit/discard 判断。**推奨 sequencing = 再lock (現行版へ) と SNS 再配布を同時に** (旧版で lock しない)。
 
 ### F2. LP — 共有 skill 4件の divergent copy (②)
 - LP (glasswerks-lp) は **全 realdir (symlink ゼロ)**。共有 skill を**コピー保持**しており `copywriting` `lp-optimizer` `remotion` `seo-audit` の 4件が canonical から drift。
 - ★**audit-peer-drift.sh では不可視** (同 script は共通4 skill しか見ない)。今回の全 skill enumeration で初検出。
-- 対応: LP のローカル編集か旧コピーかを LP課で intent 確認 → canonical へ戻すか、意図的差分なら canonical 側へ反映。conductor→LP dispatch。
+- 対応: ローカル編集か旧コピーかを **content 課** (glasswerks-lp 所有・旧 LP 統合先) で intent 確認 → canonical へ戻すか、意図的差分なら canonical 側へ反映。conductor→content dispatch。
 
 ### F3. common-claude-md-blocks — lock drift (② 想定内)
 - template の `common-claude-md-blocks` が lock と drift = block 編集で想定内 (既知)。意図確認後 `--update --confirm` で再lock (CCO 可)。
+- ★intent verify 済 (2026-07-02): 現行 on-disk = **意図的 commit の結果** (#112 block15 等・未commit 変更なし) → **再lock 安全**。
 
 ### F4. 同名 divergent 重複 + renamed fork (① + ④)
 - **note-article-post**: `SNS` と `conductor` に**別内容の同名 skill** (distinct-hash=2)。同名衝突 → 参照混乱リスク。命名 disambiguate or 統合を要検討。

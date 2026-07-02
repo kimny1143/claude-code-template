@@ -4,7 +4,7 @@ department: management
 activity: active
 status: clean
 current_task: 全 workspace 横断 skill 棚卸し (機械検出パート・Chief brief #4・conductor dispatch) **完了** = レポート `docs/org-skill-audit-machine-detection-20260702.md`。要対応 finding 5件 (F1-F5・修正は各peer/conductor側)。別線: デザインスキル dispatch = standby (PR#123/#124/#125・kimny 採否待ち)。
-next_action: 機械検出レポートを conductor へ (Chief findings と合流)。修正は CCO 不可 (cross-repo write 不可)=conductor→各peer dispatch: F1 SNS 再配布+lock再更新 / F2 LP 4共有skill drift intent確認 / F4 note-article-post 同名衝突。CCO 可分=F1/F3 の template 内 `--update --confirm` 再lock (意図確認後)。継続 OPEN: デザイン skill kimny 採否待ち / hygiene 残 [[project_next_session_hygiene_queue]]。
+next_action: conductor が advisory browser 抽出後に findings 詳細処理 (Chief findings 合流)。**CCO intent verify 済**: peer-id-lookup(#88)/common-claude-md-blocks(#112) 現行 on-disk=意図的 commit・未commit 無=**再lock 安全** / tier-judge は template で lock 一致=drift 無 (SNS のみ). **再lock 実行は conductor GO 待ち** (SNS 再配布と同時 sequencing 推奨・単独先行しない)。F2/F4 owner=**content 課** (旧 LP 統合先) 訂正済。修正 dispatch は conductor。継続 OPEN: デザイン skill kimny 採否待ち / hygiene 残 [[project_next_session_hygiene_queue]]。
 blocked_by: なし (監査完了・kimny 採否待ち=非同期)
 urgency: low
 action_owner: kimny (採否) ← conductor 回付
