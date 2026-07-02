@@ -32,10 +32,10 @@
     "peer-id-lookup": {
       "source": "claude-code-template",
       "sourceType": "internal-common",
-      "computedHash": "3368e4370a2faffd4e7ef36edfeb283d76e0464c1542e0b6502275873abc198d",
+      "computedHash": "bbd30e17db28caba0226061a470692fdfeeb99a5f4c0ed498fc4fb84bb652017",
       "distributedAt": "2026-04-26",
       "distributedBy": "scripts/distribute-skills.sh",
-      "lastAuditedAt": "2026-05-27",
+      "lastAuditedAt": "2026-07-02",
       "lastAuditedBy": "scripts/audit-skills-lock.sh --update"
     },
     "tier-judge": {
@@ -117,9 +117,11 @@
     "common-claude-md-blocks": {
       "source": "claude-code-template",
       "sourceType": "local",
-      "computedHash": "f94c793a20b76ccb1d7d9b748d45c7bc0c7b0af3067fada10d39c88dbc1b56d7",
+      "computedHash": "d5078447c0774439be58e9117b79c8d2d684d0c59376275f4e4b48e21c96a815",
       "distributedAt": "2026-05-27",
-      "distributedBy": "scripts/audit-skills-lock.sh --update"
+      "distributedBy": "scripts/audit-skills-lock.sh --update",
+      "lastAuditedAt": "2026-07-02",
+      "lastAuditedBy": "scripts/audit-skills-lock.sh --update"
     },
     "copywriting": {
       "source": "claude-code-template",
