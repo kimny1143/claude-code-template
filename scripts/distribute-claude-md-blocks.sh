@@ -104,7 +104,7 @@ def replace_section(content: str, block_id_str: str, block_content: str) -> tupl
         + "<!-- DO NOT EDIT THIS SECTION DIRECTLY. Source: template課/.claude/skills/common-claude-md-blocks/blocks/"
         + block_id_str
         + ".md -->\n"
-        + "<!-- Distribute via: scripts/distribute-claude-md-blocks.sh -->\n\n"
+        + "<!-- Distribute via: claude-code-template/scripts/distribute-claude-md-blocks.sh (実体は claude-code-template repo。配布先 repo には存在しない) -->\n\n"
         + block_content.rstrip() + "\n"
     )
     # 出力 format 正規化: END marker 前に \n 保証 (input format 不問で同 output)
