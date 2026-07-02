@@ -4,8 +4,8 @@
     "freee-api-skill": {
       "source": "freee/freee-mcp",
       "sourceType": "github",
-      "computedHash": "1b6cf34026879a33e88d28811fb87ca2e3ad05a9dd59564ea1ff2a4fd2006e3f",
-      "lastAuditedAt": "2026-05-27",
+      "computedHash": "4a7ccf4b627f3340674df5d29b83ea107a8c2448a4c4c9c4a3d868c7384c73c8",
+      "lastAuditedAt": "2026-07-03",
       "lastAuditedBy": "scripts/audit-skills-lock.sh --update"
     },
     "stripe-best-practices": {
@@ -339,6 +339,13 @@
       "computedHash": "e9596b4d8c877954a9350596c1f885b2e4112485a202f3e9848416d8fa30b19f",
       "distributedAt": "2026-05-27",
       "distributedBy": "scripts/audit-skills-lock.sh --update"
+    },
+    "peer-checkout": {
+      "source": "claude-code-template",
+      "sourceType": "internal-common",
+      "computedHash": "810026a8cf392b59efed1c7ad76770f58cbe1c71a802d0d7cbfff9be0924ce78",
+      "distributedAt": "2026-07-03",
+      "distributedBy": "scripts/distribute-skills.sh"
     }
   }
 }

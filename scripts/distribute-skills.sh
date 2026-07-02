@@ -33,6 +33,7 @@ COMMON_SKILLS=(
   "tier-judge"
   "plan-mode-policy"
   "pwa-dashboard"
+  "peer-checkout"
 )
 
 # 配布対象課（template課自身は除外、全14課 = audit-peer-drift.sh の 13 peer + conductor）
