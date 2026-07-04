@@ -85,6 +85,7 @@ git check-ignore -v .claude/settings.local.json
 詳細手順は常時コンテキストに置かず、必要時に読む。
 
 - Template ops runbook: `docs/template-ops-runbook.md`
+- 受託案件 engagement flow runbook (template課=受託テンプレ `gw-contract-template`+本フロー管理者): `docs/drafts/engagement-repo-flow-runbook-20260703.md`。client 資産の中立性 (MUED/glasswerks 参照を client repo に持ち込まない) + secrets 非焼込み + MUED-side に client 情報を書き出さない厳守。詳細=[[project_jutaku_engagement_flow]]
 - 最新整理報告:
 
 @docs/claude-code-template-ops-improvement-20260512.md
