@@ -57,3 +57,14 @@
 1. **テンプレ恒久 home**: (A) private GitHub repo 新設〔推奨・kimny gate〕/ (B) 当面 local tracked git repo / (C) 現状 Dropbox 直管理〔版管理なし・非推奨〕。いずれも前提として、テンプレ内の**実クライアント spec を placeholder 化**し README の案件言及を中立化する「テンプレ化」が必要。
 2. engagement peer を restart script に載せるか（推奨: 載せない＝ephemeral 維持）。
 3. cowork aggregation への時限案件の載せ方（消滅を stall 誤検知しない標識）。
+
+## テンプレ home 確定時に適用する queued 編集
+
+テンプレ恒久 home（Open Q #1）が確定したら、以下をまとめて「テンプレ化」バッチで適用する。home 決定まで live テンプレ（現 Dropbox 原本）は触らない。
+
+1. **実クライアント spec を placeholder 化**（現テンプレの `docs/spec/` に実案件 spec が残存）。
+2. テンプレ home 用 README の案件言及を中立化（reusable テンプレとして client-agnostic に）。
+3. **【D3 / 2026-07-04・kimny 批准・Chief 正本 `_chief/decisions/jutaku-web/`】受託テンプレ CLAUDE.md 技術規約に stack 標準 carve-out を1行追記**（Next 指定は既存ゆえ追記が主）。proposed 文言:
+   > - **標準 stack は上記 Next.js 構成。WordPress は例外**（客名指し＋予約コア〔審査/仮押さえ〕不要のシンプル案件のみ・都度見積。理由: 予約コアが plugin 型を外れ custom PHP 化し、WP は状態が git 外でエージェント保守モデルが破綻するため）。
+
+   ※ 受託テンプレ共通規約の変更は kimny 承認必須だが本 D3 は kimny 批准済。適用時は Tier3 相当（受託ライン全案件に波及）で conductor 経由。
