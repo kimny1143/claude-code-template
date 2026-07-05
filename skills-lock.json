@@ -29,6 +29,13 @@
       "lastAuditedAt": "2026-05-27",
       "lastAuditedBy": "scripts/audit-skills-lock.sh --update"
     },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "well-known",
+      "computedHash": "1c85d2efae03f05ebef44501999cefe6d294a8ad310705506fdfe08f19c36a47",
+      "lastAuditedAt": "2026-07-05",
+      "lastAuditedBy": "CCO manual — Tier1 template課 local trial (audit=design-skill-acceptance-audit-20260702.md, deepdive=design-skill-deepdive-brief-20260705.md). local-only: SHARED_SKILLS/COMMON_SKILLS 非追加"
+    },
     "peer-id-lookup": {
       "source": "claude-code-template",
       "sourceType": "internal-common",
