@@ -1,0 +1,478 @@
+<title>デザインスキル採否 — before/after で見る効果</title>
+<style>
+  :root {
+    --paper:    #eef0ec;
+    --surface:  #f8f9f6;
+    --surface-2:#ffffff;
+    --text:     #191d1e;
+    --muted:    #5c6566;
+    --faint:    #8a9291;
+    --line:     #dde0da;
+    --line-2:   #cbcfc7;
+    --accent:   #0f766e;
+    --accent-ink:#0b5952;
+    --accent-soft:#d6e9e5;
+    --slop:     #7b7ea0;
+    --slop-a:   #8b7ff0;
+    --slop-b:   #5b8def;
+    --slop-bg:  #f2f1f8;
+    --good:     #2f7d5b;
+    --warn:     #a9682a;
+    --shadow:   0 1px 2px rgba(20,30,28,.06), 0 6px 20px rgba(20,30,28,.06);
+    --radius:   14px;
+    --mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper:    #101314;
+      --surface:  #171b1c;
+      --surface-2:#1d2223;
+      --text:     #e7eae7;
+      --muted:    #9aa3a2;
+      --faint:    #6c7574;
+      --line:     #262c2d;
+      --line-2:   #333b3b;
+      --accent:   #4fd1c5;
+      --accent-ink:#7fe0d7;
+      --accent-soft:#123833;
+      --slop:     #a6a8c8;
+      --slop-a:   #9d92f5;
+      --slop-b:   #6f9bf0;
+      --slop-bg:  #1c1b26;
+      --good:     #56c08c;
+      --warn:     #d69a5c;
+      --shadow:   0 1px 2px rgba(0,0,0,.3), 0 8px 26px rgba(0,0,0,.34);
+    }
+  }
+  :root[data-theme="light"] {
+    --paper:#eef0ec; --surface:#f8f9f6; --surface-2:#ffffff; --text:#191d1e; --muted:#5c6566;
+    --faint:#8a9291; --line:#dde0da; --line-2:#cbcfc7; --accent:#0f766e; --accent-ink:#0b5952;
+    --accent-soft:#d6e9e5; --slop:#7b7ea0; --slop-a:#8b7ff0; --slop-b:#5b8def; --slop-bg:#f2f1f8;
+    --good:#2f7d5b; --warn:#a9682a; --shadow:0 1px 2px rgba(20,30,28,.06),0 6px 20px rgba(20,30,28,.06);
+  }
+  :root[data-theme="dark"] {
+    --paper:#101314; --surface:#171b1c; --surface-2:#1d2223; --text:#e7eae7; --muted:#9aa3a2;
+    --faint:#6c7574; --line:#262c2d; --line-2:#333b3b; --accent:#4fd1c5; --accent-ink:#7fe0d7;
+    --accent-soft:#123833; --slop:#a6a8c8; --slop-a:#9d92f5; --slop-b:#6f9bf0; --slop-bg:#1c1b26;
+    --good:#56c08c; --warn:#d69a5c; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 26px rgba(0,0,0,.34);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--text);
+    font-family: var(--sans); line-height: 1.62;
+    -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: clamp(20px, 5vw, 56px) clamp(16px, 4vw, 40px) 96px; }
+  .read { max-width: 680px; }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 14px;
+  }
+  h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.12; letter-spacing: -.02em; margin: 0 0 14px; text-wrap: balance; font-weight: 720; }
+  h2 { font-size: clamp(20px, 3vw, 25px); line-height: 1.2; letter-spacing: -.015em; margin: 56px 0 6px; text-wrap: balance; font-weight: 680; }
+  h3 { font-size: 16px; margin: 0 0 8px; font-weight: 680; letter-spacing: -.01em; }
+  p  { margin: 0 0 14px; color: var(--text); }
+  .lead-sub { color: var(--muted); font-size: 17px; margin: 0 0 4px; }
+  .meta { font-family: var(--mono); font-size: 12.5px; color: var(--faint); margin-top: 18px; }
+  .section-note { color: var(--muted); font-size: 14.5px; margin: 0 0 22px; max-width: 680px; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  strong { font-weight: 680; }
+
+  /* ---- lead punchline card ---- */
+  .lead {
+    margin-top: 30px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+  }
+  .lead-top { padding: 22px clamp(18px,3vw,26px); border-bottom: 1px solid var(--line); }
+  .lead-top .label { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+  .lead-rec { margin: 8px 0 0; font-size: 17.5px; line-height: 1.5; }
+  .lead-rec b { color: var(--accent-ink); }
+  .lead-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .lead-cell { padding: 20px clamp(18px,3vw,26px); }
+  .lead-cell + .lead-cell { border-left: 1px solid var(--line); }
+  .lead-cell .name { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--text); }
+  .lead-cell .tag { display: inline-block; margin-left: 8px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .06em; padding: 2px 7px; border-radius: 999px; vertical-align: 1px; }
+  .tag.go   { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+  .tag.cond { color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent); }
+  .lead-cell .role { font-size: 14px; color: var(--muted); margin-top: 8px; }
+
+  /* ---- demo comparison ---- */
+  .demo { margin-top: 20px; }
+  .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 0 0 6px; }
+  .panel {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .panel-head {
+    display: flex; align-items: center; gap: 8px; padding: 10px 14px;
+    border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: 11.5px;
+    letter-spacing: .04em; text-transform: uppercase;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 999px; flex: none; }
+  .panel.before .panel-head { color: var(--slop); }
+  .panel.before .dot { background: var(--slop); }
+  .panel.after  .panel-head { color: var(--accent); }
+  .panel.after  .dot { background: var(--accent); }
+  .stage { padding: 18px; flex: 1; display: flex; }
+
+  /* generic caricature ground used INSIDE before demos */
+  .mock { width: 100%; border-radius: 9px; overflow: hidden; }
+
+  /* -- advisory hero: BEFORE (deliberate AI-slop) -- */
+  .m-hero-b {
+    background: var(--surface-2); border: 1px solid var(--line);
+    text-align: center; padding: 26px 18px; font-family: var(--sans);
+  }
+  .m-hero-b .kick { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--slop); margin-bottom: 10px; }
+  .m-hero-b h4 { font-size: 21px; font-weight: 700; margin: 0 0 8px; line-height: 1.15; color: var(--text); }
+  .m-hero-b p  { font-size: 12.5px; color: var(--muted); margin: 0 auto 14px; max-width: 34ch; }
+  .m-hero-b .cta {
+    display: inline-block; font-size: 12.5px; font-weight: 600; color: #fff;
+    padding: 9px 18px; border-radius: 999px;
+    background: linear-gradient(90deg, var(--slop-a), var(--slop-b));
+  }
+  .m-hero-b .stats { display: flex; justify-content: center; gap: 22px; margin-top: 20px; }
+  .m-hero-b .stat b { display: block; font-size: 20px; font-weight: 750; color: var(--text); font-variant-numeric: tabular-nums; }
+  .m-hero-b .stat span { font-size: 9.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--faint); }
+
+  /* -- advisory hero: AFTER (intentional) -- */
+  .m-hero-a {
+    background: var(--surface-2); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    padding: 22px 20px; position: relative; overflow: hidden;
+  }
+  .m-hero-a .kick { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  .m-hero-a h4 { font-size: 22px; font-weight: 720; margin: 0 0 10px; line-height: 1.12; letter-spacing: -.01em; color: var(--text); max-width: 15ch; }
+  .m-hero-a h4 em { font-style: normal; color: var(--accent-ink); }
+  .m-hero-a p { font-size: 12.5px; color: var(--muted); margin: 0 0 16px; max-width: 30ch; }
+  .m-hero-a .cta { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 640; color: #fff; background: var(--accent); padding: 9px 16px; border-radius: 8px; }
+  .m-hero-a .cta::after { content: "→"; }
+  /* signature: fader/level motif from the studio's own world */
+  .faders { position: absolute; right: 16px; bottom: 14px; display: flex; align-items: flex-end; gap: 5px; height: 46px; opacity: .9; }
+  .faders i { width: 5px; background: var(--accent); border-radius: 2px; display: block; opacity: .55; }
+  .faders i:nth-child(1){ height: 40%; } .faders i:nth-child(2){ height: 72%; opacity:.8; }
+  .faders i:nth-child(3){ height: 55%; } .faders i:nth-child(4){ height: 92%; opacity: 1; }
+  .faders i:nth-child(5){ height: 34%; } .faders i:nth-child(6){ height: 64%; opacity:.8; }
+
+  /* -- MUEDear form: BEFORE -- */
+  .m-form { background: var(--surface-2); border: 1px solid var(--line); padding: 18px; font-family: var(--sans); }
+  .m-form .ftitle { font-size: 14px; font-weight: 700; margin: 0 0 14px; color: var(--text); }
+  .ph { height: 34px; border-radius: 7px; border: 1px solid var(--line-2); background: var(--surface); display: flex; align-items: center; padding: 0 11px; font-size: 11.5px; margin-bottom: 10px; }
+  .ph.b { color: var(--faint); } /* placeholder-only, no label */
+  .fieldrow { margin-bottom: 12px; }
+  .flabel { display: block; font-size: 10.5px; font-weight: 640; color: var(--muted); margin-bottom: 5px; font-family: var(--mono); letter-spacing: .02em; }
+  .flabel .req { color: var(--warn); }
+  .ph.a { color: var(--text); border-color: var(--line-2); }
+  .badgerow { display: flex; gap: 6px; margin: 4px 0 14px; flex-wrap: wrap; }
+  .bdg { font-size: 9.5px; font-weight: 640; padding: 2px 8px; border-radius: 999px; letter-spacing: .02em; }
+  .bdg.r1{ background:#f4d5d5; color:#a23; } .bdg.r2{ background:#d5e6f4; color:#26c; }
+  .bdg.r3{ background:#e6d5f4; color:#83c; } .bdg.r4{ background:#f4ecd5; color:#a82; }
+  .bdg.s-on  { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good); }
+  .bdg.s-wait{ background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+  .bdg.s-off { background: color-mix(in srgb, var(--faint) 20%, transparent); color: var(--muted); }
+  .btnrow { display: flex; gap: 9px; margin-top: 4px; }
+  .mb { font-size: 11.5px; font-weight: 620; padding: 8px 14px; border-radius: 7px; border: 1px solid transparent; }
+  .mb.same { background: var(--line-2); color: var(--text); flex: 1; text-align: center; } /* equal weight */
+  .mb.pri { background: var(--accent); color: #fff; }
+  .mb.sec { background: transparent; color: var(--muted); border-color: var(--line-2); }
+  .clickhere { font-size: 11px; color: var(--slop-b); margin-top: 10px; text-decoration: underline; }
+  .spinner { width: 22px; height: 22px; border-radius: 999px; border: 3px solid var(--slop-bg); border-top-color: var(--slop); margin: 8px auto 2px; animation: spin 1s linear infinite; }
+  .spin-cap { text-align: center; font-size: 10px; color: var(--faint); margin-bottom: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner, .sk::after { animation: none !important; } }
+  /* skeleton (after) */
+  .sk { height: 34px; border-radius: 7px; background: var(--line); position: relative; overflow: hidden; margin-bottom: 10px; }
+  .sk::after { content:""; position:absolute; inset:0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface-2) 60%, transparent), transparent); transform: translateX(-100%); animation: shim 1.4s ease-in-out infinite; }
+  @keyframes shim { to { transform: translateX(100%); } }
+  .helper { font-size: 10px; color: var(--faint); margin: -4px 0 12px; }
+
+  /* annotation deltas under a comparison */
+  .delta { list-style: none; padding: 14px 16px; margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  .delta li { display: grid; grid-template-columns: 18px 1fr; gap: 9px; font-size: 13.5px; padding: 5px 0; color: var(--muted); }
+  .delta li b { color: var(--text); font-weight: 620; }
+  .delta li::before { content: "→"; color: var(--accent); font-family: var(--mono); }
+  .caveat { font-size: 12.5px; color: var(--faint); margin: 12px 2px 0; font-style: italic; }
+
+  /* inject cards */
+  .cards2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+  .card .cname { font-family: var(--mono); font-size: 13px; font-weight: 640; color: var(--text); margin: 0; }
+  .card .csrc  { font-family: var(--mono); font-size: 10.5px; color: var(--faint); margin: 3px 0 12px; }
+  .card ul { margin: 0; padding: 0; list-style: none; }
+  .card li { position: relative; padding-left: 16px; font-size: 13.5px; color: var(--muted); margin-bottom: 7px; line-height: 1.45; }
+  .card li b { color: var(--text); font-weight: 620; }
+  .card li::before { content: ""; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 999px; background: var(--accent); }
+
+  /* alt table */
+  .tablewrap { overflow-x: auto; margin-top: 16px; border: 1px solid var(--line); border-radius: var(--radius); }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 13px; }
+  th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--mono); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--faint); font-weight: 600; background: var(--surface); }
+  tr:last-child td { border-bottom: none; }
+  td .nm { font-family: var(--mono); font-weight: 600; color: var(--text); }
+  .verdict { font-family: var(--mono); font-size: 11px; font-weight: 640; white-space: nowrap; }
+  .v-hold { color: var(--warn); } .v-no { color: var(--faint); } .v-have { color: var(--accent); }
+
+  /* recommendation block */
+  .rec { margin-top: 18px; background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: 22px clamp(18px,3vw,26px); box-shadow: var(--shadow); }
+  .rec .rlabel { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin: 0 0 8px; }
+  .rec p { font-size: 15.5px; }
+  .rec .honest { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line-2); }
+  .rec .honest p { font-size: 13.5px; color: var(--muted); margin-bottom: 8px; }
+  .rec .honest b { color: var(--text); }
+
+  /* decision options */
+  .opts { display: grid; gap: 10px; margin-top: 16px; }
+  .opt { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: baseline; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 15px 18px; }
+  .opt.pick { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
+  .opt .key { font-family: var(--mono); font-weight: 700; font-size: 13px; color: var(--accent); }
+  .opt .t { font-size: 14px; }
+  .opt .t b { font-weight: 660; }
+  .opt .t .why { display: block; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .recbar { font-family: var(--mono); font-size: 11px; color: var(--good); margin-top: 4px; }
+
+  hr.rule { border: none; border-top: 1px solid var(--line); margin: 0; }
+  .foot { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 12px; color: var(--faint); }
+
+  @media (max-width: 720px) {
+    .lead-grid, .cmp, .cards2 { grid-template-columns: 1fr; }
+    .lead-cell + .lead-cell { border-left: none; border-top: 1px solid var(--line); }
+    .m-hero-b .stats { gap: 14px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="read">
+    <p class="eyebrow">デザインスキル採否 · 深掘り brief</p>
+    <h1>「デザインスキル」を入れると、UIの出力は具体的にどう変わるか</h1>
+    <p class="lead-sub">実物のファイルを全文読み、"入れる前 / 入れた後" を実際の画面で比べました。インストール・実行は一切していません。</p>
+    <p class="meta">CCO（template課）· 2026-07-05 · kimny 理解・採否用 · 安全監査（7/2）の続編＝「中身と効果」</p>
+  </header>
+
+  <!-- LEAD: punchline first -->
+  <section class="lead">
+    <div class="lead-top">
+      <span class="label">ひとことで</span>
+      <p class="lead-rec">候補は2つ、<b>役割が違う</b>。まず <b>frontend-design（公式・最安全）</b>を社内で1件だけ試すのが、理解重視で一番わかりやすい。<b>ui-design-brain</b> は既存の道具と重なるので「出し比べ1回」で要否を判断。急ぎではありません。</p>
+    </div>
+    <div class="lead-grid">
+      <div class="lead-cell">
+        <span class="name">frontend-design</span><span class="tag go">まず試す</span>
+        <p class="role">見た目の<b>方向づけ</b>。「AIが作るとどれも同じ顔」を避け、その案件だけの意図的なデザインにさせる手引き。動くコードゼロ＝最安全。</p>
+      </div>
+      <div class="lead-cell">
+        <span class="name">ui-design-brain</span><span class="tag cond">出し比べ後</span>
+        <p class="role">部品の<b>作法</b>。ボタン・表・フォーム60種の正しい作り方。品質の下限は上がるが、既導入の道具と役割が重複。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXAMPLE 1 -->
+  <h2>実例 ①　顧問(advisory) LP のヒーロー</h2>
+  <p class="section-note"><strong>frontend-design</strong> の効き方。左＝スキル無しでAIが出しがちな既定の見た目／右＝スキルありで「この案件だけ」に寄せた見た目。<span style="color:var(--faint)">※機構を示す実演（特定の実ページの複製ではありません）</span></p>
+
+  <div class="demo">
+    <div class="cmp">
+      <div class="panel before">
+        <div class="panel-head"><span class="dot"></span>入れる前 — AIの既定</div>
+        <div class="stage">
+          <div class="mock m-hero-b">
+            <div class="kick">Advisory</div>
+            <h4>Strategic advisory<br>for modern teams</h4>
+            <p>We help ambitious teams unlock growth with data-driven strategy.</p>
+            <span class="cta">Get Started</span>
+            <div class="stats">
+              <div class="stat"><b>500+</b><span>Clients</span></div>
+              <div class="stat"><b>10+</b><span>Years</span></div>
+              <div class="stat"><b>24/7</b><span>Support</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel after">
+        <div class="panel-head"><span class="dot"></span>入れた後 — 意図的</div>
+        <div class="stage">
+          <div class="mock m-hero-a">
+            <div class="kick">音楽制作スタジオ／事業顧問</div>
+            <h4>次の一手を、<em>スタジオの言葉</em>で決める。</h4>
+            <p>制作現場を知る顧問が、レーベル戦略から座組みまで伴走します。</p>
+            <span class="cta">戦略相談を予約</span>
+            <div class="faders" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ul class="delta">
+      <li><b>主題を確定してから設計</b>：「どの顧問か（音楽制作スタジオ向け）／読者／このページの唯一の仕事＝相談予約」を先に決める。左は主題不在で誰のLPにも見える。</li>
+      <li><b>署名要素(signature)</b>：主題の世界から1つ引く（右下＝ミキサーのフェーダー）。左は「大きな数字トリオ」＝典型テンプレ。</li>
+      <li><b>コピーは能動態で一貫</b>：「戦略相談を予約」→押した後の通知も「予約しました」。左の "Get Started" は何が起きるか曖昧。</li>
+      <li><b>AI定番3クラスタを回避</b>：紫→青グラデ／Inter既定／全部中央寄せ、を名指しで避ける。左はまさにそれ。</li>
+    </ul>
+    <p class="caveat">正直に：frontend-design は「良いデザインを保証」しません。<em>没個性から遠ざける</em>効き方です。案件情報が薄ければ効果も薄く、堅いB2Bで「冒険を1つ」が外すこともあります（＝トレードオフ）。</p>
+  </div>
+
+  <!-- EXAMPLE 2 -->
+  <h2>実例 ②　MUEDear のアカウント作成画面</h2>
+  <p class="section-note"><strong>ui-design-brain</strong> の効き方。左＝部品の作法を知らないAIが出しがちな作り／右＝60部品カンペを参照した作り。使いやすさ・アクセシビリティの<strong>下限</strong>が上がる。</p>
+
+  <div class="demo">
+    <div class="cmp">
+      <div class="panel before">
+        <div class="panel-head"><span class="dot"></span>入れる前 — 素人ミス</div>
+        <div class="stage">
+          <div class="mock m-form">
+            <p class="ftitle">Create account</p>
+            <div class="ph b">Name</div>
+            <div class="ph b">Email</div>
+            <div class="ph b">Password</div>
+            <div class="badgerow">
+              <span class="bdg r1">Free</span><span class="bdg r2">Beta</span>
+              <span class="bdg r3">New</span><span class="bdg r4">Pro</span>
+            </div>
+            <div class="spinner" aria-hidden="true"></div>
+            <div class="spin-cap">Loading…</div>
+            <div class="btnrow">
+              <span class="mb same">Submit</span>
+              <span class="mb same">Cancel</span>
+            </div>
+            <div class="clickhere">Click here for terms</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel after">
+        <div class="panel-head"><span class="dot"></span>入れた後 — 丁寧な作り</div>
+        <div class="stage">
+          <div class="mock m-form">
+            <p class="ftitle">アカウントを作成</p>
+            <div class="fieldrow">
+              <span class="flabel">お名前 <span class="req">*</span></span>
+              <div class="ph a">山田 花子</div>
+            </div>
+            <div class="fieldrow">
+              <span class="flabel">メールアドレス <span class="req">*</span></span>
+              <div class="ph a">you@example.com</div>
+              <div class="helper">確認メールをお送りします</div>
+            </div>
+            <div class="badgerow">
+              <span class="bdg s-on">有効</span><span class="bdg s-wait">確認待ち</span><span class="bdg s-off">未設定</span>
+            </div>
+            <div class="sk" aria-hidden="true"></div>
+            <div class="btnrow">
+              <span class="mb pri">アカウントを作成</span>
+              <span class="mb sec">キャンセル</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <ul class="delta">
+      <li><b>ラベルは入力欄の上に常設</b>：左のplaceholderのみは入力すると消える＋読み上げNG。右は上にラベル＋書式ヒント。</li>
+      <li><b>ボタンに主従の階層</b>：左は同じ見た目が2つ（どっちが本命か不明）。右は「作成＝主／キャンセル＝従」。</li>
+      <li><b>skeleton ＞ spinner</b>：予測できる画面はグルグルでなく骨組み表示（300ms後）。</li>
+      <li><b>意味のあるバッジ配色</b>：左は虹色で意味なし。右は有効／確認待ち／未設定を限定色で。</li>
+      <li><b>文言</b>：「Submit / Click here」→「アカウントを作成」等、動詞始まりで具体的に。</li>
+    </ul>
+    <p class="caveat">正直に：この効果の多くは既導入の <b>ui-ux-pro-max</b> でも部分的に得られます。ui-design-brain の限界利益＝「コードを書く前に参照する60部品の事前知識」。重複が大きければ、入れる価値も小さい。</p>
+  </div>
+
+  <!-- WHAT EACH INJECTS -->
+  <h2>各スキルが「注入するもの」の実体</h2>
+  <p class="section-note">どちらも<strong>動く部分ゼロの手引き文書</strong>（読み込むとClaudeの作り方が変わるだけ）。ファイル全文を精読済み。</p>
+  <div class="cards2">
+    <div class="card">
+      <p class="cname">frontend-design</p>
+      <p class="csrc">Anthropic 公式 · SKILL.md + LICENSE の2ファイル · 実行面ゼロ</p>
+      <ul>
+        <li><b>プロセス規律</b>：作る前に「色4-6色・書体・レイアウト・署名要素」の設計案を先出し → <b>自己批判</b>（"誰にでも出す既定値か?"）→ 改訂 → 初めてコード化。</li>
+        <li><b>美学の方向づけ</b>：hero＝主張。大数字テンプレ・意味のない番号01/02/03・装飾モーションを戒める。</li>
+        <li><b>AI定番3クラスタを名指しで回避</b>（クリーム+serif+テラコッタ／黒+アシッド/朱／新聞風hairline）。</li>
+        <li><b>コピー規律</b>：能動態・動作名は全フロー一貫・エラーは謝らず具体的に。</li>
+      </ul>
+    </div>
+    <div class="card">
+      <p class="cname">ui-design-brain</p>
+      <p class="csrc">community · MIT · 830★ · SKILL.md + components.md(1263行) · 実行面ゼロ</p>
+      <ul>
+        <li><b>60部品の作法カンペ</b>：各部品に「別名・定義・best-practice・よくあるレイアウト」。例＝Button/Form/Table/Modal/Empty state…</li>
+        <li><b>品質の下限</b>：8pxグリッド・WCAG AA・44pxタッチ・フォーカス可視・hover/focus/active/disabled 全実装。</li>
+        <li><b>禁止アンチパターン集</b>：虹色バッジ・placeholderのみ・等weightボタン・予測画面へのspinner・"Click here"…</li>
+        <li><b>5つのスタイルpreset</b>（Modern SaaS / Apple風Minimal / Enterprise / Creative / Data Dashboard）。</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ALTERNATIVES -->
+  <h2>代替候補（他サイト複製系は除外）</h2>
+  <p class="section-note">source-eval 的に確認。結論＝上の2つを超える「今すぐ入れる代替」は無い。</p>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>候補</th><th>出所</th><th>実体と実行面</th><th>評価</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="nm">Taste Skill</span></td>
+          <td>community<br>MIT · 37k★</td>
+          <td>「anti-slop」skill群。core散文は3ダイヤル(equalizer)方式で frontend-design より操作的。ただし repo に script + <b>画像生成(外部API)</b>＝実行面が広い。</td>
+          <td class="verdict v-hold">core散文のみ<br>なら低リスク／<br>suite全体は保留</td>
+        </tr>
+        <tr>
+          <td><span class="nm">brand-guidelines</span></td>
+          <td>Anthropic公式</td>
+          <td>中身は「<b>Anthropic社の</b>ブランド専用」(orange/Poppins・Lora・スライド向け)。汎用ではない。</td>
+          <td class="verdict v-no">そのままは無価値<br>／MUED独自版の<br>雛形としてのみ</td>
+        </tr>
+        <tr>
+          <td><span class="nm">ui-ux-pro-max</span></td>
+          <td>community 88k★</td>
+          <td>50+スタイル/161パレットの推論エンジン。最大手。</td>
+          <td class="verdict v-have">★既に導入済<br>＝2つが補完<br>する相手</td>
+        </tr>
+        <tr>
+          <td><span class="nm">clone-website / brand-design-md</span></td>
+          <td>community</td>
+          <td>法務リスク／未固定の外部実行（7/2監査済）。</td>
+          <td class="verdict v-no">見送り継続</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RECOMMENDATION -->
+  <h2>正直な推奨</h2>
+  <div class="rec">
+    <p class="rlabel">CCO の一本推奨</p>
+    <p><b>frontend-design を社内(template課)で1件だけ試験導入</b> → 実案件で before/after を体感 → 良ければ全課へ。<b>ui-design-brain は「ui-ux-pro-max のみ vs +追加」で1回出し比べ</b>て、差が出てから採否。Taste／brand-guidelines／複製系は今回見送り。</p>
+    <div class="honest">
+      <p><b>過剰に推しません：</b>frontend-design は良デザインを保証せず「没個性回避」の効き方。ui-design-brain は既存と重複するので、差が薄ければ<b>入れない判断も正しい</b>。</p>
+      <p><b>「今は何も足さない」も妥当：</b>LPの本筋は Claude Design 製品の再走で、この導入はそれを止めない<b>おまけの補強</b>。最大手 ui-ux-pro-max は既にあります。</p>
+    </div>
+  </div>
+
+  <!-- DECISION -->
+  <h2>判断の選択肢</h2>
+  <div class="opts">
+    <div class="opt pick">
+      <span class="key">a</span>
+      <span class="t"><b>推奨どおり</b>（frontend-design を社内お試し／ui-design-brain は出し比べ後／他は見送り）<span class="recbar">推奨でOK</span></span>
+    </div>
+    <div class="opt">
+      <span class="key">b</span>
+      <span class="t"><b>frontend-design を最初から全課へ</b><span class="why">お試しを飛ばして即展開したい場合。</span></span>
+    </div>
+    <div class="opt">
+      <span class="key">c</span>
+      <span class="t"><b>今は何も足さない</b><span class="why">Claude Design 製品の再走に集中する。</span></span>
+    </div>
+    <div class="opt">
+      <span class="key">d</span>
+      <span class="t"><b>もっと詳しく知りたい点がある</b><span class="why">気になる箇所を指定してください。</span></span>
+    </div>
+  </div>
+
+  <p class="foot">根拠 = docs/drafts/design-skill-deepdive-brief-20260705.md（中身と効果）＋ design-skill-acceptance-audit-20260702.md（安全）。実物3ファイルは public GitHub から再取得し全文精読。</p>
+
+</div>
