@@ -34,6 +34,7 @@ COMMON_SKILLS=(
   "plan-mode-policy"
   "pwa-dashboard"
   "peer-checkout"
+  "ui-mock-fidelity"
 )
 
 # 配布対象課（template課自身は除外、全14課 = audit-peer-drift.sh の 13 peer + conductor）
