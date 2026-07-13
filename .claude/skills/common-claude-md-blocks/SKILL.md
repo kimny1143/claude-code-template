@@ -2,7 +2,7 @@
 name: common-claude-md-blocks
 disable-model-invocation: true
 description: >
-  経営部4課 (template/conductor/freee/cowork) → 5/18 cognitive load v3 rollout で全14課に展開された CLAUDE.md 共通block管理 skill (19 blocks)。
+  経営部4課 (template/conductor/freee/cowork) → 5/18 cognitive load v3 rollout で全14課に展開された CLAUDE.md 共通block管理 skill (20 blocks)。
   source of truth: blocks/*.md、各課CLAUDE.mdへ marker-bounded section置換でdistribute。
   使用タイミング: (1) 共通block仕様変更時 (2) 14課横断 policy 同期時 (3) cognitive load v3 trial期間 (5/19-5/29) で各 peer marker 挿入 PR 完納時。
 ---
@@ -22,7 +22,7 @@ description: >
 - **diff PRサイズ削減**: 共通block変更時に 1 PR (template課) だけでmaintainance完納、各課PRは distribute実行のみ
 - **5/14 launch期との整合**: 5/13 launch期間中は変更最小化、Phase 2 完納で post-launch 運用負荷低減
 
-## blocks/*.md (19 共通blocks)
+## blocks/*.md (20 共通blocks)
 
 ### Phase 2 0.1 (PR #56): 基盤 8 blocks
 
@@ -76,6 +76,19 @@ proposal `proposal-conductor-cognitive-load-v3.md` (c) hybrid path、 kimny 5/18
 - `docs/templates/pull-request-template.base.md` (共通 PR テンプレ base、 機械チェック / 成果物 verify 別 section)
 - `docs/dev-flow-gate-rollout-20260520.md` (migration note)
 - `.claude/skills/tier-judge/SKILL.md` (Step 4 = UI/成果物変更検出 + evidence 必須 warning)
+
+### Phase 2 0.5 (2026-07-13 kimny 直命): UI mock fidelity 1 block
+
+UI 実装が承認モックから乖離する事故 (native/plugin 反復・"雰囲気移植で近い止まり") の再発防止機構。kimny 直命「1ミリもずらさず同一にせよ」→ 全課共通規律化 (Tier3 gate 通過済)。手順本体は `ui-mock-fidelity` skill (COMMON_SKILLS/rsync 配布・全14課到達)、本 block は常時 on の薄い DoD pointer。
+
+| block | source spec | 内容 |
+|-------|-------------|------|
+| `20-ui-mock-fidelity.md` | proposal-ui-mock-fidelity-mechanism-20260713.md | UI DoD (mock pin + 数値移植 + diff 添付 + conductor vet + mock hygiene)。scope = 新規UI面/re-skin/視覚再設計のみ (既存微修正=コピー1行/padding/バグ は対象外)。native=100%厳格 / web=pixel-perfect。詳細手順は `ui-mock-fidelity` skill。 |
+
+関連 artifacts:
+- `.claude/skills/ui-mock-fidelity/SKILL.md` (手順本体・単一正本・COMMON_SKILLS 配布)
+- `docs/drafts/ui-mock-fidelity-vessel-distribution-plan-20260713.md` (vessel + 配布計画)
+- ★**marker 挿入 = 別 follow-up**: block 20 marker は各 peer CLAUDE.md に未挿入ゆえ `distribute-claude-md-blocks.sh` では未 land。skill (器A) を先行配布し、block marker 挿入は conductor が段取る (dsp/SNS/blender は全 marker 無で対象外)。
 
 ### evidence base (Phase 2 0.2)
 
@@ -152,6 +165,7 @@ cd template課/
 | 1.2 | distribute production run で全14課 marker-bounded sections sync | 5/22+ |
 | 1.3 | 開発フロー改善 MTG 論点1 quality gate (block 19-character-gate + 共通 PR テンプレ + tier-judge Step 4) | 5/20 |
 | 2.0 | cognitive load 圧縮 (19 block source を 582→312行へ圧縮 = 散文/履歴/Why削減・format+ルール core 保持。block14 conductor専用再配置。後続: block16 hook 化 PR-B) | 5/29 |
+| 2.1 | UI mock fidelity 機構配布 (block 20 追加 + `ui-mock-fidelity` skill を COMMON_SKILLS 追加・kimny 直命 Tier3。skill 先行配布 / block 20 marker 挿入は follow-up) | 7/13 |
 
 ## 関連リソース
 

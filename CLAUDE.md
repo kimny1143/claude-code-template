@@ -92,4 +92,4 @@ git check-ignore -v .claude/settings.local.json
 
 ## Common blocks (source of truth)
 
-共通blockの正本は `.claude/skills/common-claude-md-blocks/blocks/` (19 blocks)、`scripts/distribute-claude-md-blocks.sh` で各peerへ配布する。template課 (CCO) 自身はこれらを CLAUDE.md にロードしない (slim維持 — 2026-05-29 空placeholder marker 削除、behavior変化なし)。`14-conductor-active-judgment` は conductor専用配布。
+共通blockの正本は `.claude/skills/common-claude-md-blocks/blocks/` (20 blocks)、`scripts/distribute-claude-md-blocks.sh` で各peerへ配布する。template課 (CCO) 自身はこれらを CLAUDE.md にロードしない (slim維持 — 2026-05-29 空placeholder marker 削除、behavior変化なし)。`14-conductor-active-judgment` は conductor専用配布。
