@@ -227,7 +227,7 @@ conductor 観点2への回答。全 workspace の `settings*.json*` を機械走
 +    "Edit(~/.config/gh/hosts.yml)",
 ```
 
-> ★kimny 判断ポイント: これらへの正当な書込 (例: 別ツールでの `~/.npmrc` 更新を Claude にやらせたい等) が運用上あるなら除外。無ければ追加推奨。**deny は正当作業も止める**ため、ここだけ運用実態の確認が要る。
+> ★kimny 判断ポイント (conductor 独立検証で nuance 追加・懸念はほぼ解消): この `Edit(...)` deny は **Claude の Edit/Write ツールが該当ファイルを直接編集するのを止めるだけ**。**Bash 経由の正当な認証操作 (`gh auth login`, `npm login` 等) は Bash 実行ゆえブロックされない**。→「正当作業が止まる」懸念はほぼ moot = **credential file への Claude 直接注入だけを防ぐ** (まさに欲しい防御)。∴ 安全に採用可。残る判断は「Claude に直接 `~/.npmrc` 等を編集させる運用が実在するか」のみ (通常は無い)。
 
 ### B-3. 任意 (掃除・非 security) — allow の死にノイズ除去
 
@@ -257,9 +257,13 @@ conductor 観点2への回答。全 workspace の `settings*.json*` を機械走
 
 ## 7. 未確定事項 (明示)
 
-- **`auto` mode (classifier) の厳密挙動**: deny 絶対優先は `acceptEdits` で実証したが、`--permission-mode auto` の Sonnet classifier 経路まで同一 sentinel で叩いてはいない。deny は mode より前段で評価される設計ゆえ同結論のはずだが、`auto` 経路の直接実測は未。**conductor も独立検証中**、突き合わせ推奨。
+- **`auto` mode (classifier) の厳密挙動**: deny 絶対優先は `acceptEdits` で実証。`--permission-mode auto` の classifier 経路の直接実測は未だが、deny は mode より前段で評価される設計ゆえ同結論。→ **conductor も独立検証し「acceptEdits 実証が auto もカバー・許容残差」と合意** (2026-07-18)。fix 影響なし。
 - **`Write(path)` 非強制の挙動が始まった正確な version** (§2-e): warning 追加=2.1.210 は確定。非強制そのものの開始時期は未特定 (2.1.210 以前と推定)。fix には影響なし。
-- **B-2 の対象 path への正当書込の有無** = kimny 運用判断 (§B-2)。
+- **B-2 の対象 path への正当書込の有無** = kimny 運用判断 (§B-2)。ただし conductor nuance で**懸念はほぼ解消** (Bash auth 操作は非ブロック・Claude 直接編集のみ防ぐ)。
+
+## 7-1. conductor 独立検証結果 (2026-07-18)
+
+conductor が fix diff × 実 settings.json 突合で **B-1 / B-3 = 正確・可逆・実ファイル一致**と PASS。実測結論 (`Write(path)`死 / `Edit(path)`効 / deny絶対優先 / `//`vs`/`) 採用。「double-slash malformed」疑いの撤回も受理。**B-2 = 採用推奨** (上記 nuance 付き)。→ **kimny gate へ queue 済** (security ゆえ他 auth 群と束ねず独立提示・承認後に kimny 本人 or conductor が適用)。
 
 > ★訂正: interim で「`_conductor` の `Read(//...)` double-slash が malformed の疑い」と報告したが、§2-f の実証で **`//` は正しい絶対パス記法**と判明。**撤回**する。
 
