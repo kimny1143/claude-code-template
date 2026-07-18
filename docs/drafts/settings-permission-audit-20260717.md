@@ -37,7 +37,8 @@
 ## 2. 仕様照合 (一次情報 — 実証済)
 
 > **照合方法**: (1) 導入済バイナリ `~/.local/share/claude/versions/{2.1.202,2.1.203,2.1.212}` の enforcement コードを直接 strings 抽出 (2) **実際に settings を渡して claude を走らせ、write/read が通るか通らないかを観測** (3) 公式 CHANGELOG (`~/.claude/cache/changelog.md`)。
-> Fable サブエージェント (`claude-code-guide`) は応答が得られなかったため、CCO が上記一次手法で直接確定した。**推測ではなく、この機で観測した挙動**。
+> Fable サブエージェント (`claude-code-guide`) は初期照合では応答が得られず、CCO が上記一次手法で直接確定した。**推測ではなく、この機で観測した挙動**。
+> ★**事後 corroboration (2026-07-18)**: 遅れて perm-spec (Fable) の完全レポートが到着。公式 docs (`code.claude.com/docs/en/permissions.md` / `permission-modes.md`) の verbatim 引用 + バイナリ抽出 (`EPr`/`lg` 関数) + 独立 11 probe で **CCO 実測の全結論を裏付け**。加えて **(b) を精緻化** → CCO が当初「`Write(*)` は `Edit(*)` に包含され冗長」としていた点を **誤りと指摘** → CCO 再実測 (clean room・default mode) で確認し**訂正済** (下記 (b))。2つの独立経路 (CCO 実測 + perm-spec docs+binary+probe) が一致=確度は高い。
 
 ### (a) ★`Write(<path>)` は file permission check で **完全に死んでいる** — 実証
 
@@ -54,8 +55,14 @@ sentinel path で実測。`--permission-mode acceptEdits` 下:
 
 ### (b) ★bare `Write(*)` は **tool 単位 wildcard = 有効** (死んでいない) — 実証
 
-`Write(*)` と `Glob(*)` は warning を**出さない** (実測: `Write(**/CLAUDE.md)` 等の path 形は warning を出すが `Write(*)` は無警告)。`*` は path glob ではなく tool 全体の wildcard として扱われる。
-→ **allow の `Write(*)` `Edit(*)` はどちらも有効**。§4 の「配布物の `Write(*)` 掃除」は**不要** (死にルールではない)。`Edit(*)` があれば Write もカバーされるため `Write(*)` は厳密には冗長だが、有効な allow ゆえ**放置で害なし** (削除は任意・非 security)。
+`Write(*)` と `Glob(*)` は warning を**出さない** (実測: `Write(**/CLAUDE.md)` 等の path 形は warning を出すが `Write(*)` は無警告)。`*` は path glob ではなく tool 全体の wildcard として扱われる (parser が `Tool(*)`/`Tool()` を path 無しの bare tool-name rule に正規化 → path 照合器に届かず死なない)。
+→ **allow の `Write(*)` `Edit(*)` はどちらも有効**。§4 の「配布物の `Write(*)` 掃除」は**不要** (死にルールではない)。
+
+★**訂正 (perm-spec 独立検証 + CCO 再実測で確定・当初 "冗長" は誤り)**: **`Edit(*)` は Write ツールを包含しない**。path 統合 (`Edit(path)` が全ファイル編集ツールをカバー) は **path 単位ルール限定**であって、bare `Edit(*)` ≡ bare `Edit` = **Edit ツールのみ**。実測 (default mode・clean room・headless):
+- allow `Edit(*)` のみ → Write ツール呼び出しは **DENIED** (未許可)
+- allow `Write(*)` のみ → Write ツール呼び出しは **承認・ファイル作成**
+
+→ ∴ **`Write(*)` は load-bearing** = 新規ファイル Write の無プロンプト承認に必須。**削除すると Write が毎回プロンプト化**する挙動変化。修正 diff (§6) は `Write(*)` を**残す** (B-3 は path 形の死に `Write(<path>)` のみ除去)。
 
 ### (c) ★deny は auto-approve モードでも **絶対優先** — 実証
 
@@ -163,8 +170,8 @@ conductor 観点2への回答。全 workspace の `settings*.json*` を機械走
 
 | ルール | 判定 | 備考 |
 |---|---|---|
-| `Bash(*)` `Read(*)` `Edit(*)` `Write(*)` `Glob(*)` `Grep(*)` `WebSearch(*)` | 有効 | tool 単位 wildcard。全許可 |
-| `Write(*)` | 有効・**冗長** | `Edit(*)` が Write ツールを包含。削除可・非 security |
+| `Bash(*)` `Read(*)` `Edit(*)` `Glob(*)` `Grep(*)` `WebSearch(*)` | 有効 | tool 単位 wildcard。各 tool を全許可 |
+| `Write(*)` | 有効・**load-bearing (非冗長)** | Write ツールの無プロンプト承認に必須。`Edit(*)` は Write を包含しない (§2-b 訂正) → **削除不可** |
 | `Edit(**/Dropbox/_DevProjects/**)` `Edit(**/.claude/**)` `Edit(**/CLAUDE.md)` | 有効・**冗長** | `Edit(*)` が全 path を包含済 |
 | `Write(**/Dropbox/_DevProjects/**)` `Write(**/.claude/**)` `Write(**/CLAUDE.md)` | ★**死に** | warning 3行の出所。同 path の Edit 版あり=無害ノイズ |
 | `WebFetch(domain:github.com)` 他 domain / `mcp__...` 各種 | 有効 | tool 単位 allowlist |
@@ -252,6 +259,13 @@ conductor 観点2への回答。全 workspace の `settings*.json*` を機械走
 ### 可逆性
 
 全て `permissions` 配列の要素 add/remove のみ。適用前の settings.json を控えれば 1 コピーで完全復元。スキーマ変更・他キー変更なし。
+
+### ★残存リスク (fix しても残る・明示) — `Bash(*)` は独立した書込経路
+
+`Edit(~/.ssh/**)` deny は **Claude の Edit/Write ツール**が該当 path を触るのを止めるだけ。**`Bash(*)` allow は別経路**で、`echo ... >> ~/.ssh/authorized_keys` や `cp`、python/node スクリプト経由の間接書込は Edit/Read deny の**対象外** (Read/Edit deny が効くのは `cat`/`head`/`sed` 等の認識済ファイルコマンドのみで、任意サブプロセスの間接 I/O は不可視)。dangerous-ops hook も ~/.ssh への bash 書込は捕捉しない (force-push / rm -rf / DROP / secret 外部送信 のみ)。**完全遮断は OS レベル sandbox が要る**。
+- **緩和 (peer 特有)**: ピアは `--permission-mode auto` 稼働で、auto mode は blanket `Bash(*)` allow を drop し classifier 経路に回す (perm-spec 確認) → peer での Bash 書込経路は緩和される。
+- **live なまま**: kimny の**個人 default / acceptEdits セッション**では `Bash(*)` は生きており、この経路は開いている。
+→ 本 fix は「Claude ツール経由の鍵書込」を塞ぐ第一歩として妥当だが、**Bash 経由まで塞ぐには sandbox 検討が別途**。security posture として report に残す。
 
 ---
 
