@@ -4,7 +4,7 @@
 - **依頼元**: conductor (2026-07-18/19)。banner Tier2 review 中に CCO が発見した repo-hygiene finding を CCO owner で proposal 化。
 - **扱い (conductor 裁定 2026-07-19)**: **CCO+conductor の技術 conformance**。kimny 戦略 gate では**ない** (価格/認証/DBスキーマ破壊/本番設定/外部サービス/組織/policy 免除のどれにも非該当)。kimny には **FYI awareness のみ**。3案いずれも Branch Protection Policy の「保護 trunk」意図への conformance であって policy 免除ではない。
 - **escalation caveat**: 移行手順に (a) shipped plugin / 本番 download への実リスク、または (b) fleet Branch Protection Policy 本体の改訂 (全 dsp 系波及) が出たら、その時点で kimny gate 化。→ 本 proposal は両方に**該当しない** (§5 参照) ので CCO+conductor で確定可。
-- **status**: ✅ 完成 (dsp Q1-Q3 回答反映済・§9) → conductor 技術 go 待ち。残 open = 統合 branch naming の最終確定 (CCO 推奨 `develop`・conductor 確認)。
+- **status**: ✅ **conductor 技術 GO 受領 (2026-07-19)**。naming 裁定 = **`main`** (fleet 一貫性・§6-1)。free plugin hermetic 実査で MUEDsp 退行リスク消滅 (§1-3b)。rename mechanical 裏取り済 (§3-2)。→ **Phase 1 を dsp へ実行 dispatch する段階** (CCO 設計 handoff + Tier2 review)。
 
 ---
 
@@ -12,7 +12,7 @@
 
 - **問題**: `mued-dsp` は **plugin product source が per-plugin feat branch にしか無く、統合 trunk が不在**。無料2種 (MUEDlim/MUEDsat) が同居する branch がゼロ。`main` は停止した docs fork (release から分岐・65 commit stale)。→ **IP-loss リスク** (feat branch 消滅 = product source 消失) + reviewable trunk 不在 + fleet Branch Protection Policy との乖離。
 - **Phase 1 (即時・conductor greenlight 済)**: **統合 branch を確立**し全 plugin source を集約。★**丸 branch merge でなく subdir graft** で行う (feat を丸 merge すると release の新しい MUEDsp core を退行させるため)。**加算的・history 書換なし・feat branch 残置ゆえ現 shipped-build path 不変・可逆**。★ship path は各 plugin 自己完結の **Xcode project** で subdir 内に閉じる (top-level CMake 非依存) ため、subdir graft だけで ship 経路ごと移動する (dsp Q1 確認)。
-- **Phase 2 (長期・CCO 推奨)**: **2-(ii) = 統合 branch を正式 protected trunk と宣言 + default branch rename、`main` は docs salvage 後 retire**。2-(i) main reconcile は分岐が大きく無益ゆえ非推奨。
+- **Phase 2 (長期・CCO 推奨)**: **2-(ii) = 統合 branch を正式 protected trunk と宣言**。旧 `main` は docs salvage 後 archive、**統合 branch を `main` に rename** (conductor 裁定 naming=`main`・fleet 一貫)。2-(i) main reconcile は分岐が大きく無益ゆえ非推奨。全 ref 操作・history 不変。
 - **CI 破壊リスク低**: workflows は ref-agnostic (`branches:[main]` 固定 filter 無し) を実査確認。
 
 ---
@@ -43,13 +43,20 @@
 - `main` ↔ `release`: **分岐** (release は main から +66 ahead、main は release から +6 ahead = 互いに相手に無い commit を持つ非 linear)。`main` = docs 主体で **2026-07-10 停止**。
 - 両 feat の merge-base = `dec2b93` (#200・dist gitignore hardening)。muedlim +17 / muedsat +23。
 
-### 1-3. ★共通 core (MUEDsp) の branch 間差分 = 退行リスク源
+### 1-3. 共通 core (MUEDsp) の branch 間差分 — 丸 merge なら退行源 / subdir graft なら無関係
 
-`release/0.1.1-alpha` の MUEDsp は feat 2 branch より**新しい**:
-- `plugin/MUEDsp/scripts/makepkg-mac.sh` (+70 行差)
-- `plugin/MUEDsp/tests/test_glue_compressor.cpp` (差分)
+`release/0.1.1-alpha` の MUEDsp は feat 2 branch より**新しい** (`plugin/MUEDsp/scripts/makepkg-mac.sh` +70・`tests/test_glue_compressor.cpp` 差分)。
+→ もし **feat branch を丸ごと merge**すれば release の新しい MUEDsp を退行させる ([[feedback_merge_target_duplication_check]])。**丸 merge を避ける根拠**。ただし採用手法 (subdir graft) では plugin/MUEDsp を触らない (release 版維持) ゆえ、この差分は graft に**無関係**になる。
 
-→ **feat branch を丸ごと merge すると release の新しい MUEDsp を退行させる** ([[feedback_merge_target_duplication_check]] の典型)。移行手法の設計上の肝 (§6)。
+### 1-3b. ★free plugin は hermetic = MUEDsp 依存ゼロ (CCO 実査確認・退行リスク構造的に消滅)
+
+dsp supply → **CCO 実査で確認**: MUEDlim/MUEDsat は **完全自己完結**で `plugin/MUEDsp/` を一切参照しない:
+- **MUEDlim**: 自前 `plugin/MUEDlim/dsp/` に muedsp:: core の**コピー10本** (BodyLimiter/BoxcarCascade/EnvelopeFollower/GRReleaseShaper/ISPPeakDetector/LookaheadBuffer/LoudnessMeter/PreLimiterClipper/RunningMinHold/TPLimiter)。
+- **MUEDsat**: 自前 `plugin/MUEDsat/dsp/Saturator.h`。
+- `git grep` で両 plugin の source/build から `plugin/MUEDsp`・`../MUEDsp` 参照 = **ゼロ** (実査済)。
+- これは Chief 北極星#1「DSP surface-independence (header-only muedsp:: を surface 毎コピー)」の帰結 = **設計上 shared linkage を持たない**。
+
+→ ★**release の MUEDsp version は free 2種に無関係**。subdir graft は hermetic subdir を移動するだけ = MUEDsp core に API 差があっても **free plugin は壊れない・reconcile 不要**。§1-3 の退行リスクは subdir graft では**構造的に発生しない**。
 
 ### 1-4. CI / build tooling 所在 (dsp Q1/Q2 回答で確定)
 
@@ -85,7 +92,17 @@
 
 - `main` は「保護された trunk」の実質を**既に失っている** (docs 停止 fork・product .cpp 不在)。名ばかり main を残すと「main から clone/build すると plugin が無い」誤解を再生産する。
 - **CI 破壊リスク低** (§1-4): workflows に `main` 固定 filter 無しを実査確認。default branch 変更で壊れる hardcoded 依存が薄い。→ ただし実行時に `grep -rn "branches:" .github plugin/.github` と `grep -rn "github.event.schedule\|'main'\|\"main\"" .github plugin/.github` の **final scan を手順に含める** (CLAUDE.md の GitHub Actions branch/schedule filter gotcha discipline)。
-- GitHub default branch rename の影響範囲 = (a) PR base 既定 (b) branch protection ルールの移設 (c) open PR の re-target (d) clone HEAD。いずれも一度きりの設定変更で、既存 shipped artifact には無影響。
+- GitHub default branch rename の影響範囲 = (a) PR base 既定 (b) branch protection (c) open PR の re-target (d) clone HEAD。いずれも一度きりの設定変更で、既存 shipped artifact には無影響。
+
+### 3-2. ★rename mechanical 裏取り (conductor 依頼・CCO 実査 2026-07-19)
+
+`gh` で `kimny1143/mued-dsp` を実査 → **「旧 main archive → 統合 branch を main に rename」は mechanically clean・ただし 3 点を手順化すれば snag なし** (fallback `develop` は不要):
+
+1. ★**現 `main` は branch protection **無し**** (`gh api .../branches/main/protection` = 404 "Branch not protected")。→ Phase 2 の protection は**移設でなく net-new 設定** (§6-11)。rename は protection に阻まれない。
+2. ★**open PR 3件** — うち 2 件が base=`main` (`#201` MuedSteel→MUEDsat rename / `#203` sign-and-package orchestrator)、1 件が base=feat (`#202` muedsat-ui-D→rename-muedsteel branch)。GitHub は base branch rename 時に open PR を**自動 retarget** → 放置すると `main` base の 2 件が archive 先を指す。→ **rename 前に明示処理** (#201 close / #203 retarget or 取り込み / #202 fate 確認)＝§6-7。
+3. ★**default は rename 先へ追随**する (現 default=main を archive に rename すると default が archive へ移る) → 統合 branch を main に rename 後、**default を main へ明示再設定**＝§6-9/10。
+
+→ history 書換・force-push は**一切不要** (全て branch rename + tag + 設定変更)。上記 3 点を手順に織り込み済ゆえ **naming=`main` で進行可** (snag なし)。
 
 ---
 
@@ -103,7 +120,7 @@
 |---|---|---|
 | shipped build path 破壊 | **無** | 移行は加算 (graft + 新 branch)。feat branch は残置 → 現 build+notarize+ship は移行中も不変。★ship path (各 plugin 自己完結 Xcode project) は **subdir 内に閉じる**ゆえ subdir graft で ship 経路ごと移動 (top-level CMake 非依存・dsp Q1)。統合 branch が build+ship 実証されるまで feat を退役させない。 |
 | force-push / history 書換 | **不要** | subdir graft + merge commit のみ。rename も履歴不変。 |
-| MUEDsp core 退行 | **回避可** | ★丸 merge を避け subdir graft (MUEDsp は release 版維持)。§6 手順で担保 + build-verify。 |
+| MUEDsp core 退行 | **構造的に非該当** | ★free plugin は hermetic (自前 dsp/ コピー・plugin/MUEDsp 参照ゼロ・§1-3b 実査)。subdir graft は MUEDsp を触らず、free plugin も MUEDsp に依存しない → 退行経路が存在しない。build-verify は green 実証用 (退行検出用ではない)。 |
 | CI 破壊 (rename) | **低** | workflows ref-agnostic。final grep を手順化。 |
 | 可逆性 | **完全** | 統合 branch 削除 / default branch を main に戻すだけで復元。feat branch 温存ゆえ source loss 無し。 |
 | **escalation caveat (a) 本番 download 実リスク** | **非該当** | download 対象は既存 shipped artifact (feat build 由来)。本 proposal はそれを変えない。 |
@@ -119,28 +136,33 @@
 
 ### Phase 1 — 統合 branch 確立 (即時・IP-loss 窓を閉じる)
 
-1. **base 選定 = `release/0.1.1-alpha`** (最新 MUEDsp core + docs・dsp も推奨)。統合 branch 名 = **CCO 推奨: release から新 `develop` を切り trunk にする** (下記理由)。dsp は「base=release の内容」が要件で naming は従う。
-   - *naming 理由*: `release/0.1.1-alpha` を default/trunk に昇格すると「version 名 branch が trunk」= 次版 0.1.2 で trunk 名を変える羽目になり semantically 混乱。**安定名 `develop` (or `trunk`) を release 内容から切り default 化**すれば trunk 名が版に依存しない。最小コスト志向なら release 昇格も可 — conductor 確認事項。
+1. **base 選定 = `release/0.1.1-alpha`** (最新 MUEDsp core + docs・dsp も推奨)。
+   - ★**最終 trunk 名 = `main`** (conductor 裁定 2026-07-19)。CCO の当初 `develop` 推奨 (version 名 branch を trunk にしない) は **`main` でも満たされる** (`main` も version-agnostic) 上、**fleet Branch Protection Policy が全 repo `main`=保護 trunk 標準**ゆえ dsp だけ `develop` は fleet naming 乖離。旧 main は §6-10 で retire ゆえ `main` の名が解放される → 統合 branch を `main` にすれば version-agnostic + fleet 一貫の両取り。
+   - **Phase 1 は working 名で作業** (`develop` or `trunk-wip`・dsp/CCO 任意) → build+verify 通過後に Phase 2 で `main` へ rename (§6-8〜)。
 2. **MUEDlim graft** (丸 merge しない):
    - `feat/muedlim-productize` から **`plugin/MUEDlim/` subdir のみ**を統合 branch へ持ち込む (`git checkout feat/muedlim-productize -- plugin/MUEDlim` 相当)。★**ship path (Xcode project) はこの subdir 内に自己完結**ゆえ graft だけで ship 用 scheme が揃う (dsp Q1)。
    - MUEDsp は**触らない** (release 版維持)。
    - (任意・dev-convenience) top-level から両 free を CMake 一括 build したいなら `plugin/CMakeLists.txt` に `add_subdirectory(MUEDlim)` 追加。**ship (Xcode) には不要** (dsp Q2 = 現状 top-level 未登録・各 plugin standalone CMake)。
 3. **MUEDsat graft**: 同様に `plugin/MUEDsat/` subdir (ship = 自前 Xcode project)。CMake 一括 build 希望時のみ `add_subdirectory(MUEDsat)`。
-4. **build-verify (必須・2 面)**:
+4. **build-verify (必須・2 面・green 実証用)**:
    - (a) **ship path**: 各 plugin の Xcode scheme (`macOS-VST3`/`AUv2`/`AAX`) を統合 branch 上で build → 既存 shipped と同等を確認。
    - (b) **dev/verify**: CMake APP build + 既存 render-verify 再走。
-   - 特に **feat の plugin が release の新しい MUEDsp core (共通 DSP) に依存して壊れないか**を確認 (API 差あれば reconcile)。
+   - ※ MUEDsp 依存による破壊の心配は §1-3b (free plugin hermetic) で構造的に消滅ゆえ、build-verify は「graft 後に green を実証する」目的 (退行検出ではない)。
 5. **可逆性**: この時点で feat branch は無傷。問題あれば統合 branch を捨てて元に戻る。
 
-### Phase 2 — trunk 宣言 (long-term・(C))
+### Phase 2 — `main` へ昇格 (long-term・(C)・全 ref 操作・history 不変)
+
+> ★sequence = 旧 main を archive→名を解放→統合 branch を `main` に rename→default+protection。force-push なし。**§3-2 CCO 実査の GitHub mechanical 前提** (open PR 3件・main 無保護) を織り込む。
 
 6. **main の unique docs を salvage**: `release..main` の main-unique commit (gap#10 limiter 診断/決定 ~3 commit: `f732db3`/`a599e46`/`8ba067c` 等) を統合 branch へ cherry-pick (docs のみ・conflict 小)。
-7. **final CI grep**: `grep -rn "branches:" .github plugin/.github/workflows` + `grep -rn "github.event.schedule\|\bmain\b" .github plugin/.github/workflows` で `main` 固定依存が無いことを再確認 (§3)。ヒットあれば統合 branch 名へ更新。
-8. **GitHub default branch を統合 branch に変更** + branch protection ルールを移設 (main→統合)。
-9. ★**rename 実効 verify (conductor 依頼)**: default 変更後に **CI を 1 回実走** (統合 branch への push か workflow_dispatch) し **緑を確認** — rename が CI trigger を壊していないことを実証してから次へ進む。
-10. **`main` retire**: docs salvage 後、main を archive tag (`archive/main-pre-consolidation`) で残し branch は非保護化 (削除は任意・履歴保全のため tag 推奨)。
-11. **feat branch 退役**: 統合 branch が build+ship 実証後、`feat/muedlim-productize`/`feat/muedsat-ui-D` を archive tag 化 (source は統合 branch にあるため安全)。
-12. **最終検証**: 統合 branch から (a) 全 plugin build (b) notarize (c) MUEDsat DL manifest 突合 (既存 shipped と同一性) → clean で完了。
+7. **★open PR 3件を rename 前に明示処理** (§3-2・auto-retarget 誤爆回避): GitHub は base branch rename 時に open PR を自動 retarget するため、放置すると `main` base の PR が archive 先を指す。→ **rename 前に**: (a) `#201` (MuedSteel→MUEDsat rename・base main) = 統合で MUEDsat 実在ゆえ **superseded 判定→close** (dsp 確認) (b) `#203` (sign-and-package orchestrator・base main・価値あり) = 新 main へ **retarget** (or 統合 branch へ先に取り込み) (c) `#202` (base=feat/rename-muedsteel-to-muedsat) = main rename の影響外だが consolidation stack の一部ゆえ fate を dsp と確認。
+8. **final CI grep**: `grep -rn "branches:" .github plugin/.github/workflows` + `grep -rn "github.event.schedule\|\bmain\b" .github plugin/.github/workflows` で `main` 固定依存が無いことを再確認 (§3・実査済だが実行前再走)。
+9. **旧 main を archive + 名を解放**: 旧 main を **archive tag `archive/main-pre-consolidation`** で保全 → 旧 main branch を `archive/main-pre-consolidation` に **rename** (名を解放)。★注意: 現 default を rename すると **default が rename 先へ移る**ため一時的に archive が default 化 → 次手で戻す。
+10. **統合 branch → `main` に rename** + **default を `main` に設定** (step 9 で移った default を明示的に main へ)。
+11. ★**net-new branch protection を `main` に設定** (§3-2 実査: 現 main は**無保護** = 移設でなく新規設定)。fleet Branch Protection Policy 準拠 (PR 必須・main 直 push 禁止)。
+12. ★**rename 実効 verify (conductor 依頼)**: default 変更後に **CI を 1 回実走** (`main` への push か workflow_dispatch) し **緑を確認** — rename が CI trigger / PR base を壊していないことを実証。
+13. **feat branch 退役**: 新 `main` が build+ship 実証後、`feat/muedlim-productize`/`feat/muedsat-ui-D` を archive tag 化 (source は `main` にあるため安全)。
+14. **最終検証**: 新 `main` から (a) 全 plugin build (b) notarize (c) MUEDsat DL manifest 突合 (既存 shipped と同一性) → clean で完了。
 
 ### Tier / review
 
