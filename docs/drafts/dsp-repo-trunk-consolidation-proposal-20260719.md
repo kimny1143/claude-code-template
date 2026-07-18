@@ -148,6 +148,9 @@ dsp supply → **CCO 実査で確認**: MUEDlim/MUEDsat は **完全自己完結
    - (a) **ship path**: 各 plugin の Xcode scheme (`macOS-VST3`/`AUv2`/`AAX`) を統合 branch 上で build → 既存 shipped と同等を確認。
    - (b) **dev/verify**: CMake APP build + 既存 render-verify 再走。
    - ※ MUEDsp 依存による破壊の心配は §1-3b (free plugin hermetic) で構造的に消滅ゆえ、build-verify は「graft 後に green を実証する」目的 (退行検出ではない)。
+   - ★**fresh 統合 worktree build 前提 (dsp Phase1 実行で判明・runbook/CI 必須 2 step)**: `git worktree add` は submodule を自動 init しない → build 前に **(i) `git submodule update --init plugin/iPlug2`** (未 init だと `parse_config` ModuleNotFound で build script 落ち) **(ii) `iPlug2/Dependencies/IPlug/download-vst3-sdk.sh`** (VST3_SDK は submodule 外の別 download・未取得だと VST3 target が SDK not found)。AAX SDK も同様に別配置。→ **Phase 2 の trunk build CI/再現手順にこの 2 step を含める** ([[project_vst3_au_build_phase2a]])。graft 欠陥ではない (hermetic 検証どおり MUEDsp 依存の退行ゼロ・APP/VST3 clean build)。
+
+**✅ Phase 1 実施結果 (2026-07-19・dsp 実行 → CCO Tier2 review APPROVE `ee9f207`)**: `develop` (release/0.1.1-alpha 起点) に MUEDlim/MUEDsat subdir graft 完了。CCO git 裏取り = subdir 加算のみ・**plugin/MUEDsp 変更 0** (release 版維持)・graft tree md5 が feat head と**完全一致** (banner+nit 込み・drift 0)・feat 残置 (可逆)・banner render が pinned `658da78e` 一致 (両プラグイン develop build)。ship=Xcode VST3 + dev=CMake APP green (dsp evidence)。→ **IP-loss 窓が閉じた** (全 plugin source が単一 develop trunk に集約)。
 5. **可逆性**: この時点で feat branch は無傷。問題あれば統合 branch を捨てて元に戻る。
 
 ### Phase 2 — `main` へ昇格 (long-term・(C)・全 ref 操作・history 不変)
