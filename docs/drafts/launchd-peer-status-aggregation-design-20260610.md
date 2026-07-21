@@ -62,14 +62,11 @@ credential.helper osxkeychain
 
 **(2) `~/.git-credentials` 不在は「PAT が平文保存されていない」ことしか意味しない。** 実効 credential は gh の token。
 
-**(3) token source = keyring 内の classic token。今回の PAT 失効とは別物。**
+**(3) token source は gh 側で管理されており、7/21 に再発行した PAT とは別物。**
 
-```
-✓ Logged in to github.com account kimny1143 (keyring)
-  Token scopes: 'gist', 'read:org', 'repo'
-```
+`gh auth status` で確認できる gh のログイン token は、7/21 に再発行した PAT とは**別の資格情報**であり、**当該 PAT 失効の影響を受けない**。
 
-classic 形式の scope を持つ token が keyring に格納されている。7/21 に kimny が再発行した **Fine-grained PAT (scope でなく per-repo permission 制) とは別物**であり、**gh のログイン token は当該 PAT 失効の影響を受けない**。
+> 実査出力 (token の保管場所・形式・権限範囲) は本 doc が公開 repo 上にあるため転記しない。必要時は各自の環境で `gh auth status` を実行して確認すること。
 
 **(4) ★本 draft が懸念した「launchd 下で環境が痩せる」問題は、config 推論でなく実績で解消済。**
 
@@ -81,7 +78,9 @@ cowork の launchd aggregation は **PAT 失効期間中 (7/19 以降) かつ鍵
 
 = keychain unlock / PATH / HOME が痩せる問題も含め、**実環境で通ることが既存 2 job により経験的に実証済**。上記「残る注意点 1.」の懸念は、設計時点では妥当だったが**実運用で潰れた**と記録する。新設 job も同一 host・同一 helper・同一 remote 種別であれば、移行当日に認証で詰まる公算は低い。
 
-**(5) fleet 横断の認証正本 doc は作らない (conductor 推奨・CCO 同意)。** 実態は「gh helper が実効 / token は keyring / launchd で実証済」の 3 行で尽きており、正本を 1 枚起こすと更新されない stale source を増やす側のコストが上回る。本節の記録で足りる。
+**(5) fleet 横断の認証正本 doc は作らない (conductor 推奨・CCO 同意)。** 実態は「gh helper が実効 / token は gh 管理 / launchd で実証済」の 3 行で尽きており、正本を 1 枚起こすと更新されない stale source を増やす側のコストが上回る。本節の記録で足りる。
+
+> **本 doc の公開範囲に関する注記 (2026-07-21)**: このリポジトリは **PUBLIC** です。本節の初版では実査出力の生ログを転記していましたが、token の保管場所・形式・権限範囲は公開すべき情報ではないため除去しました。以後、認証・権限まわりの実査結果を本リポジトリの doc に書く際は、**結論 (どの経路が実効か・何の影響を受けないか) のみを書き、生出力は転記しない**こと。
 
 ## ★ 設計上の劣化点: stale 通知の Claude-in-the-loop 喪失
 
