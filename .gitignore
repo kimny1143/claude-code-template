@@ -1,5 +1,9 @@
 .DS_Store
 *.zip
+
+# Gumroad Pro ($29) 商品本体 — このリポジトリは PUBLIC。git 管理しない (CLAUDE.md 絶対禁止)
+# 2026-04 に private 前提で commit されたまま 5/10 の public 化で公開されていた (PR #169 で untrack)
+premium/
 __pycache__/
 .venv/
 *.egg-info/
