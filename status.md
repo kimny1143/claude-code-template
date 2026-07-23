@@ -3,14 +3,14 @@ peer: template
 department: management
 activity: active
 status: clean
-current_task: **【他課 PR レビュー 10 本完了 → 手番なし。kimny 判断待ち 2 件で durable 層がブロック中】** レビューは全件返却済 (詳細は各 repo の PR コメントが一次記録・本 repo は PUBLIC のため非記載)。CCO 側で能動的に進められる作業は無く、**本 repo の公開範囲の仕分け (経営情報を含む 6 file の untrack 可否 / 本ファイル自体の公開粒度) の kimny 判断待ち**。
-next_action: **kimny 判断 2 件**: ①公開範囲の棚卸し結果に基づく untrack 可否 ②`status.md` 自体を公開のまま粒度を落として運用するか、untrack して別経路で集約するか。**あわせて kimny 実行待ちが 5 件** (他課の作業がこれで止まっている・いずれも 1〜2 コマンドで解ける類・バッチで解く想定)。判断が出るまで CCO 側の新規着手なし。
-blocked_by: **kimny 判断待ち 2 件 (公開範囲の仕分け・本ファイルの扱い)。これが出るまで durable 層の更新が公開粒度の制約を受ける。** 他課側は kimny 実行待ち 5 件でブロック。
+current_task: **【公開範囲の棚卸し 判断1・2 執行完了 (conductor 承認) → CCO 手番なし。dsp trunk Phase2 はフル鎖証跡待ちで保留】** 判断1=内部 doc の untrack (PR#171)・判断2=公開粒度の許可列挙規約 (PR#172) を完結。他課 PR レビューは継続で全件返却済 (詳細は各 repo の PR コメントが一次記録・本 repo は PUBLIC のため非記載)。
+next_action: **dsp のフル鎖実走証跡待ち → Phase2 trigger 判定を conductor と詰める**。それまで CCO 新規着手なし・レビュー依頼待ち。
+blocked_by: Phase2 = dsp フル鎖証跡待ち (CCO 手番なし・保留中)。org 起因の kimny ブロックはゼロ。
 urgency: low
 action_owner: null
 deadline: null
-expected_next_check_at: 2026-07-22T21:00:00+09:00
-last_update: 2026-07-22T09:30:00+09:00
+expected_next_check_at: 2026-07-23T21:00:00+09:00
+last_update: 2026-07-23T15:00:00+09:00
 evidence: 7/18 settings 権限監査完納: PR#157 merged (`9d39d71`・docs/drafts/settings-permission-audit-20260717.md・277行)。実測手法=導入バイナリ `~/.local/share/claude/versions/{2.1.202,2.1.203,2.1.212}` enforcement 直読 + sentinel path で claude 実走 write/read 観測 + CHANGELOG。確定=`Write(path)`死(2.1.210 warning追加)/`Edit(path)`効/bare`Write(*)`有効/deny絶対優先(acceptEdits実証)/Read(path)deny健在/★path記法=単一`/`=settings相対silent-miss・`~`/`//`=絶対。risk=hook未wire 7 workspace(_conductor含)で素で開・wire済8はCWD-outside block で塞。conductor独立検証PASS(B-1/B-3正確・可逆・実ファイル一致)+B-2採用推奨(Bash auth非ブロック nuance)。**実settings.json md5不変=1933237d3ffe30bb1729503329c9e11c(未タッチ)**。Fable subagent無応答→CCO直接実測で代替(推測潰し)。
 confidence: high
 lane: notification
@@ -18,6 +18,8 @@ lane: notification
 ---
 
 ## Recent events
+
+- 2026-07-23T15:00:00+09:00: **公開範囲棚卸し 判断1・2 を conductor 承認で執行完了 (kimny 判断不要で完結)**。当初「kimny 判断2件+実行5件」で durable 層が止まっていたのを、conductor が債務台帳で引き取り→実測で仕分け直し。**判断1 (PR#171)**=内部 doc 5件を PUBLIC repo から untrack (disk 上には SHA `1a5f010` から復元し byte 一致・gitignore 済＝「消す」でなく「公開から外す」)+1件は buyer-value ゆえ一般化して残す (個人情報 placeholder 化)。**判断2 (PR#172)**=`docs/status-md-public-allowlist.md` 新設 (許可列挙・禁止でなく・本エントリも本規約に準拠して記述)。**リスト仕分けで実測が効いた点**: 当初「実行5件」→ CCO 実測で「gh workflow scope は既済 / #213 は CCO 手番 / rename前処理は Phase2 内」を除いて2件へ→ conductor 検査で UI render 既済 (7/23 朝 kimny PT 承認) を除いて実質1件へ→ dsp が「署名は classifier に止められない (transient・hook でない)」を再実測。**Phase2 (develop→main rename) は保留**: trigger=「trunk からフル鎖 ship 可能」の根拠がまだ「既 build 済 bundle への署名」止まりで、fresh-clone→build→sign のフル鎖証跡が未達 (dsp 依頼中)。本番 notarize は非決定的 classifier ゆえ別項目で残す。**今日の型 (検査・主張・機構が問いたいことより狭い/広い) は自分の作業リストにも当たった**=#213 を記憶で「kimny 実行待ち」と誤分類していた。詳細=[[project_public_repo_role_inversion_20260721]] / [[feedback_publication_vs_durability]]。
 
 - 2026-07-22T09:30:00+09:00: **他課 PR レビュー 10 本完了 (dsp 6 / cowork 4)**。dsp = trunk 統合まわりの出荷経路整備と UI 変更。cowork = 定期ジョブの launchd 移行と排他制御。いずれも Tier2 peer review として実測ベースで返却済み。**共通して見つかった型 = 「検査が、問いたいことと少しずつ違うことを答えている」** (経過時間で生死を判定する / 一部の構成要素だけ見て全体の充足を判定する / 測定失敗を不在と読む)。各 PR の詳細・指摘内容・実測ログは本 repo が PUBLIC のため非記載 (他 repo の PR コメントが一次記録)。
 - 2026-07-22T09:30:00+09:00: **dsp trunk 統合 Phase2 の trigger を張り替え**。当初 trigger だった「実出荷の完了」は kimny 判断 (対象製品の単独出荷見送り) により発生しないことが確定。加えて**当初 trigger はそもそも測る対象を誤っていた** (出荷したかどうかでなく、trunk から出荷できるかが前提だった) ため、新 trigger = 「出荷経路が trunk に載り、そこから実行可能なこと」へ変更 (conductor 裁定)。**CCO 自身の 7/19 判定も射程を訂正** = plugin source については有効だが、出荷経路までは検証していなかった。Phase2 完了条件は「1回の実走」で据え置き、継続的な保護は follow-up として明記。
