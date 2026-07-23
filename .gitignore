@@ -4,6 +4,14 @@
 # Gumroad Pro ($29) 商品本体 — このリポジトリは PUBLIC。git 管理しない (CLAUDE.md 絶対禁止)
 # 2026-04 に private 前提で commit されたまま 5/10 の public 化で公開されていた (PR #169 で untrack)
 premium/
+
+# 内部経営 doc — private 前提で書かれ 5/10 の public 化で公開されていた (conductor 承認 2026-07-23 で untrack)。
+# disk 上には残す (durability) が公開しない。詳細=docs/drafts/DO-NOT-COMMIT-public-repo-exposure-audit-20260721.md
+docs/cco-12mo-goal-20260526.md
+docs/cco-review-cfo-monetization-baseline-20260526.md
+docs/trilateral-codex-report-cco-input-20260526.md
+docs/growth-skill-audit-20260526.md
+docs/security-audit-report-20260331.md
 __pycache__/
 .venv/
 *.egg-info/
