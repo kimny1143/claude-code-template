@@ -3,14 +3,14 @@ peer: template
 department: management
 activity: active
 status: clean
-current_task: **【公開範囲の棚卸し 判断1・2 執行完了 (conductor 承認) → CCO 手番なし。dsp trunk Phase2 はフル鎖証跡待ちで保留】** 判断1=内部 doc の untrack (PR#171)・判断2=公開粒度の許可列挙規約 (PR#172) を完結。他課 PR レビューは継続で全件返却済 (詳細は各 repo の PR コメントが一次記録・本 repo は PUBLIC のため非記載)。
-next_action: **dsp のフル鎖実走証跡待ち → Phase2 trigger 判定を conductor と詰める**。それまで CCO 新規着手なし・レビュー依頼待ち。
-blocked_by: Phase2 = dsp フル鎖証跡待ち (CCO 手番なし・保留中)。org 起因の kimny ブロックはゼロ。
+current_task: **【dsp trunk Phase2 = 統合設計完了・runbook durable 化 → salvage harness 1件の dsp 判断待ち・rename は Tier2 review 待機】** Phase2 は rename でなく diverged 2本の content 統合と判明 (pre-check で plan と現実の乖離検出)。8コミット disposition 確定・PR triage 完了・salvage unit 完了 (実測確認済)・runbook は dsp trunk に durable 化。残 = harness 1件の cover 判断 (dsp domain・conductor の name-search を CCO が function-search に拡張して格上げ) + rename(default+protection) を dsp が co-sign + 実行直前 compare 後に実行。判断1・2 (公開範囲 untrack + 許可列挙規約) は前段で完結済。
+next_action: **dsp の salvage 判断 (P-a 確定) / rename 実行 / version 別 PR 待ち → 来たら CCO Tier2 review**。CCO 能動作業なし・レビュー依頼待ち。
+blocked_by: Phase2 = dsp の判断/実行待ち (CCO 手番=review のみ)。org 起因の kimny ブロックはゼロ。org 未決は dsp の harness 判断 1件。
 urgency: low
 action_owner: null
 deadline: null
 expected_next_check_at: 2026-07-23T21:00:00+09:00
-last_update: 2026-07-23T15:00:00+09:00
+last_update: 2026-07-23T15:40:00+09:00
 evidence: 7/18 settings 権限監査完納: PR#157 merged (`9d39d71`・docs/drafts/settings-permission-audit-20260717.md・277行)。実測手法=導入バイナリ `~/.local/share/claude/versions/{2.1.202,2.1.203,2.1.212}` enforcement 直読 + sentinel path で claude 実走 write/read 観測 + CHANGELOG。確定=`Write(path)`死(2.1.210 warning追加)/`Edit(path)`効/bare`Write(*)`有効/deny絶対優先(acceptEdits実証)/Read(path)deny健在/★path記法=単一`/`=settings相対silent-miss・`~`/`//`=絶対。risk=hook未wire 7 workspace(_conductor含)で素で開・wire済8はCWD-outside block で塞。conductor独立検証PASS(B-1/B-3正確・可逆・実ファイル一致)+B-2採用推奨(Bash auth非ブロック nuance)。**実settings.json md5不変=1933237d3ffe30bb1729503329c9e11c(未タッチ)**。Fable subagent無応答→CCO直接実測で代替(推測潰し)。
 confidence: high
 lane: notification
