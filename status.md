@@ -14,6 +14,7 @@ last_update: 2026-07-22T09:30:00+09:00
 evidence: 7/18 settings 権限監査完納: PR#157 merged (`9d39d71`・docs/drafts/settings-permission-audit-20260717.md・277行)。実測手法=導入バイナリ `~/.local/share/claude/versions/{2.1.202,2.1.203,2.1.212}` enforcement 直読 + sentinel path で claude 実走 write/read 観測 + CHANGELOG。確定=`Write(path)`死(2.1.210 warning追加)/`Edit(path)`効/bare`Write(*)`有効/deny絶対優先(acceptEdits実証)/Read(path)deny健在/★path記法=単一`/`=settings相対silent-miss・`~`/`//`=絶対。risk=hook未wire 7 workspace(_conductor含)で素で開・wire済8はCWD-outside block で塞。conductor独立検証PASS(B-1/B-3正確・可逆・実ファイル一致)+B-2採用推奨(Bash auth非ブロック nuance)。**実settings.json md5不変=1933237d3ffe30bb1729503329c9e11c(未タッチ)**。Fable subagent無応答→CCO直接実測で代替(推測潰し)。
 confidence: high
 lane: notification
+# 公開粒度規約: docs/status-md-public-allowlist.md (PUBLIC repo・許可列挙・conductor 承認 2026-07-23)
 ---
 
 ## Recent events
