@@ -3,21 +3,23 @@ peer: template
 department: management
 activity: active
 status: clean
-current_task: **【dsp trunk Phase2 = 統合設計完了・runbook durable 化 → salvage harness 1件の dsp 判断待ち・rename は Tier2 review 待機】** Phase2 は rename でなく diverged 2本の content 統合と判明 (pre-check で plan と現実の乖離検出)。8コミット disposition 確定・PR triage 完了・salvage unit 完了 (実測確認済)・runbook は dsp trunk に durable 化。残 = harness 1件の cover 判断 (dsp domain・conductor の name-search を CCO が function-search に拡張して格上げ) + rename(default+protection) を dsp が co-sign + 実行直前 compare 後に実行。判断1・2 (公開範囲 untrack + 許可列挙規約) は前段で完結済。
-next_action: **dsp の salvage 判断 (P-a 確定) / rename 実行 / version 別 PR 待ち → 来たら CCO Tier2 review**。CCO 能動作業なし・レビュー依頼待ち。
-blocked_by: Phase2 = dsp の判断/実行待ち (CCO 手番=review のみ)。org 起因の kimny ブロックはゼロ。org 未決は dsp の harness 判断 1件。
+current_task: **【7/23 完納3件 + Phase2 は rename のみ次 session へ持越し。CCO 能動作業ゼロ・review 待機】** ①**スキル配布 bug 是正 完了** (kimny 実害・universal 5件[tdd/coding-rules/git-worktree/hooks/mcp]を `~/.claude/skills` へ symlink 追加=leak class 消滅・PR#175 監査+#176 実行記録)。★**次インスタンスは「配布漏れ」を再調査しないこと**=完了刻印済。②**公開範囲 untrack + status allow-list** 完了 (PR#171/172)。③**dsp trunk Phase2** = 統合設計完了 (rename でなく diverged 2本 content 統合と pre-check で判明)・disposition 8件確定・salvage 3件 unit 完了 (#217/218/220 実測済)・PR triage 完了・runbook を dsp trunk に durable 化。**残=rename(default+protection) のみ**で、high-consequence ゆえ**次 session 頭に dsp が compare 再取得+conductor 実行 co-sign 後に実行→CCO が diff を Tier2 review**。
+next_action: **CCO 能動作業なし。以下いずれか着信で動く**: (1)dsp の Phase2 rename 実行 diff → Tier2 review (2)dsp の version 別 PR → review (3)demo fade 設計 draft の kimny P1/P2 決着後 → review (4)copy-not-symlink stale 別項目 (threads-api/_product/_Reserch・急がない)。**★再開アンカー**: dsp Phase2 詳細=`docs/drafts/DO-NOT-COMMIT-dsp-phase2-integration-runbook-20260723.md`(untracked・canonical は dsp trunk `docs/dsp-phase2-integration-runbook-20260723.md`)/スキル配布=`docs/drafts/skill-distribution-audit-20260723.md`/公開範囲=`docs/drafts/DO-NOT-COMMIT-public-repo-exposure-audit-20260721.md`。checkin は `_conductor/docs/inbox/approved-not-executed-queue.md`(M1 verify 列)+ hold-until を読む。org v8 は起動形態不変=通常 checkin で正。
+blocked_by: なし (CCO 能動作業ゼロ)。Phase2 rename=dsp 実行待ち (次 session・CCO 手番=review のみ)。org 起因 kimny ブロック=ゼロ。
 urgency: low
 action_owner: null
 deadline: null
-expected_next_check_at: 2026-07-23T21:00:00+09:00
-last_update: 2026-07-23T15:40:00+09:00
-evidence: 7/18 settings 権限監査完納: PR#157 merged (`9d39d71`・docs/drafts/settings-permission-audit-20260717.md・277行)。実測手法=導入バイナリ `~/.local/share/claude/versions/{2.1.202,2.1.203,2.1.212}` enforcement 直読 + sentinel path で claude 実走 write/read 観測 + CHANGELOG。確定=`Write(path)`死(2.1.210 warning追加)/`Edit(path)`効/bare`Write(*)`有効/deny絶対優先(acceptEdits実証)/Read(path)deny健在/★path記法=単一`/`=settings相対silent-miss・`~`/`//`=絶対。risk=hook未wire 7 workspace(_conductor含)で素で開・wire済8はCWD-outside block で塞。conductor独立検証PASS(B-1/B-3正確・可逆・実ファイル一致)+B-2採用推奨(Bash auth非ブロック nuance)。**実settings.json md5不変=1933237d3ffe30bb1729503329c9e11c(未タッチ)**。Fable subagent無応答→CCO直接実測で代替(推測潰し)。
+expected_next_check_at: 2026-07-24T21:00:00+09:00
+last_update: 2026-07-24T10:10:00+09:00
+evidence: 7/23 完納 (allow-list 準拠記述・詳細は各 PR/監査 doc が一次記録): **スキル配布是正** PR#175(監査)+#176(実行) — 全 workspace 実測で universal 5件 leak を確定 (0/5=_product/_mued-dsp/_conductor/_Reserch・_chief=dir無)・occur は意図的除外で是正対象外と分離・universal を user scope 化で leak class 消滅 (setup.sh 不変=public template 保護・所有ガード準拠=kimny home のみ)。**公開範囲** PR#171(内部 doc 5件 untrack・SHA復元でdisk保持)+#172(status allow-list)。**Phase2** disposition 8件を content-level 実測で確定・salvage 3件 unit=#217/218/220 (harness の現音再現を compile+run 実証)・runbook co-sign 済。全て「済を両側で測る」で node/edge 落ちを二重化対処 (#217 で済が1/4だった前例が最後まで効いた)。settings 権限監査(PR#157)は kimny gate 継続中 (実 settings 未変更・md5 不変)。
 confidence: high
 lane: notification
 # 公開粒度規約: docs/status-md-public-allowlist.md (PUBLIC repo・許可列挙・conductor 承認 2026-07-23)
 ---
 
 ## Recent events
+
+- 2026-07-24T10:10:00+09:00: **peer-checkout (kimny 指示・再起動前状態保全)**。7/23 は marathon session で CCO 分 = 判断1・2(公開範囲) + Phase2 統合設計 + スキル配布 bug 是正(a/b/c) + レビュー18本(dsp 11/cowork 7) を完納。★**次インスタンス申し送り**: (1)スキル配布漏れは**是正済**=再調査不要 (2)Phase2 は rename のみ残・次 session で dsp 実行→CCO Tier2 review (3)checkin=`_conductor/docs/inbox/approved-not-executed-queue.md` + hold-until (4)org v8 は起動形態不変。**一貫した学び**=検査/主張/記憶/機構/salvage/探索/監視が「問いたいことより少し狭い/広い」型を全面で踏み、org が実測の二重化(測り直す冗長性 + 射程申告して外側を埋める分業)で捕まえ合いを1度も漏らさなかった。詳細=[[feedback_publication_vs_durability]] / [[project_public_repo_role_inversion_20260721]]。
 
 - 2026-07-23T15:00:00+09:00: **公開範囲棚卸し 判断1・2 を conductor 承認で執行完了 (kimny 判断不要で完結)**。当初「kimny 判断2件+実行5件」で durable 層が止まっていたのを、conductor が債務台帳で引き取り→実測で仕分け直し。**判断1 (PR#171)**=内部 doc 5件を PUBLIC repo から untrack (disk 上には SHA `1a5f010` から復元し byte 一致・gitignore 済＝「消す」でなく「公開から外す」)+1件は buyer-value ゆえ一般化して残す (個人情報 placeholder 化)。**判断2 (PR#172)**=`docs/status-md-public-allowlist.md` 新設 (許可列挙・禁止でなく・本エントリも本規約に準拠して記述)。**リスト仕分けで実測が効いた点**: 当初「実行5件」→ CCO 実測で「gh workflow scope は既済 / #213 は CCO 手番 / rename前処理は Phase2 内」を除いて2件へ→ conductor 検査で UI render 既済 (7/23 朝 kimny PT 承認) を除いて実質1件へ→ dsp が「署名は classifier に止められない (transient・hook でない)」を再実測。**Phase2 (develop→main rename) は保留**: trigger=「trunk からフル鎖 ship 可能」の根拠がまだ「既 build 済 bundle への署名」止まりで、fresh-clone→build→sign のフル鎖証跡が未達 (dsp 依頼中)。本番 notarize は非決定的 classifier ゆえ別項目で残す。**今日の型 (検査・主張・機構が問いたいことより狭い/広い) は自分の作業リストにも当たった**=#213 を記憶で「kimny 実行待ち」と誤分類していた。詳細=[[project_public_repo_role_inversion_20260721]] / [[feedback_publication_vs_durability]]。
 
